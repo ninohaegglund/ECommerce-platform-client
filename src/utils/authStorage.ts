@@ -4,17 +4,23 @@ const AUTH_TOKEN_KEY = 'authToken'
 const AUTH_USER_KEY = 'authUser'
 const AUTH_EXPIRES_AT_KEY = 'authExpiresAt'
 
+const AUTH_KEYS = [AUTH_TOKEN_KEY, AUTH_USER_KEY, AUTH_EXPIRES_AT_KEY]
+
 export type StoredAuth = {
   token: string
   user: AuthUser | null
   expiresAt: string
 }
 
-export function getStoredAuth(): StoredAuth {
-  const token = localStorage.getItem(AUTH_TOKEN_KEY) ?? ''
-  const expiresAt = localStorage.getItem(AUTH_EXPIRES_AT_KEY) ?? ''
+function clearFromStorage(storage: Storage) {
+  AUTH_KEYS.forEach((key) => storage.removeItem(key))
+}
 
-  const rawUser = localStorage.getItem(AUTH_USER_KEY)
+function getRawAuth(storage: Storage): StoredAuth {
+  const token = storage.getItem(AUTH_TOKEN_KEY) ?? ''
+  const expiresAt = storage.getItem(AUTH_EXPIRES_AT_KEY) ?? ''
+
+  const rawUser = storage.getItem(AUTH_USER_KEY)
   if (!rawUser) {
     return { token, user: null, expiresAt }
   }
@@ -27,14 +33,51 @@ export function getStoredAuth(): StoredAuth {
   }
 }
 
-export function setStoredAuth(token: string, user: AuthUser, expiresAt: string) {
-  localStorage.setItem(AUTH_TOKEN_KEY, token)
-  localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user))
-  localStorage.setItem(AUTH_EXPIRES_AT_KEY, expiresAt)
+function isExpired(expiresAt: string): boolean {
+  if (!expiresAt) {
+    return false
+  }
+
+  const expirationTime = Date.parse(expiresAt)
+  if (Number.isNaN(expirationTime)) {
+    return false
+  }
+
+  return expirationTime <= Date.now()
+}
+
+export function getStoredAuth(): StoredAuth {
+  const localAuth = getRawAuth(localStorage)
+  const sessionAuth = getRawAuth(sessionStorage)
+  const selectedAuth = localAuth.token ? localAuth : sessionAuth
+
+  if (!selectedAuth.token || !selectedAuth.user) {
+    return { token: '', user: null, expiresAt: '' }
+  }
+
+  if (isExpired(selectedAuth.expiresAt)) {
+    clearStoredAuth()
+    return { token: '', user: null, expiresAt: '' }
+  }
+
+  return selectedAuth
+}
+
+export function setStoredAuth(
+  token: string,
+  user: AuthUser,
+  expiresAt: string,
+  rememberMe: boolean,
+) {
+  clearStoredAuth()
+
+  const storage = rememberMe ? localStorage : sessionStorage
+  storage.setItem(AUTH_TOKEN_KEY, token)
+  storage.setItem(AUTH_USER_KEY, JSON.stringify(user))
+  storage.setItem(AUTH_EXPIRES_AT_KEY, expiresAt)
 }
 
 export function clearStoredAuth() {
-  localStorage.removeItem(AUTH_TOKEN_KEY)
-  localStorage.removeItem(AUTH_USER_KEY)
-  localStorage.removeItem(AUTH_EXPIRES_AT_KEY)
+  clearFromStorage(localStorage)
+  clearFromStorage(sessionStorage)
 }

@@ -27,10 +27,10 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
       </nav>
 
       <div className="nav-actions">
-        <button type="button" className="cart-btn" aria-label="Shopping cart">
+        <Link className="cart-btn" to="/cart" aria-label="Shopping cart">
           <img src="/cart-icon.svg" alt="" aria-hidden="true" />
           <span>Cart</span>
-        </button>
+        </Link>
 
         <div className="profile-menu">
           <button

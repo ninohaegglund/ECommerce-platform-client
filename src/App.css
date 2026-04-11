@@ -102,6 +102,20 @@
   border-color: #6ea2f8;
 }
 
+.remember-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: #304a75;
+  margin-top: 2px;
+}
+
+.remember-row .remember-check {
+  width: 16px;
+  height: 16px;
+}
+
 .submit-btn {
   margin-top: 4px;
   border: none;
@@ -204,6 +218,7 @@
   gap: 8px;
   padding: 7px 10px;
   cursor: pointer;
+  text-decoration: none;
 }
 
 .cart-btn img {
@@ -402,6 +417,67 @@
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
+.cart-page {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(12, 17, 31, 0.12);
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.cart-page h1 {
+  margin: 0 0 8px;
+}
+
+.cart-table-wrap {
+  margin-top: 12px;
+  overflow-x: auto;
+}
+
+.cart-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 760px;
+}
+
+.cart-table th,
+.cart-table td {
+  text-align: left;
+  border-bottom: 1px solid #d6e0f1;
+  padding: 10px 8px;
+  color: #22375f;
+}
+
+.cart-table th {
+  color: #304a75;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.qty-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.qty-controls button {
+  border: 1px solid #c2cde1;
+  border-radius: 6px;
+  background: #ffffff;
+  width: 28px;
+  height: 28px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.cart-summary {
+  margin-top: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
 .admin-panel {
   background: rgba(255, 255, 255, 0.9);
   border: 1px solid rgba(12, 17, 31, 0.12);
@@ -486,6 +562,11 @@
 
   .products-grid {
     grid-template-columns: 1fr;
+  }
+
+  .cart-summary {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .admin-grid {

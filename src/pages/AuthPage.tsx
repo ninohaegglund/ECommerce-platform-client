@@ -10,6 +10,7 @@ type AuthPageProps = {
   onSubmit: (
     mode: AuthMode,
     payload: LoginPayload | RegisterPayload,
+    rememberMe: boolean,
   ) => Promise<{ ok: boolean; message: string }>
 }
 
@@ -25,6 +26,7 @@ function AuthPage({ mode, endpoint, isLoading, onSubmit }: AuthPageProps) {
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [rememberMe, setRememberMe] = useState(true)
 
   const isRegister = mode === 'register'
 
@@ -51,7 +53,7 @@ function AuthPage({ mode, endpoint, isLoading, onSubmit }: AuthPageProps) {
           password,
         }
 
-    const result = await onSubmit(mode, payload)
+    const result = await onSubmit(mode, payload, isRegister ? true : rememberMe)
 
     if (!result.ok) {
       setErrorMessage(result.message)
@@ -136,6 +138,18 @@ function AuthPage({ mode, endpoint, isLoading, onSubmit }: AuthPageProps) {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 autoComplete="new-password"
               />
+            </label>
+          )}
+
+          {!isRegister && (
+            <label className="remember-row">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="remember-check"
+              />
+              Remember me
             </label>
           )}
 

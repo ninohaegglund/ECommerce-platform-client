@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import './App.css'
 import AuthPage from './pages/AuthPage'
 import AdminPage from './pages/AdminPage'
+import CartPage from './pages/CartPage'
 import DashboardPage from './pages/DashboardPage'
 import SimplePage from './pages/SimplePage'
 import type {
@@ -38,6 +39,7 @@ function App() {
   const handleSubmit = async (
     mode: AuthMode,
     payload: LoginPayload | RegisterPayload,
+    rememberMe: boolean,
   ): Promise<{ ok: boolean; message: string }> => {
     setIsLoading(true)
 
@@ -63,7 +65,7 @@ function App() {
       }
 
       const authData = data as AuthResponse
-      setStoredAuth(authData.token, authData.user, authData.expiresAt)
+      setStoredAuth(authData.token, authData.user, authData.expiresAt, rememberMe)
 
       setAuthToken(authData.token)
       setAuthUser(authData.user)
@@ -134,6 +136,16 @@ function App() {
               expiresAt={authExpiresAt}
               onLogout={handleLogout}
             />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+      <Route
+        path="/cart"
+        element={
+          isAuthenticated && authUser ? (
+            <CartPage user={authUser} isAdmin={isAdmin} onLogout={handleLogout} />
           ) : (
             <Navigate to="/login" replace />
           )
