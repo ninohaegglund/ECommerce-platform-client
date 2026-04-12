@@ -4,7 +4,9 @@ import './App.css'
 import AuthPage from './pages/AuthPage'
 import AdminPage from './pages/AdminPage'
 import CartPage from './pages/CartPage'
+import CheckoutPage from './pages/CheckoutPage'
 import DashboardPage from './pages/DashboardPage'
+import OrdersPage from './pages/OrdersPage'
 import SimplePage from './pages/SimplePage'
 import type {
   AuthMode,
@@ -152,6 +154,16 @@ function App() {
         }
       />
       <Route
+        path="/checkout"
+        element={
+          isAuthenticated && authUser ? (
+            <CheckoutPage user={authUser} isAdmin={isAdmin} onLogout={handleLogout} />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+      <Route
         path="/admin"
         element={
           isAuthenticated && authUser ? (
@@ -169,13 +181,7 @@ function App() {
         path="/orders"
         element={
           isAuthenticated && authUser ? (
-            <SimplePage
-              user={authUser}
-              isAdmin={isAdmin}
-              onLogout={handleLogout}
-              title="Your Orders"
-              description="This is a simple placeholder page for order history and tracking."
-            />
+            <OrdersPage user={authUser} isAdmin={isAdmin} onLogout={handleLogout} />
           ) : (
             <Navigate to="/login" replace />
           )

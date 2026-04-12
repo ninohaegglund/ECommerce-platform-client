@@ -478,6 +478,112 @@
   gap: 12px;
 }
 
+.checkout-page,
+.orders-page {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(12, 17, 31, 0.12);
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.checkout-page h1,
+.orders-page h1 {
+  margin: 0 0 8px;
+}
+
+.checkout-form {
+  margin-top: 12px;
+  display: grid;
+  gap: 12px;
+}
+
+.checkout-address-block {
+  border: 1px solid #d2ddee;
+  border-radius: 12px;
+  padding: 12px;
+  margin: 0;
+}
+
+.checkout-address-block legend {
+  padding: 0 6px;
+  color: #213a66;
+  font-weight: 700;
+}
+
+.checkout-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.checkout-grid label {
+  display: grid;
+  gap: 6px;
+  color: #24365b;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.checkout-grid input {
+  border: 1px solid #c9d3e6;
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 10px 11px;
+  font-size: 14px;
+}
+
+.checkout-summary {
+  border: 1px dashed #c2cde1;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.checkout-summary p {
+  margin: 0 0 4px;
+}
+
+.orders-list {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.order-card {
+  border: 1px solid #d2ddee;
+  border-radius: 12px;
+  background: #f9fbff;
+  padding: 12px;
+}
+
+.order-card h3 {
+  margin: 0 0 8px;
+  color: #132549;
+}
+
+.order-card p {
+  margin: 0 0 6px;
+}
+
+.order-actions {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+}
+
+.order-details {
+  margin-top: 16px;
+  border: 1px solid #d2ddee;
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 12px;
+}
+
+.order-details h2 {
+  margin: 0 0 8px;
+  color: #132549;
+}
+
 .admin-panel {
   background: rgba(255, 255, 255, 0.9);
   border: 1px solid rgba(12, 17, 31, 0.12);
@@ -564,9 +670,17 @@
     grid-template-columns: 1fr;
   }
 
+  .checkout-grid {
+    grid-template-columns: 1fr;
+  }
+
   .cart-summary {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .orders-list {
+    grid-template-columns: 1fr;
   }
 
   .admin-grid {

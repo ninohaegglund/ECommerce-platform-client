@@ -1,5 +1,12 @@
 import { getStoredAuth } from '../utils/authStorage'
-import type { AddCartItemRequest, Cart, UpdateCartItemRequest } from '../types/cart'
+import type {
+  AddCartItemRequest,
+  Cart,
+  CheckoutRequest,
+  CheckoutResponse,
+  UpdateCartItemRequest,
+} from '../types/cart'
+import type { OrderDetails, OrderSummary } from '../types/order'
 
 const ORDER_API_BASE_URL =
   import.meta.env.VITE_ORDER_API_URL ?? 'https://localhost:7043'
@@ -90,8 +97,28 @@ export async function removeCartItem(itemId: string): Promise<void> {
   })
 }
 
-export async function checkoutCart(): Promise<void> {
-  return request<void>('/api/cart/checkout', {
+export async function checkoutCart(payload: CheckoutRequest): Promise<CheckoutResponse | void> {
+  return request<CheckoutResponse | void>('/api/cart/checkout', {
     method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
+export async function getOrders(userId: string): Promise<OrderSummary[]> {
+  return request<OrderSummary[]>(`/api/orders/user/${userId}`, {
+    method: 'GET',
+  })
+}
+
+export async function getOrderById(id: string): Promise<OrderDetails> {
+  return request<OrderDetails>(`/api/orders/${id}`, {
+    method: 'GET',
+  })
+}
+
+export async function updateOrderStatus(orderId: string, status: number): Promise<void> {
+  return request<void>(`/api/orders/${orderId}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
   })
 }

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import AppNavbar from '../components/AppNavbar'
-import { checkoutCart, getCart, removeCartItem, updateCartItem } from '../services/cartApi'
+import { getCart, removeCartItem, updateCartItem } from '../services/cartApi'
 import type { AuthUser } from '../types/auth'
 import type { Cart, CartItem } from '../types/cart'
 
@@ -11,9 +12,9 @@ type CartPageProps = {
 }
 
 function CartPage({ user, isAdmin, onLogout }: CartPageProps) {
+  const navigate = useNavigate()
   const [cart, setCart] = useState<Cart | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [isCheckoutLoading, setIsCheckoutLoading] = useState(false)
   const [activeItemId, setActiveItemId] = useState('')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -84,23 +85,6 @@ function CartPage({ user, isAdmin, onLogout }: CartPageProps) {
       setError(message)
     } finally {
       setActiveItemId('')
-    }
-  }
-
-  const handleCheckout = async () => {
-    setIsCheckoutLoading(true)
-    setError('')
-    setSuccess('')
-
-    try {
-      await checkoutCart()
-      await loadCart()
-      setSuccess('Checkout completed. Order created and cart was cleared.')
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Checkout failed.'
-      setError(message)
-    } finally {
-      setIsCheckoutLoading(false)
     }
   }
 
@@ -185,10 +169,9 @@ function CartPage({ user, isAdmin, onLogout }: CartPageProps) {
               <button
                 type="button"
                 className="submit-btn"
-                onClick={() => void handleCheckout()}
-                disabled={isCheckoutLoading}
+                onClick={() => navigate('/checkout')}
               >
-                {isCheckoutLoading ? 'Processing checkout...' : 'Checkout'}
+                Proceed to checkout
               </button>
             </div>
           </>
