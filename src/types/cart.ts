@@ -18,10 +18,7 @@ export type Cart = {
 
 export type AddCartItemRequest = {
   productId: string
-  productName: string
-  sku: string
   quantity: number
-  unitPrice: number
   currency: string
 }
 

@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import AppNavbar from '../components/AppNavbar'
-import { demoProducts } from '../data/products'
 import type { Product } from '../data/products'
 import ProductCard from '../components/ProductCard'
 import { addCartItem } from '../services/cartApi'
+import { getCatalogProducts } from '../services/catalogApi'
 import type { AuthUser } from '../types/auth'
 
 type DashboardPageProps = {
@@ -16,25 +16,44 @@ type DashboardPageProps = {
 
 function DashboardPage({ user, isAdmin, token, expiresAt, onLogout }: DashboardPageProps) {
   const [showToken, setShowToken] = useState(false)
+  const [products, setProducts] = useState<Product[]>([])
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true)
+  const [productsError, setProductsError] = useState('')
   const [addingProductId, setAddingProductId] = useState('')
   const [cartFeedback, setCartFeedback] = useState('')
   const [cartError, setCartError] = useState('')
 
+  useEffect(() => {
+    const loadProducts = async () => {
+      setIsLoadingProducts(true)
+      setProductsError('')
+
+      try {
+        const data = await getCatalogProducts()
+        setProducts(data)
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Could not load products.'
+        setProductsError(message)
+      } finally {
+        setIsLoadingProducts(false)
+      }
+    }
+
+    void loadProducts()
+  }, [])
+
   const handleAddToCart = async (product: Product) => {
-    setAddingProductId(product.productId)
+    setAddingProductId(product.id)
     setCartFeedback('')
     setCartError('')
 
     try {
       await addCartItem({
-        productId: product.productId,
-        productName: product.productName,
-        sku: product.sku,
+        productId: product.id,
         quantity: 1,
-        unitPrice: product.unitPrice,
         currency: product.currency,
       })
-      setCartFeedback(`${product.productName} added to cart.`)
+      setCartFeedback(`${product.name} added to cart.`)
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Could not add item to cart.'
       setCartError(message)
@@ -58,22 +77,26 @@ function DashboardPage({ user, isAdmin, token, expiresAt, onLogout }: DashboardP
       <section className="hero-panel">
         <h2>Simple Ecommerce Front Page</h2>
         <p>
-          This is your post-login landing page. Later you can replace this with product
-          search, cart, and checkout.
+          Products are loaded dynamically from the Catalog API.
         </p>
+        {productsError && <p className="feedback error">{productsError}</p>}
         {cartError && <p className="feedback error">{cartError}</p>}
         {cartFeedback && <p className="feedback success">{cartFeedback}</p>}
       </section>
 
       <section className="products-grid">
-        {demoProducts.map((product) => (
-          <ProductCard
-            key={product.productId}
-            product={product}
-            isAdding={addingProductId === product.productId}
-            onAddToCart={handleAddToCart}
-          />
-        ))}
+        {isLoadingProducts ? (
+          <p>Loading products...</p>
+        ) : (
+          products.map((product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              isAdding={addingProductId === product.id}
+              onAddToCart={handleAddToCart}
+            />
+          ))
+        )}
       </section>
 
       <section className="token-panel">

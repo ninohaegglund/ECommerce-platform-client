@@ -9,14 +9,15 @@ type ProductCardProps = {
 function ProductCard({ product, isAdding, onAddToCart }: ProductCardProps) {
   return (
     <article className="product-card">
-      <p className="chip">{product.category}</p>
-      <h3>{product.productName}</h3>
+      <p className="chip">Catalog Product</p>
+      <h3>{product.name}</h3>
+      <p className="subtitle">{product.shortDescription || 'No description available.'}</p>
       <p className="price">
         {new Intl.NumberFormat('sv-SE', {
           style: 'currency',
           currency: product.currency,
           maximumFractionDigits: 2,
-        }).format(product.unitPrice)}
+        }).format(product.price)}
       </p>
       <button
         type="button"
