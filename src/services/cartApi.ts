@@ -7,9 +7,16 @@ import type {
   UpdateCartItemRequest,
 } from '../types/cart'
 import type { OrderDetails, OrderSummary } from '../types/order'
+import type {
+  CreatePaymentRequest,
+  CreatePaymentResponse,
+  ProcessPaymentRequest,
+} from '../types/payment'
 
 const ORDER_API_BASE_URL =
   import.meta.env.VITE_ORDER_API_URL ?? 'https://localhost:7043'
+const PAYMENT_API_BASE_URL =
+  import.meta.env.VITE_PAYMENT_API_URL ?? 'https://localhost:7082'
 
 function getAuthToken(): string {
   const token = getStoredAuth().token || localStorage.getItem('authToken') || ''
@@ -34,10 +41,14 @@ function getErrorMessage(payload: unknown, fallback: string): string {
   return fallback
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+async function request<T>(
+  path: string,
+  init?: RequestInit,
+  baseUrl: string = ORDER_API_BASE_URL,
+): Promise<T> {
   const token = getAuthToken()
 
-  const response = await fetch(`${ORDER_API_BASE_URL}${path}`, {
+  const response = await fetch(`${baseUrl}${path}`, {
     ...init,
     headers: {
       'Content-Type': 'application/json',
@@ -121,4 +132,31 @@ export async function updateOrderStatus(orderId: string, status: number): Promis
     method: 'PATCH',
     body: JSON.stringify({ status }),
   })
+}
+
+export async function createPayment(
+  payload: CreatePaymentRequest,
+): Promise<CreatePaymentResponse> {
+  return request<CreatePaymentResponse>(
+    '/api/Payments',
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    },
+    PAYMENT_API_BASE_URL,
+  )
+}
+
+export async function processPayment(
+  paymentId: string,
+  payload: ProcessPaymentRequest,
+): Promise<void> {
+  return request<void>(
+    `/api/Payments/${paymentId}/process`,
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    },
+    PAYMENT_API_BASE_URL,
+  )
 }

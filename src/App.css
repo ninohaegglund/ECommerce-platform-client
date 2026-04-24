@@ -584,6 +584,89 @@
   color: #132549;
 }
 
+.payment-shell {
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.stripe-card,
+.success-card {
+  width: 100%;
+  max-width: 520px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(12, 17, 31, 0.12);
+  border-radius: 18px;
+  padding: 22px;
+  box-shadow: 0 16px 40px rgba(12, 17, 31, 0.12);
+}
+
+.stripe-card h1,
+.success-card h1 {
+  margin: 8px 0;
+}
+
+.stripe-badge {
+  display: inline-flex;
+  margin: 0;
+  background: #edf3ff;
+  color: #2452a4;
+  font-weight: 700;
+  font-size: 12px;
+  border-radius: 999px;
+  padding: 5px 10px;
+}
+
+.stripe-amount-row {
+  margin: 14px 0;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #d2ddee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stripe-amount-row strong {
+  color: #0f2f67;
+  font-size: 20px;
+}
+
+.fake-card-line {
+  margin-bottom: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  letter-spacing: 0.14em;
+  color: #233a63;
+  background: #f4f8ff;
+  border: 1px dashed #bfd1ef;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.success-info {
+  margin: 12px 0;
+  border: 1px solid #d2ddee;
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+.success-info p {
+  margin: 0 0 6px;
+}
+
+.success-actions {
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+}
+
+.success-primary {
+  text-decoration: none;
+  text-align: center;
+}
+
 .admin-panel {
   background: rgba(255, 255, 255, 0.9);
   border: 1px solid rgba(12, 17, 31, 0.12);
@@ -685,5 +768,9 @@
 
   .admin-grid {
     grid-template-columns: 1fr;
+  }
+
+  .success-actions {
+    flex-direction: column;
   }
 }

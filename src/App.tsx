@@ -6,6 +6,8 @@ import AdminPage from './pages/AdminPage'
 import CartPage from './pages/CartPage'
 import CheckoutPage from './pages/CheckoutPage'
 import DashboardPage from './pages/DashboardPage'
+import MockStripeCheckoutPage from './pages/MockStripeCheckoutPage'
+import OrderSuccessPage from './pages/OrderSuccessPage'
 import OrdersPage from './pages/OrdersPage'
 import SimplePage from './pages/SimplePage'
 import type {
@@ -161,6 +163,22 @@ function App() {
           ) : (
             <Navigate to="/login" replace />
           )
+        }
+      />
+      <Route
+        path="/checkout/payment-simulation"
+        element={
+          isAuthenticated && authUser ? (
+            <MockStripeCheckoutPage user={authUser} />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+      <Route
+        path="/order-success"
+        element={
+          isAuthenticated ? <OrderSuccessPage /> : <Navigate to="/login" replace />
         }
       />
       <Route

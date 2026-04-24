@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AppNavbar from '../components/AppNavbar'
-import { checkoutCart } from '../services/cartApi'
+import { checkoutCart, getCart } from '../services/cartApi'
 import type { AuthUser } from '../types/auth'
 import type { AddressInput, CheckoutRequest } from '../types/cart'
 
@@ -31,12 +31,8 @@ function CheckoutPage({ user, isAdmin, onLogout }: CheckoutPageProps) {
   const [billingAddress, setBillingAddress] = useState<AddressInput>(EMPTY_ADDRESS)
   const [billingSameAsShipping, setBillingSameAsShipping] = useState(true)
 
-  const [paymentProvider, setPaymentProvider] = useState('Manual')
-  const [paymentTransactionId, setPaymentTransactionId] = useState('')
-
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
 
   const billingPreview = useMemo(
     () => (billingSameAsShipping ? shippingAddress : billingAddress),
@@ -59,25 +55,40 @@ function CheckoutPage({ user, isAdmin, onLogout }: CheckoutPageProps) {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setError('')
-    setSuccess('')
     setIsSubmitting(true)
 
     const payload: CheckoutRequest = {
       shippingAddress,
       billingAddress: billingSameAsShipping ? shippingAddress : billingAddress,
-      paymentProvider,
-      paymentTransactionId,
+      paymentProvider: 'Stripe',
+      paymentTransactionId: 'PENDING',
     }
 
     try {
-      await checkoutCart(payload)
-      setSuccess('Checkout completed. Redirecting to orders...')
-      navigate('/orders', {
-        replace: true,
-        state: { checkoutSuccess: 'Order placed successfully from cart checkout.' },
-      })
+      const cartBeforeCheckout = await getCart()
+      const checkoutResult = await checkoutCart(payload)
+
+      const orderId = checkoutResult?.orderId ?? checkoutResult?.OrderId ?? checkoutResult?.id
+      if (!orderId) {
+        throw new Error('Order was created but no order ID was returned.')
+      }
+
+      const amount =
+        checkoutResult?.totalAmount ??
+        checkoutResult?.amount ??
+        cartBeforeCheckout.subtotalAmount
+
+      navigate(
+        `/checkout/payment-simulation?orderId=${encodeURIComponent(orderId)}&amount=${encodeURIComponent(String(amount))}`,
+        {
+          replace: true,
+        },
+      )
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Checkout failed.'
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Could not create order before payment. Please try again.'
       setError(message)
     } finally {
       setIsSubmitting(false)
@@ -180,10 +191,9 @@ function CheckoutPage({ user, isAdmin, onLogout }: CheckoutPageProps) {
 
       <section className="checkout-page">
         <h1>Checkout</h1>
-        <p className="subtitle">Enter shipping, billing, and payment reference details.</p>
+        <p className="subtitle">Enter shipping and billing details before payment.</p>
 
         {error && <p className="feedback error">{error}</p>}
-        {success && <p className="feedback success">{success}</p>}
 
         <form className="checkout-form" onSubmit={handleSubmit}>
           {renderAddressFields('shipping', 'Shipping Address', shippingAddress)}
@@ -210,30 +220,8 @@ function CheckoutPage({ user, isAdmin, onLogout }: CheckoutPageProps) {
             </div>
           )}
 
-          <fieldset className="checkout-address-block">
-            <legend>Payment</legend>
-            <div className="checkout-grid">
-              <label>
-                Payment Provider
-                <input
-                  required
-                  value={paymentProvider}
-                  onChange={(e) => setPaymentProvider(e.target.value)}
-                />
-              </label>
-              <label>
-                Payment Transaction Id
-                <input
-                  required
-                  value={paymentTransactionId}
-                  onChange={(e) => setPaymentTransactionId(e.target.value)}
-                />
-              </label>
-            </div>
-          </fieldset>
-
           <button type="submit" className="submit-btn" disabled={isSubmitting}>
-            {isSubmitting ? 'Submitting checkout...' : 'Place order from cart'}
+            {isSubmitting ? 'Creating order...' : 'Proceed to Payment'}
           </button>
         </form>
       </section>

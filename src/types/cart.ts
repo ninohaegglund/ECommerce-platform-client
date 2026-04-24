@@ -47,6 +47,10 @@ export type CheckoutRequest = {
 }
 
 export type CheckoutResponse = {
+  id?: string
   orderId?: string
+  OrderId?: string
+  totalAmount?: number
+  amount?: number
   message?: string
 }
