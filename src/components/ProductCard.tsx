@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import type { Product } from '../data/products'
 
 type ProductCardProps = {
@@ -9,7 +10,6 @@ type ProductCardProps = {
 function ProductCard({ product, isAdding, onAddToCart }: ProductCardProps) {
   return (
     <article className="product-card">
-      <p className="chip">Catalog Product</p>
       <h3>{product.name}</h3>
       <p className="subtitle">{product.shortDescription || 'No description available.'}</p>
       <p className="price">
@@ -27,6 +27,9 @@ function ProductCard({ product, isAdding, onAddToCart }: ProductCardProps) {
       >
         {isAdding ? 'Adding...' : 'Add to cart'}
       </button>
+      <Link className="product-link" to={`/products/${product.id}`}>
+        View stock details
+      </Link>
     </article>
   )
 }

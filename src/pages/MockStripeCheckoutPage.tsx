@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { createPayment, processPayment, updateOrderStatus } from '../services/cartApi'
+import { confirmInventoryReservation, releaseInventoryReservation } from '../services/inventoryApi'
+import { useNotificationCenter } from '../context/notificationCenter'
 import type { AuthUser } from '../types/auth'
 
 type MockStripeCheckoutPageProps = {
@@ -10,11 +12,16 @@ type MockStripeCheckoutPageProps = {
 function MockStripeCheckoutPage({ user }: MockStripeCheckoutPageProps) {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
+  const { refreshNotifications } = useNotificationCenter()
 
   const [isPaying, setIsPaying] = useState(false)
   const [error, setError] = useState('')
 
   const orderId = searchParams.get('orderId') ?? ''
+  const reservationIds = (searchParams.get('reservationIds') ?? '')
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean)
   const amountRaw = searchParams.get('amount') ?? '0'
 
   const amount = useMemo(() => {
@@ -44,6 +51,25 @@ function MockStripeCheckoutPage({ user }: MockStripeCheckoutPageProps) {
     return `STRIPE-MOCK-${Date.now()}-${Math.floor(Math.random() * 1_000_000)}`
   }
 
+  const releaseReservations = async () => {
+    if (reservationIds.length === 0) {
+      return
+    }
+
+    for (const reservationId of reservationIds) {
+      try {
+        await releaseInventoryReservation(reservationId)
+      } catch {
+        // Ignore release errors after a failed payment attempt.
+      }
+    }
+  }
+
+  const handleCancel = async () => {
+    await releaseReservations()
+    navigate('/checkout', { replace: true })
+  }
+
   const handlePay = async () => {
     if (!orderId) {
       setError('Missing orderId. Please restart checkout.')
@@ -71,7 +97,12 @@ function MockStripeCheckoutPage({ user }: MockStripeCheckoutPageProps) {
         paymentTransactionId: generateTransactionId(),
       })
 
+      for (const reservationId of reservationIds) {
+        await confirmInventoryReservation(reservationId)
+      }
+
       await updateOrderStatus(orderId, 2)
+      await refreshNotifications()
 
       navigate('/order-success', {
         replace: true,
@@ -87,6 +118,7 @@ function MockStripeCheckoutPage({ user }: MockStripeCheckoutPageProps) {
           ? err.message
           : 'Payment failed. Please try again or restart checkout.'
       setError(message)
+      await releaseReservations()
     } finally {
       setIsPaying(false)
     }
@@ -115,6 +147,10 @@ function MockStripeCheckoutPage({ user }: MockStripeCheckoutPageProps) {
           disabled={isPaying}
         >
           {isPaying ? 'Processing payment...' : 'Pay with Stripe'}
+        </button>
+
+        <button type="button" className="ghost-btn" onClick={() => void handleCancel()}>
+          Cancel payment
         </button>
 
         <p className="subtitle">

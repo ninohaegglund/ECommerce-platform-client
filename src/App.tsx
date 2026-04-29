@@ -1,14 +1,17 @@
 import { useMemo, useState } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import './App.css'
+import { NotificationCenterProvider } from './context/notificationCenter'
 import AuthPage from './pages/AuthPage'
 import AdminPage from './pages/AdminPage'
 import CartPage from './pages/CartPage'
 import CheckoutPage from './pages/CheckoutPage'
 import DashboardPage from './pages/DashboardPage'
 import MockStripeCheckoutPage from './pages/MockStripeCheckoutPage'
+import NotificationsPage from './pages/NotificationsPage'
 import OrderSuccessPage from './pages/OrderSuccessPage'
 import OrdersPage from './pages/OrdersPage'
+import ProductDetailPage from './pages/ProductDetailPage'
 import SimplePage from './pages/SimplePage'
 import type {
   AuthMode,
@@ -20,6 +23,7 @@ import { clearStoredAuth, getStoredAuth, setStoredAuth } from './utils/authStora
 
 const API_BASE_URL =
   import.meta.env.VITE_IDENTITY_API_URL ?? 'https://localhost:5001/api/auth'
+const WELCOME_NOTIFICATION_FLAG_KEY = 'pendingWelcomeNotificationUserId'
 
 function App() {
   const initialAuth = getStoredAuth()
@@ -71,6 +75,10 @@ function App() {
       const authData = data as AuthResponse
       setStoredAuth(authData.token, authData.user, authData.expiresAt, rememberMe)
 
+      if (mode === 'register') {
+        sessionStorage.setItem(WELCOME_NOTIFICATION_FLAG_KEY, authData.user.id)
+      }
+
       setAuthToken(authData.token)
       setAuthUser(authData.user)
       setAuthExpiresAt(authData.expiresAt)
@@ -94,7 +102,8 @@ function App() {
   const registerEndpoint = useMemo(() => `${API_BASE_URL}/register`, [])
 
   return (
-    <Routes>
+    <NotificationCenterProvider userId={authUser?.id ?? ''}>
+      <Routes>
       <Route
         path="/"
         element={<Navigate to={isAuthenticated ? '/dashboard' : '/login'} replace />}
@@ -146,6 +155,16 @@ function App() {
         }
       />
       <Route
+        path="/products/:productId"
+        element={
+          isAuthenticated && authUser ? (
+            <ProductDetailPage user={authUser} isAdmin={isAdmin} onLogout={handleLogout} />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+      <Route
         path="/cart"
         element={
           isAuthenticated && authUser ? (
@@ -170,6 +189,16 @@ function App() {
         element={
           isAuthenticated && authUser ? (
             <MockStripeCheckoutPage user={authUser} />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+      <Route
+        path="/notifications"
+        element={
+          isAuthenticated && authUser ? (
+            <NotificationsPage user={authUser} isAdmin={isAdmin} onLogout={handleLogout} />
           ) : (
             <Navigate to="/login" replace />
           )
@@ -238,7 +267,8 @@ function App() {
         }
       />
       <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+      </Routes>
+    </NotificationCenterProvider>
   )
 }
 

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AppNavbar from '../components/AppNavbar'
 import { checkoutCart, getCart } from '../services/cartApi'
+import { getInventoryStock, reserveInventory } from '../services/inventoryApi'
 import type { AuthUser } from '../types/auth'
 import type { AddressInput, CheckoutRequest } from '../types/cart'
 
@@ -78,17 +79,44 @@ function CheckoutPage({ user, isAdmin, onLogout }: CheckoutPageProps) {
         checkoutResult?.amount ??
         cartBeforeCheckout.subtotalAmount
 
+      for (const item of cartBeforeCheckout.items) {
+        const stock = await getInventoryStock(item.productId)
+        if (stock.quantityAvailable < item.quantity) {
+          throw new Error(
+            `One of your items is out of stock. Only ${stock.quantityAvailable} left for product ${item.productId}.`,
+          )
+        }
+      }
+
+      const reservationIds: string[] = []
+
+      for (const item of cartBeforeCheckout.items) {
+        const reservation = await reserveInventory({
+          orderId,
+          productId: item.productId,
+          quantity: item.quantity,
+        })
+
+        const reservationId = reservation.reservationId ?? reservation.id
+        if (!reservationId) {
+          throw new Error('Reservation was created but no reservation ID was returned.')
+        }
+
+        reservationIds.push(reservationId)
+      }
+
       navigate(
-        `/checkout/payment-simulation?orderId=${encodeURIComponent(orderId)}&amount=${encodeURIComponent(String(amount))}`,
+        `/checkout/payment-simulation?orderId=${encodeURIComponent(orderId)}&amount=${encodeURIComponent(String(amount))}&reservationIds=${encodeURIComponent(reservationIds.join(','))}`,
         {
           replace: true,
         },
       )
     } catch (err) {
+      const rawMessage = err instanceof Error ? err.message : ''
       const message =
-        err instanceof Error
-          ? err.message
-          : 'Could not create order before payment. Please try again.'
+        rawMessage.toLowerCase().includes('stock') || rawMessage.toLowerCase().includes('out of stock')
+          ? 'This product is out of stock.'
+          : rawMessage || 'Could not create order before payment. Please try again.'
       setError(message)
     } finally {
       setIsSubmitting(false)

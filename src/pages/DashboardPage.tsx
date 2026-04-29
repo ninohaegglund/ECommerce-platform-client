@@ -79,6 +79,7 @@ function DashboardPage({ user, isAdmin, token, expiresAt, onLogout }: DashboardP
         <p>
           Products are loaded dynamically from the Catalog API.
         </p>
+        <p>Open a product to see inventory stock and reservation details.</p>
         {productsError && <p className="feedback error">{productsError}</p>}
         {cartError && <p className="feedback error">{cartError}</p>}
         {cartFeedback && <p className="feedback success">{cartFeedback}</p>}

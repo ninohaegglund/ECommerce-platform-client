@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useNotificationCenter } from '../context/notificationCenter'
 import type { AuthUser } from '../types/auth'
 
 type AppNavbarProps = {
@@ -10,6 +11,7 @@ type AppNavbarProps = {
 
 function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const { unreadCount } = useNotificationCenter()
 
   const initials = `${user.firstName[0] ?? ''}${user.lastName[0] ?? ''}`.toUpperCase()
 
@@ -27,6 +29,17 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
       </nav>
 
       <div className="nav-actions">
+        <Link className="notification-btn" to="/notifications" aria-label="Notifications">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path
+              d="M12 22a2.2 2.2 0 0 0 2.1-1.5H9.9A2.2 2.2 0 0 0 12 22Zm7-6V11a7 7 0 1 0-14 0v5l-2 2v1h18v-1l-2-2Zm-2 1H7v-5a5 5 0 1 1 10 0v5Z"
+              fill="currentColor"
+            />
+          </svg>
+          <span className="sr-only">Open notifications</span>
+          {unreadCount > 0 && <span className="notification-badge">{unreadCount}</span>}
+        </Link>
+
         <Link className="cart-btn" to="/cart" aria-label="Shopping cart">
           <img src="/cart-icon.svg" alt="" aria-hidden="true" />
           <span>Cart</span>
