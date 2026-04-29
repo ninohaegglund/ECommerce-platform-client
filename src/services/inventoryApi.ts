@@ -1,4 +1,4 @@
-import { request } from './apiClient'
+import { request } from './apiClient.ts'
 import type {
   InventoryStock,
   ReserveInventoryRequest,

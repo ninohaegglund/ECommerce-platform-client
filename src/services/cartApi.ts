@@ -11,7 +11,7 @@ import type {
   ProcessPaymentRequest,
 } from '../types/payment'
 import type { OrderDetails, OrderSummary } from '../types/order'
-import { request } from './apiClient'
+import { request } from './apiClient.ts'
 
 const ORDER_API_BASE_URL = import.meta.env.VITE_ORDER_API_URL ?? 'https://localhost:7043'
 const PAYMENT_API_BASE_URL = import.meta.env.VITE_PAYMENT_API_URL ?? 'https://localhost:7082'
