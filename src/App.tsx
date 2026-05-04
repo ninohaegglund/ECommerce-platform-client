@@ -225,6 +225,18 @@ function App() {
           />
         }
       />
+      <Route
+        path="/about"
+        element={
+          <SimplePage
+            user={activeUser}
+            isAdmin={isAdmin}
+            onLogout={handleLogout}
+            title="Om oss"
+            description="NovaCart är en modern e-handelsupplevelse med fokus på smidig shopping och snabba leveranser."
+          />
+        }
+      />
       <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </NotificationCenterProvider>
