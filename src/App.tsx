@@ -14,6 +14,7 @@ import OrdersPage from './pages/OrdersPage'
 import ProductDetailPage from './pages/ProductDetailPage'
 import SimplePage from './pages/SimplePage'
 import type {
+  AuthUser,
   AuthMode,
   AuthResponse,
   LoginPayload,
@@ -24,6 +25,15 @@ import { clearStoredAuth, getStoredAuth, setStoredAuth } from './utils/authStora
 const API_BASE_URL =
   import.meta.env.VITE_IDENTITY_API_URL ?? 'https://localhost:5001/api/auth'
 const WELCOME_NOTIFICATION_FLAG_KEY = 'pendingWelcomeNotificationUserId'
+const GUEST_SESSION_KEY = 'guestModeEnabled'
+
+const GUEST_USER: AuthUser = {
+  id: 'guest',
+  firstName: 'Guest',
+  lastName: 'User',
+  email: 'guest@novacart.local',
+  roles: [],
+}
 
 function App() {
   const initialAuth = getStoredAuth()
@@ -31,26 +41,34 @@ function App() {
   const [authToken, setAuthToken] = useState(initialAuth.token)
   const [authUser, setAuthUser] = useState(initialAuth.user)
   const [authExpiresAt, setAuthExpiresAt] = useState(initialAuth.expiresAt)
+  const [isGuestMode, setIsGuestMode] = useState(
+    () =>
+      sessionStorage.getItem(GUEST_SESSION_KEY) === '1' || !initialAuth.token,
+  )
 
   const isAuthenticated = Boolean(authToken && authUser)
+  const canAccessStore = Boolean(isAuthenticated || isGuestMode)
+  const activeUser = authUser ?? (isGuestMode ? GUEST_USER : null)
   const isAdmin = Boolean(
     authUser?.roles?.some((role) => role.toLowerCase() === 'admin'),
   )
-  const activeUser =
-    authUser ??
-    ({
-      id: 'guest',
-      firstName: 'Guest',
-      lastName: 'User',
-      email: 'guest@novacart.local',
-      roles: [],
-    } satisfies AuthUser)
+
+  const handleContinueAsGuest = () => {
+    clearStoredAuth()
+    setAuthToken('')
+    setAuthUser(null)
+    setAuthExpiresAt('')
+    setIsGuestMode(true)
+    sessionStorage.setItem(GUEST_SESSION_KEY, '1')
+  }
 
   const handleLogout = () => {
     clearStoredAuth()
     setAuthToken('')
     setAuthUser(null)
     setAuthExpiresAt('')
+    setIsGuestMode(false)
+    sessionStorage.removeItem(GUEST_SESSION_KEY)
   }
 
   const handleSubmit = async (
@@ -88,6 +106,9 @@ function App() {
         sessionStorage.setItem(WELCOME_NOTIFICATION_FLAG_KEY, authData.user.id)
       }
 
+      setIsGuestMode(false)
+      sessionStorage.removeItem(GUEST_SESSION_KEY)
+
       setAuthToken(authData.token)
       setAuthUser(authData.user)
       setAuthExpiresAt(authData.expiresAt)
@@ -111,13 +132,16 @@ function App() {
   const registerEndpoint = useMemo(() => `${API_BASE_URL}/register`, [])
 
   return (
-    <NotificationCenterProvider userId={authUser?.id ?? ''}>
+    <NotificationCenterProvider userId={activeUser?.id ?? ''}>
       <Routes>
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route
+        path="/"
+        element={<Navigate to={canAccessStore ? '/dashboard' : '/login'} replace />}
+      />
       <Route
         path="/login"
         element={
-          isAuthenticated ? (
+          canAccessStore ? (
             <Navigate to="/dashboard" replace />
           ) : (
             <AuthPage
@@ -125,6 +149,7 @@ function App() {
               endpoint={loginEndpoint}
               isLoading={isLoading}
               onSubmit={handleSubmit}
+              onContinueAsGuest={handleContinueAsGuest}
             />
           )
         }
@@ -132,7 +157,7 @@ function App() {
       <Route
         path="/register"
         element={
-          isAuthenticated ? (
+          canAccessStore ? (
             <Navigate to="/dashboard" replace />
           ) : (
             <AuthPage
@@ -147,42 +172,75 @@ function App() {
       <Route
         path="/dashboard"
         element={
-          <DashboardPage
-            user={activeUser}
-            isAdmin={isAdmin}
-            token={authToken}
-            expiresAt={authExpiresAt}
-            onLogout={handleLogout}
-          />
+          canAccessStore && activeUser ? (
+            <DashboardPage
+              user={activeUser}
+              isAdmin={isAdmin}
+              token={authToken}
+              expiresAt={authExpiresAt}
+              onLogout={handleLogout}
+            />
+          ) : (
+            <Navigate to="/login" replace />
+          )
         }
       />
       <Route
         path="/products/:productId"
         element={
-          <ProductDetailPage user={activeUser} isAdmin={isAdmin} onLogout={handleLogout} />
+          canAccessStore && activeUser ? (
+            <ProductDetailPage user={activeUser} isAdmin={isAdmin} onLogout={handleLogout} />
+          ) : (
+            <Navigate to="/login" replace />
+          )
         }
       />
       <Route
         path="/cart"
-        element={<CartPage user={activeUser} isAdmin={isAdmin} onLogout={handleLogout} />}
+        element={
+          canAccessStore && activeUser ? (
+            <CartPage user={activeUser} isAdmin={isAdmin} onLogout={handleLogout} />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
       />
       <Route
         path="/checkout"
         element={
-          <CheckoutPage user={activeUser} isAdmin={isAdmin} onLogout={handleLogout} />
+          canAccessStore && activeUser ? (
+            <CheckoutPage user={activeUser} isAdmin={isAdmin} onLogout={handleLogout} />
+          ) : (
+            <Navigate to="/login" replace />
+          )
         }
       />
       <Route
         path="/checkout/payment-simulation"
-        element={<MockStripeCheckoutPage user={activeUser} />}
+        element={
+          canAccessStore && activeUser ? (
+            <MockStripeCheckoutPage user={activeUser} />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
       />
       <Route
         path="/notifications"
         element={
-          <NotificationsPage user={activeUser} isAdmin={isAdmin} onLogout={handleLogout} />
+          canAccessStore && activeUser ? (
+            <NotificationsPage user={activeUser} isAdmin={isAdmin} onLogout={handleLogout} />
+          ) : (
+            <Navigate to="/login" replace />
+          )
         }
       />
-      <Route path="/order-success" element={<OrderSuccessPage />} />
+      <Route
+        path="/order-success"
+        element={
+          canAccessStore ? <OrderSuccessPage /> : <Navigate to="/login" replace />
+        }
+      />
       <Route
         path="/admin"
         element={
@@ -199,42 +257,60 @@ function App() {
       />
       <Route
         path="/orders"
-        element={<OrdersPage user={activeUser} isAdmin={isAdmin} onLogout={handleLogout} />}
+        element={
+          canAccessStore && activeUser ? (
+            <OrdersPage user={activeUser} isAdmin={isAdmin} onLogout={handleLogout} />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
       />
       <Route
         path="/wishlist"
         element={
-          <SimplePage
-            user={activeUser}
-            isAdmin={isAdmin}
-            onLogout={handleLogout}
-            title="Your Wishlist"
-            description="This is a simple placeholder page for saved products."
-          />
+          canAccessStore && activeUser ? (
+            <SimplePage
+              user={activeUser}
+              isAdmin={isAdmin}
+              onLogout={handleLogout}
+              title="Your Wishlist"
+              description="This is a simple placeholder page for saved products."
+            />
+          ) : (
+            <Navigate to="/login" replace />
+          )
         }
       />
       <Route
         path="/account"
         element={
-          <SimplePage
-            user={activeUser}
-            isAdmin={isAdmin}
-            onLogout={handleLogout}
-            title="Account Settings"
-            description="This is a simple placeholder page for profile details and preferences."
-          />
+          canAccessStore && activeUser ? (
+            <SimplePage
+              user={activeUser}
+              isAdmin={isAdmin}
+              onLogout={handleLogout}
+              title="Account Settings"
+              description="This is a simple placeholder page for profile details and preferences."
+            />
+          ) : (
+            <Navigate to="/login" replace />
+          )
         }
       />
       <Route
         path="/about"
         element={
-          <SimplePage
-            user={activeUser}
-            isAdmin={isAdmin}
-            onLogout={handleLogout}
-            title="Om oss"
-            description="NovaCart är en modern e-handelsupplevelse med fokus på smidig shopping och snabba leveranser."
-          />
+          canAccessStore && activeUser ? (
+            <SimplePage
+              user={activeUser}
+              isAdmin={isAdmin}
+              onLogout={handleLogout}
+              title="Om oss"
+              description="NovaCart är en modern e-handelsupplevelse med fokus på smidig shopping och snabba leveranser."
+            />
+          ) : (
+            <Navigate to="/login" replace />
+          )
         }
       />
       <Route path="*" element={<Navigate to="/" replace />} />

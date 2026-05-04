@@ -7,6 +7,7 @@ type AuthPageProps = {
   mode: AuthMode
   endpoint: string
   isLoading: boolean
+  onContinueAsGuest?: () => void
   onSubmit: (
     mode: AuthMode,
     payload: LoginPayload | RegisterPayload,
@@ -14,7 +15,7 @@ type AuthPageProps = {
   ) => Promise<{ ok: boolean; message: string }>
 }
 
-function AuthPage({ mode, endpoint, isLoading, onSubmit }: AuthPageProps) {
+function AuthPage({ mode, endpoint, isLoading, onContinueAsGuest, onSubmit }: AuthPageProps) {
   const navigate = useNavigate()
 
   const [errorMessage, setErrorMessage] = useState('')
@@ -156,6 +157,21 @@ function AuthPage({ mode, endpoint, isLoading, onSubmit }: AuthPageProps) {
           <button className="submit-btn" type="submit" disabled={isLoading}>
             {isLoading ? 'Please wait...' : isRegister ? 'Create account' : 'Sign in'}
           </button>
+
+          {!isRegister && onContinueAsGuest && (
+            <button
+              className="guest-btn"
+              type="button"
+              onClick={() => {
+                setErrorMessage('')
+                setSuccessMessage('')
+                onContinueAsGuest()
+                navigate('/dashboard', { replace: true })
+              }}
+            >
+              Continue as guest
+            </button>
+          )}
         </form>
 
         {errorMessage && <p className="feedback error">{errorMessage}</p>}
