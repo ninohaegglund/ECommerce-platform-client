@@ -1,12 +1,7 @@
 import { getStoredAuth } from '../utils/authStorage'
 
 export function getAuthToken(): string {
-  const token = getStoredAuth().token || localStorage.getItem('authToken') || ''
-  if (!token) {
-    throw new Error('Missing auth token. Please sign in again.')
-  }
-
-  return token
+  return getStoredAuth().token || localStorage.getItem('authToken') || ''
 }
 
 export function getErrorMessage(payload: unknown, fallback: string): string {
@@ -30,14 +25,18 @@ export async function request<T>(
 ): Promise<T> {
   const token = getAuthToken()
   const resolvedBaseUrl = baseUrl ?? 'https://localhost:7043'
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(init?.headers ?? {}),
+  }
+
+  if (token) {
+    headers.Authorization = `Bearer ${token}`
+  }
 
   const response = await fetch(`${resolvedBaseUrl}${path}`, {
     ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-      ...(init?.headers ?? {}),
-    },
+    headers,
   })
 
   if (!response.ok) {

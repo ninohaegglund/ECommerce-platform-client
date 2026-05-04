@@ -36,6 +36,15 @@ function App() {
   const isAdmin = Boolean(
     authUser?.roles?.some((role) => role.toLowerCase() === 'admin'),
   )
+  const activeUser =
+    authUser ??
+    ({
+      id: 'guest',
+      firstName: 'Guest',
+      lastName: 'User',
+      email: 'guest@novacart.local',
+      roles: [],
+    } satisfies AuthUser)
 
   const handleLogout = () => {
     clearStoredAuth()
@@ -104,10 +113,7 @@ function App() {
   return (
     <NotificationCenterProvider userId={authUser?.id ?? ''}>
       <Routes>
-      <Route
-        path="/"
-        element={<Navigate to={isAuthenticated ? '/dashboard' : '/login'} replace />}
-      />
+      <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route
         path="/login"
         element={
@@ -141,75 +147,42 @@ function App() {
       <Route
         path="/dashboard"
         element={
-          isAuthenticated && authUser ? (
-            <DashboardPage
-              user={authUser}
-              isAdmin={isAdmin}
-              token={authToken}
-              expiresAt={authExpiresAt}
-              onLogout={handleLogout}
-            />
-          ) : (
-            <Navigate to="/login" replace />
-          )
+          <DashboardPage
+            user={activeUser}
+            isAdmin={isAdmin}
+            token={authToken}
+            expiresAt={authExpiresAt}
+            onLogout={handleLogout}
+          />
         }
       />
       <Route
         path="/products/:productId"
         element={
-          isAuthenticated && authUser ? (
-            <ProductDetailPage user={authUser} isAdmin={isAdmin} onLogout={handleLogout} />
-          ) : (
-            <Navigate to="/login" replace />
-          )
+          <ProductDetailPage user={activeUser} isAdmin={isAdmin} onLogout={handleLogout} />
         }
       />
       <Route
         path="/cart"
-        element={
-          isAuthenticated && authUser ? (
-            <CartPage user={authUser} isAdmin={isAdmin} onLogout={handleLogout} />
-          ) : (
-            <Navigate to="/login" replace />
-          )
-        }
+        element={<CartPage user={activeUser} isAdmin={isAdmin} onLogout={handleLogout} />}
       />
       <Route
         path="/checkout"
         element={
-          isAuthenticated && authUser ? (
-            <CheckoutPage user={authUser} isAdmin={isAdmin} onLogout={handleLogout} />
-          ) : (
-            <Navigate to="/login" replace />
-          )
+          <CheckoutPage user={activeUser} isAdmin={isAdmin} onLogout={handleLogout} />
         }
       />
       <Route
         path="/checkout/payment-simulation"
-        element={
-          isAuthenticated && authUser ? (
-            <MockStripeCheckoutPage user={authUser} />
-          ) : (
-            <Navigate to="/login" replace />
-          )
-        }
+        element={<MockStripeCheckoutPage user={activeUser} />}
       />
       <Route
         path="/notifications"
         element={
-          isAuthenticated && authUser ? (
-            <NotificationsPage user={authUser} isAdmin={isAdmin} onLogout={handleLogout} />
-          ) : (
-            <Navigate to="/login" replace />
-          )
+          <NotificationsPage user={activeUser} isAdmin={isAdmin} onLogout={handleLogout} />
         }
       />
-      <Route
-        path="/order-success"
-        element={
-          isAuthenticated ? <OrderSuccessPage /> : <Navigate to="/login" replace />
-        }
-      />
+      <Route path="/order-success" element={<OrderSuccessPage />} />
       <Route
         path="/admin"
         element={
@@ -226,44 +199,30 @@ function App() {
       />
       <Route
         path="/orders"
-        element={
-          isAuthenticated && authUser ? (
-            <OrdersPage user={authUser} isAdmin={isAdmin} onLogout={handleLogout} />
-          ) : (
-            <Navigate to="/login" replace />
-          )
-        }
+        element={<OrdersPage user={activeUser} isAdmin={isAdmin} onLogout={handleLogout} />}
       />
       <Route
         path="/wishlist"
         element={
-          isAuthenticated && authUser ? (
-            <SimplePage
-              user={authUser}
-              isAdmin={isAdmin}
-              onLogout={handleLogout}
-              title="Your Wishlist"
-              description="This is a simple placeholder page for saved products."
-            />
-          ) : (
-            <Navigate to="/login" replace />
-          )
+          <SimplePage
+            user={activeUser}
+            isAdmin={isAdmin}
+            onLogout={handleLogout}
+            title="Your Wishlist"
+            description="This is a simple placeholder page for saved products."
+          />
         }
       />
       <Route
         path="/account"
         element={
-          isAuthenticated && authUser ? (
-            <SimplePage
-              user={authUser}
-              isAdmin={isAdmin}
-              onLogout={handleLogout}
-              title="Account Settings"
-              description="This is a simple placeholder page for profile details and preferences."
-            />
-          ) : (
-            <Navigate to="/login" replace />
-          )
+          <SimplePage
+            user={activeUser}
+            isAdmin={isAdmin}
+            onLogout={handleLogout}
+            title="Account Settings"
+            description="This is a simple placeholder page for profile details and preferences."
+          />
         }
       />
       <Route path="*" element={<Navigate to="/" replace />} />
