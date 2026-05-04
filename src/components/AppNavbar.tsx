@@ -11,9 +11,21 @@ type AppNavbarProps = {
 
 function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isNavOpen, setIsNavOpen] = useState(false)
   const { unreadCount } = useNotificationCenter()
 
   const initials = `${user.firstName[0] ?? ''}${user.lastName[0] ?? ''}`.toUpperCase()
+
+  const navItems = [
+    { label: 'Produkter', to: '/dashboard' },
+    { label: 'Varumärken', to: '#' },
+    { label: 'Förhandsboka', to: '#' },
+    { label: 'Fynd', to: '#' },
+    { label: 'Topplistan', to: '#' },
+    { label: 'Information', to: '#' },
+    { label: 'Kundservice', to: '#' },
+    { label: 'Om oss', to: '/about' },
+  ]
 
   return (
     <header className="app-navbar">
@@ -22,13 +34,32 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
       </Link>
 
       <nav className="nav-links" aria-label="Primary navigation">
-        <Link to="/dashboard">Shop</Link>
-        <a href="#">Deals</a>
-        <a href="#">Categories</a>
+        {navItems.map((item) =>
+          item.to.startsWith('/') ? (
+            <Link key={item.label} to={item.to}>
+              {item.label}
+            </Link>
+          ) : (
+            <a key={item.label} href={item.to}>
+              {item.label}
+            </a>
+          ),
+        )}
         {isAdmin && <Link to="/admin">Admin</Link>}
       </nav>
 
       <div className="nav-actions">
+        <button
+          type="button"
+          className="nav-toggle"
+          onClick={() => setIsNavOpen((value) => !value)}
+          aria-expanded={isNavOpen}
+          aria-controls="nav-drawer"
+        >
+          <span className="sr-only">Open menu</span>
+          <span aria-hidden="true">&#9776;</span>
+        </button>
+
         <Link className="notification-btn" to="/notifications" aria-label="Notifications">
           <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <path
@@ -88,6 +119,39 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
             </div>
           )}
         </div>
+      </div>
+
+      <div
+        id="nav-drawer"
+        className={`nav-drawer ${isNavOpen ? 'open' : ''}`}
+        role="menu"
+      >
+        {navItems.map((item) =>
+          item.to.startsWith('/') ? (
+            <Link
+              key={`mobile-${item.label}`}
+              to={item.to}
+              role="menuitem"
+              onClick={() => setIsNavOpen(false)}
+            >
+              {item.label}
+            </Link>
+          ) : (
+            <a
+              key={`mobile-${item.label}`}
+              href={item.to}
+              role="menuitem"
+              onClick={() => setIsNavOpen(false)}
+            >
+              {item.label}
+            </a>
+          ),
+        )}
+        {isAdmin && (
+          <Link to="/admin" role="menuitem" onClick={() => setIsNavOpen(false)}>
+            Admin
+          </Link>
+        )}
       </div>
     </header>
   )
