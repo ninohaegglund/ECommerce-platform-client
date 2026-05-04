@@ -33,21 +33,6 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
         NovaCart
       </Link>
 
-      <nav className="nav-links" aria-label="Primary navigation">
-        {navItems.map((item) =>
-          item.to.startsWith('/') ? (
-            <Link key={item.label} to={item.to}>
-              {item.label}
-            </Link>
-          ) : (
-            <a key={item.label} href={item.to}>
-              {item.label}
-            </a>
-          ),
-        )}
-        {isAdmin && <Link to="/admin">Admin</Link>}
-      </nav>
-
       <div className="nav-actions">
         <button
           type="button"
@@ -56,8 +41,8 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
           aria-expanded={isNavOpen}
           aria-controls="nav-drawer"
         >
-          <span className="sr-only">Open menu</span>
           <span aria-hidden="true">&#9776;</span>
+          <span className="nav-toggle-label">Meny</span>
         </button>
 
         <Link className="notification-btn" to="/notifications" aria-label="Notifications">
@@ -121,17 +106,12 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
         </div>
       </div>
 
-      <div
-        id="nav-drawer"
-        className={`nav-drawer ${isNavOpen ? 'open' : ''}`}
-        role="menu"
-      >
+      <div id="nav-drawer" className={`nav-drawer ${isNavOpen ? 'open' : ''}`}>
         {navItems.map((item) =>
           item.to.startsWith('/') ? (
             <Link
               key={`mobile-${item.label}`}
               to={item.to}
-              role="menuitem"
               onClick={() => setIsNavOpen(false)}
             >
               {item.label}
@@ -140,7 +120,6 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
             <a
               key={`mobile-${item.label}`}
               href={item.to}
-              role="menuitem"
               onClick={() => setIsNavOpen(false)}
             >
               {item.label}
@@ -148,7 +127,7 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
           ),
         )}
         {isAdmin && (
-          <Link to="/admin" role="menuitem" onClick={() => setIsNavOpen(false)}>
+          <Link to="/admin" onClick={() => setIsNavOpen(false)}>
             Admin
           </Link>
         )}
