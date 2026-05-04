@@ -25,13 +25,11 @@ export async function request<T>(
 ): Promise<T> {
   const token = getAuthToken()
   const resolvedBaseUrl = baseUrl ?? 'https://localhost:7043'
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(init?.headers ?? {}),
-  }
+  const headers = new Headers(init?.headers)
+  headers.set('Content-Type', 'application/json')
 
   if (token) {
-    headers.Authorization = `Bearer ${token}`
+    headers.set('Authorization', `Bearer ${token}`)
   }
 
   const response = await fetch(`${resolvedBaseUrl}${path}`, {

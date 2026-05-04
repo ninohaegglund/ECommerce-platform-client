@@ -133,6 +133,17 @@
   opacity: 0.7;
 }
 
+.guest-btn {
+  border: 1px solid #c2cde1;
+  border-radius: 12px;
+  padding: 11px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #17345f;
+  background: #ffffff;
+  cursor: pointer;
+}
+
 .feedback {
   border-radius: 10px;
   padding: 10px 12px;
