@@ -1,4 +1,5 @@
 import AppNavbar from '../components/AppNavbar'
+import SiteFooter from '../components/SiteFooter'
 import { useNotificationCenter } from '../context/notificationCenter'
 import type { AuthUser } from '../types/auth'
 
@@ -79,6 +80,8 @@ function NotificationsPage({ user, isAdmin, onLogout }: NotificationsPageProps) 
           </div>
         )}
       </section>
+
+      <SiteFooter />
     </main>
   )
 }
