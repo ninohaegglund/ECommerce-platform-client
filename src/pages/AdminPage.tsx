@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import AppNavbar from '../components/AppNavbar'
+import SiteFooter from '../components/SiteFooter'
 import type { Product } from '../data/products'
 import { getCatalogProducts } from '../services/catalogApi'
 import { getInventoryStock, setInventoryStock } from '../services/inventoryApi'
@@ -173,6 +174,8 @@ function AdminPage({ user, onLogout }: AdminPageProps) {
           )}
         </div>
       </section>
+
+      <SiteFooter />
     </main>
   )
 }
