@@ -17,20 +17,21 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
   const initials = `${user.firstName[0] ?? ''}${user.lastName[0] ?? ''}`.toUpperCase()
 
   const navItems = [
-    { label: 'Produkter', to: '/dashboard' },
-    { label: 'Varumärken', to: '#' },
-    { label: 'Förhandsboka', to: '#' },
-    { label: 'Fynd', to: '#' },
-    { label: 'Topplistan', to: '#' },
-    { label: 'Information', to: '#' },
-    { label: 'Kundservice', to: '#' },
-    { label: 'Om oss', to: '/about' },
+    { label: 'Drops', to: '/dashboard' },
+    { label: 'Consoles', to: '/dashboard#consoles' },
+    { label: 'Cards', to: '/dashboard#cards' },
+    { label: 'Preorders', to: '/dashboard#preorders' },
+    { label: 'Trade-ins', to: '/dashboard#trade-ins' },
+    { label: 'Support', to: '/about' },
   ]
 
   return (
     <header className="app-navbar">
       <Link className="brand" to="/dashboard">
-        NovaCart
+        <span className="brand-mark" aria-hidden="true">
+          NV
+        </span>
+        <span>NovaCart Arcade</span>
       </Link>
 
       <div className="nav-actions">
@@ -40,9 +41,14 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
           onClick={() => setIsNavOpen((value) => !value)}
           aria-expanded={isNavOpen}
           aria-controls="nav-drawer"
+          aria-label="Open navigation menu"
         >
-          <span aria-hidden="true">&#9776;</span>
-          <span className="nav-toggle-label">Meny</span>
+          <span className="nav-toggle-lines" aria-hidden="true">
+            <span />
+            <span />
+            <span />
+          </span>
+          <span className="nav-toggle-label">Menu</span>
         </button>
 
         <Link className="notification-btn" to="/notifications" aria-label="Notifications">
@@ -58,7 +64,7 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
 
         <Link className="cart-btn" to="/cart" aria-label="Shopping cart">
           <img src="/cart-icon.svg" alt="" aria-hidden="true" />
-          <span>Cart</span>
+          <span>Bag</span>
         </Link>
 
         <div className="profile-menu">
@@ -107,25 +113,11 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
       </div>
 
       <div id="nav-drawer" className={`nav-drawer ${isNavOpen ? 'open' : ''}`}>
-        {navItems.map((item) =>
-          item.to.startsWith('/') ? (
-            <Link
-              key={`mobile-${item.label}`}
-              to={item.to}
-              onClick={() => setIsNavOpen(false)}
-            >
-              {item.label}
-            </Link>
-          ) : (
-            <a
-              key={`mobile-${item.label}`}
-              href={item.to}
-              onClick={() => setIsNavOpen(false)}
-            >
-              {item.label}
-            </a>
-          ),
-        )}
+        {navItems.map((item) => (
+          <Link key={`mobile-${item.label}`} to={item.to} onClick={() => setIsNavOpen(false)}>
+            {item.label}
+          </Link>
+        ))}
         {isAdmin && (
           <Link to="/admin" onClick={() => setIsNavOpen(false)}>
             Admin
