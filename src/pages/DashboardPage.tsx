@@ -71,43 +71,59 @@ function DashboardPage({ user, isAdmin, token, expiresAt, onLogout }: DashboardP
 
       <header className="store-hero">
         <div className="hero-copy">
-          <p className="eyebrow">Retro collector shop</p>
-          <h1>Consoles, Pokemon cards, and arcade finds in one clean vault.</h1>
+          <div className="hero-kicker-row">
+            <span>Spring collector drop</span>
+            <span>Stock synced from catalog</span>
+          </div>
+          <h1>Rare games, clean cards, and console nostalgia without the messy hunt.</h1>
           <p className="hero-lede">
-            Curated drops for players, collectors, and anyone who still remembers the
-            cartridge click.
+            Browse tested retro consoles, Pokemon card picks, and collector bundles
+            inside a focused storefront built for fast shopping.
           </p>
 
           <div className="hero-actions">
             <a className="submit-btn hero-primary" href="#drop-grid">
-              Shop latest drop
+              Shop the drop
             </a>
-            <Link className="ghost-btn hero-secondary" to="/about">
-              About the vault
+            <Link className="ghost-btn hero-secondary" to="/wishlist">
+              View wishlist
             </Link>
           </div>
 
           <dl className="hero-stats" aria-label="Store highlights">
             <div>
-              <dt>1990s</dt>
-              <dd>console era</dd>
+              <dt>48h</dt>
+              <dd>drop refresh</dd>
             </div>
             <div>
               <dt>TCG</dt>
-              <dd>sealed picks</dd>
+              <dd>card-ready packing</dd>
             </div>
             <div>
-              <dt>24h</dt>
-              <dd>packing window</dd>
+              <dt>CRT</dt>
+              <dd>retro tested feel</dd>
             </div>
           </dl>
         </div>
 
-        <div className="hero-showcase" aria-label="Featured retro drop">
-          <img src={heroImage} alt="Layered retro console display" />
+        <div className="hero-showcase" aria-label="Featured collector display">
+          <div className="hero-visual-board">
+            <img src={heroImage} alt="Layered retro console display" />
+            <div className="hero-card-stack" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+            </div>
+          </div>
+
           <div className="hero-drop-card">
-            <span>Featured drop</span>
-            <strong>Hand-tested hardware and display-ready cards</strong>
+            <span>Vault pick</span>
+            <strong>Console condition checked before the listing goes live.</strong>
+          </div>
+
+          <div className="hero-schedule-card">
+            <span>Next drop</span>
+            <strong>Friday 18:00</strong>
           </div>
         </div>
       </header>
@@ -117,21 +133,28 @@ function DashboardPage({ user, isAdmin, token, expiresAt, onLogout }: DashboardP
           <span className="category-icon">01</span>
           <div>
             <h2>Retro consoles</h2>
-            <p>Game Boy, Nintendo, Sega, PlayStation, and living-room classics.</p>
+            <p>Handhelds, living-room systems, cables, controllers, and display pieces.</p>
           </div>
         </article>
         <article id="cards">
           <span className="category-icon">02</span>
           <div>
             <h2>Pokemon cards</h2>
-            <p>Sealed boosters, binder hits, and graded-card friendly picks.</p>
+            <p>Singles, sealed finds, and collector-safe shipping for binder upgrades.</p>
           </div>
         </article>
         <article id="preorders">
           <span className="category-icon">03</span>
           <div>
-            <h2>Upcoming drops</h2>
-            <p>Wishlisted stock, preorder windows, and limited collector bundles.</p>
+            <h2>Preorders</h2>
+            <p>Reserve upcoming stock before the next collector wave lands.</p>
+          </div>
+        </article>
+        <article id="trade-ins">
+          <span className="category-icon">04</span>
+          <div>
+            <h2>Trade-ins</h2>
+            <p>Send in duplicate cards or old hardware and build your next haul.</p>
           </div>
         </article>
       </section>
@@ -139,8 +162,14 @@ function DashboardPage({ user, isAdmin, token, expiresAt, onLogout }: DashboardP
       <section className="store-toolbar">
         <div>
           <p className="eyebrow">Latest inventory</p>
-          <h2>Fresh collector drops</h2>
-          <p className="subtitle">Welcome back, {user.firstName}. The vault is open.</p>
+          <h2>Fresh from the vault</h2>
+          <p className="subtitle">Welcome back, {user.firstName}. Your next find is ready.</p>
+        </div>
+
+        <div className="drop-badges" aria-label="Drop categories">
+          <span>Cards</span>
+          <span>Hardware</span>
+          <span>Bundles</span>
         </div>
 
         {(productsError || cartError || cartFeedback) && (
@@ -170,7 +199,7 @@ function DashboardPage({ user, isAdmin, token, expiresAt, onLogout }: DashboardP
       <section className="session-panel">
         <div>
           <p className="eyebrow">Account session</p>
-          <h2>Signed in as {user.email}</h2>
+          <h2>{user.email}</h2>
           <p className="subtitle">Session expiry: {expiresAt || 'Unknown'}</p>
         </div>
         <button type="button" className="ghost-btn" onClick={() => setShowToken((v) => !v)}>
