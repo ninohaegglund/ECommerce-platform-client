@@ -7,11 +7,15 @@ type ProductCardProps = {
   onAddToCart: (product: Product) => Promise<void>
 }
 
-function getProductKind(product: Product) {
+function getProductProfile(product: Product) {
   const searchable = `${product.name} ${product.shortDescription}`.toLowerCase()
 
   if (searchable.includes('pokemon') || searchable.includes('card')) {
-    return 'Trading Cards'
+    return {
+      label: 'Pokemon cards',
+      tone: 'cards',
+      detail: 'Sleeved and packed',
+    }
   }
 
   if (
@@ -21,27 +25,43 @@ function getProductKind(product: Product) {
     searchable.includes('playstation') ||
     searchable.includes('sega')
   ) {
-    return 'Retro Console'
+    return {
+      label: 'Retro console',
+      tone: 'console',
+      detail: 'Power tested',
+    }
   }
 
-  return 'Collector Drop'
+  return {
+    label: 'Collector drop',
+    tone: 'drop',
+    detail: 'Vault selected',
+  }
 }
 
 function ProductCard({ product, isAdding, onAddToCart }: ProductCardProps) {
-  const productKind = getProductKind(product)
+  const profile = getProductProfile(product)
 
   return (
-    <article className="product-card">
+    <article className={`product-card product-card-${profile.tone}`}>
       <div className="product-art" aria-hidden="true">
         <span className="product-art-screen" />
         <span className="product-art-card" />
         <span className="product-art-button" />
+        <span className="product-art-glint" />
       </div>
 
       <div className="product-card-content">
-        <p className="chip">{productKind}</p>
+        <div className="product-card-topline">
+          <p className="chip">{profile.label}</p>
+          <span>{profile.detail}</span>
+        </div>
+
         <h3>{product.name}</h3>
         <p className="subtitle">{product.shortDescription || 'Fresh from the vault.'}</p>
+      </div>
+
+      <div className="product-card-footer">
         <p className="price">
           {new Intl.NumberFormat('sv-SE', {
             style: 'currency',
@@ -49,20 +69,20 @@ function ProductCard({ product, isAdding, onAddToCart }: ProductCardProps) {
             maximumFractionDigits: 2,
           }).format(product.price)}
         </p>
-      </div>
 
-      <div className="product-card-actions">
-        <button
-          type="button"
-          className="buy-btn"
-          onClick={() => void onAddToCart(product)}
-          disabled={isAdding}
-        >
-          {isAdding ? 'Adding...' : 'Add to bag'}
-        </button>
-        <Link className="product-link" to={`/products/${product.id}`}>
-          Stock details
-        </Link>
+        <div className="product-card-actions">
+          <button
+            type="button"
+            className="buy-btn"
+            onClick={() => void onAddToCart(product)}
+            disabled={isAdding}
+          >
+            {isAdding ? 'Adding...' : 'Add to bag'}
+          </button>
+          <Link className="product-link" to={`/products/${product.id}`}>
+            Stock
+          </Link>
+        </div>
       </div>
     </article>
   )
