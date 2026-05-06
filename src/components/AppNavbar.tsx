@@ -16,42 +16,55 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
 
   const initials = `${user.firstName[0] ?? ''}${user.lastName[0] ?? ''}`.toUpperCase()
 
-  const navItems = [
-    { label: 'New drops', to: '/dashboard#drop-grid' },
-    { label: 'Consoles', to: '/dashboard#consoles' },
-    { label: 'Pokemon cards', to: '/dashboard#cards' },
-    { label: 'Preorders', to: '/dashboard#preorders' },
-    { label: 'Trade-ins', to: '/dashboard#trade-ins' },
+  const mainNavItems = [
+    { label: 'Products', to: '/dashboard#categories' },
+    { label: 'Brands', to: '/dashboard#brands' },
+    { label: 'Preorder', to: '/dashboard#preorders' },
+    { label: 'Deals', to: '/dashboard#deals' },
+    { label: 'Top list', to: '/dashboard#best-sellers' },
+    { label: 'Reviews', to: '/dashboard#reviews' },
     { label: 'Support', to: '/about' },
+  ]
+
+  const categoryItems = [
+    { label: 'Pokemon', to: '/dashboard#pokemon' },
+    { label: 'Magic', to: '/dashboard#magic' },
+    { label: 'One Piece', to: '/dashboard#one-piece' },
+    { label: 'Yu-Gi-Oh!', to: '/dashboard#yu-gi-oh' },
+    { label: 'Lorcana', to: '/dashboard#lorcana' },
+    { label: 'Accessories', to: '/dashboard#accessories' },
+    { label: 'Consoles', to: '/dashboard#consoles' },
   ]
 
   return (
     <header className="site-header">
       <div className="header-utility" aria-label="Store highlights">
-        <span>Drop room open</span>
-        <span>Console tested</span>
-        <span>Card-safe packing</span>
+        <span>5% member discount</span>
+        <span>1-4 day delivery</span>
+        <span>14 day price promise</span>
+        <span>20,000+ happy collectors</span>
       </div>
 
       <div className="app-navbar">
-        <Link className="brand" to="/dashboard" aria-label="NovaCart Vault home">
+        <Link className="brand" to="/dashboard" aria-label="NovaCart TCG home">
           <span className="brand-mark" aria-hidden="true">
             NC
           </span>
           <span className="brand-copy">
-            <strong>NovaCart Vault</strong>
-            <small>Retro games and cards</small>
+            <strong>NovaCart TCG</strong>
+            <small>Cards, consoles and collector gear</small>
           </span>
         </Link>
 
-        <nav className="nav-links" aria-label="Primary navigation">
-          {navItems.map((item) => (
-            <Link key={item.label} to={item.to}>
-              {item.label}
-            </Link>
-          ))}
-          {isAdmin && <Link to="/admin">Admin</Link>}
-        </nav>
+        <form
+          className="header-search"
+          role="search"
+          aria-label="Search products"
+          onSubmit={(event) => event.preventDefault()}
+        >
+          <span aria-hidden="true">Search</span>
+          <input type="search" placeholder="Search Pokemon, boosters, consoles..." />
+        </form>
 
         <div className="nav-actions">
           <button
@@ -82,7 +95,7 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
 
           <Link className="cart-btn" to="/cart" aria-label="Shopping cart">
             <img src="/cart-icon.svg" alt="" aria-hidden="true" />
-            <span>Bag</span>
+            <span>Cart</span>
           </Link>
 
           <div className="profile-menu">
@@ -131,8 +144,25 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
         </div>
       </div>
 
+      <nav className="main-nav-row" aria-label="Primary navigation">
+        {mainNavItems.map((item) => (
+          <Link key={item.label} to={item.to}>
+            {item.label}
+          </Link>
+        ))}
+        {isAdmin && <Link to="/admin">Admin</Link>}
+      </nav>
+
+      <nav className="category-nav-row" aria-label="Popular categories">
+        {categoryItems.map((item) => (
+          <Link key={item.label} to={item.to}>
+            {item.label}
+          </Link>
+        ))}
+      </nav>
+
       <div id="nav-drawer" className={`nav-drawer ${isNavOpen ? 'open' : ''}`}>
-        {navItems.map((item) => (
+        {[...mainNavItems, ...categoryItems].map((item) => (
           <Link key={`mobile-${item.label}`} to={item.to} onClick={() => setIsNavOpen(false)}>
             {item.label}
           </Link>
