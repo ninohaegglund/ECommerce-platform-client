@@ -1728,6 +1728,14 @@
   top: 8px;
 }
 
+.category-overview,
+.product-section,
+.best-seller-section,
+.review-section,
+.story-section {
+  scroll-margin-top: 180px;
+}
+
 .header-utility {
   border-radius: 10px 10px 0 0;
   border-color: #1b1f28;
@@ -2227,6 +2235,21 @@
 }
 
 @media (max-width: 620px) {
+  .header-utility {
+    display: grid;
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .app-navbar {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .brand {
+    justify-content: space-between;
+  }
+
   .products-grid,
   .category-grid,
   .best-seller-grid,
