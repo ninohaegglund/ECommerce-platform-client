@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import AppNavbar from '../components/AppNavbar'
+import SiteFooter from '../components/SiteFooter'
 import { getOrderById, getOrders, updateOrderStatus } from '../services/cartApi'
 import type { AuthUser } from '../types/auth'
 import {
@@ -46,7 +47,7 @@ function OrdersPage({ user, isAdmin, onLogout }: OrdersPageProps) {
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [user.id])
 
   useEffect(() => {
     void loadOrders()
@@ -236,6 +237,8 @@ function OrdersPage({ user, isAdmin, onLogout }: OrdersPageProps) {
           </section>
         )}
       </section>
+
+      <SiteFooter />
     </main>
   )
 }

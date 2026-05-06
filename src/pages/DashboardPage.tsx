@@ -1,10 +1,15 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
+import heroImage from '../assets/hero.png'
 import AppNavbar from '../components/AppNavbar'
-import type { Product } from '../data/products'
 import ProductCard from '../components/ProductCard'
+import SiteFooter from '../components/SiteFooter'
+import type { Product } from '../data/products'
 import { addCartItem } from '../services/cartApi'
 import { getCatalogProducts } from '../services/catalogApi'
+import { getProductImages } from '../services/productImagesApi'
 import type { AuthUser } from '../types/auth'
+import type { ProductImage } from '../types/product-image'
 
 type DashboardPageProps = {
   user: AuthUser
@@ -14,14 +19,105 @@ type DashboardPageProps = {
   onLogout: () => void
 }
 
+const CATEGORY_SECTIONS = [
+  {
+    id: 'pokemon',
+    title: 'Pokemon',
+    description: 'Booster packs, ETB, singles and collector boxes.',
+    image: '/shop-icons/pokemon-surging-sparks-booster-box.webp',
+  },
+  {
+    id: 'magic',
+    title: 'Magic: The Gathering',
+    description: 'Play boosters, commander decks and bundle boxes.',
+    image: '/shop-icons/simisear-214-vstar-universe-raukcard-10.webp',
+  },
+  {
+    id: 'one-piece',
+    title: 'One Piece',
+    description: 'Latest OP sets, decks and display products.',
+    image: '/shop-icons/642461276_99944b76-c506-4fa4-93ee-a00502756c0a.jpg',
+  },
+  {
+    id: 'yu-gi-oh',
+    title: 'Yu-Gi-Oh!',
+    description: 'Boosters, starter decks and collector tins.',
+    image: '/shop-icons/cynthias-garchump-ex-087-sar-raukcard-10-pokemon-kort.webp',
+  },
+  {
+    id: 'lorcana',
+    title: 'Disney Lorcana',
+    description: "Booster boxes, troves and starter decks.",
+    image: '/shop-icons/pokemon-151-japansk-booster-box.webp',
+  },
+  {
+    id: 'accessories',
+    title: 'Accessories',
+    description: 'Sleeves, binders, top loaders and storage.',
+    image: '/shop-icons/img20260422_15443916.webp',
+  },
+]
+
+const REVIEW_CARDS = [
+  {
+    name: 'Elias N.',
+    rating: '5/5',
+    text: 'Fast delivery and really solid packaging for graded cards.',
+    image: '/shop-icons/2020POKEMONSWSHBLACKSTARPROMO_050CHARIZARDVCHMPN.PATHELITETRNR.BOX_PSA10_FRONT.webp',
+  },
+  {
+    name: 'Sara L.',
+    rating: '5/5',
+    text: 'Best place for preorder drops. Clear communication and fair prices.',
+    image: '/shop-icons/pokemon-surging-sparks-booster-box.webp',
+  },
+  {
+    name: 'Mikael P.',
+    rating: '4.9/5',
+    text: 'Clean checkout and always good stock on sleeves and binders.',
+    image: '/shop-icons/Nintendo64KontrollTredjepartOrange_8cc0d6a1-427d-4f0f-95c7-d0e65a8cd766.webp',
+  },
+]
+
 function DashboardPage({ user, isAdmin, token, expiresAt, onLogout }: DashboardPageProps) {
   const [showToken, setShowToken] = useState(false)
   const [products, setProducts] = useState<Product[]>([])
+  const [productImageUrls, setProductImageUrls] = useState<Record<string, string>>({})
   const [isLoadingProducts, setIsLoadingProducts] = useState(true)
   const [productsError, setProductsError] = useState('')
   const [addingProductId, setAddingProductId] = useState('')
   const [cartFeedback, setCartFeedback] = useState('')
   const [cartError, setCartError] = useState('')
+
+  const getProductImageCandidates = (images: ProductImage[]) => {
+    return images
+      .filter((image) => image.imageUrl.trim().length > 0)
+      .sort((left, right) => {
+        if (left.isPrimary !== right.isPrimary) {
+          return left.isPrimary ? -1 : 1
+        }
+
+        return left.sortOrder - right.sortOrder
+      })
+      .map((image) => image.imageUrl.trim())
+  }
+
+  const resolveWorkingImageUrl = async (candidates: string[]) => {
+    for (const candidate of candidates) {
+      const isAvailable = await new Promise<boolean>((resolve) => {
+        const img = new Image()
+        img.onload = () => resolve(true)
+        img.onerror = () => resolve(false)
+        img.src = candidate
+      })
+
+      if (isAvailable) {
+        return candidate
+      }
+    }
+
+    return ''
+  }
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -42,6 +138,44 @@ function DashboardPage({ user, isAdmin, token, expiresAt, onLogout }: DashboardP
     void loadProducts()
   }, [])
 
+  useEffect(() => {
+    if (products.length === 0) {
+      setProductImageUrls({})
+      return
+    }
+
+    let isCancelled = false
+
+    const loadProductImages = async () => {
+      const imageEntries = await Promise.all(
+        products.map(async (product) => {
+          try {
+            const images = await getProductImages(product.id)
+            const imageUrl = await resolveWorkingImageUrl(getProductImageCandidates(images))
+
+            return imageUrl ? [product.id, imageUrl] : null
+          } catch {
+            return null
+          }
+        }),
+      )
+
+      if (isCancelled) {
+        return
+      }
+
+      setProductImageUrls(
+        Object.fromEntries(imageEntries.filter((entry): entry is [string, string] => entry !== null)),
+      )
+    }
+
+    void loadProductImages()
+
+    return () => {
+      isCancelled = true
+    }
+  }, [products])
+
   const handleAddToCart = async (product: Product) => {
     setAddingProductId(product.id)
     setCartFeedback('')
@@ -53,7 +187,7 @@ function DashboardPage({ user, isAdmin, token, expiresAt, onLogout }: DashboardP
         quantity: 1,
         currency: product.currency,
       })
-      setCartFeedback(`${product.name} added to cart.`)
+      setCartFeedback(`${product.name} added to your cart.`)
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Could not add item to cart.'
       setCartError(message)
@@ -62,57 +196,209 @@ function DashboardPage({ user, isAdmin, token, expiresAt, onLogout }: DashboardP
     }
   }
 
+  const newInStock = useMemo(() => products.slice(0, 8), [products])
+  const bestSellers = useMemo(
+    () => [...products].sort((a, b) => b.price - a.price).slice(0, 4),
+    [products],
+  )
+  const bestSellerImages = [
+    '/shop-icons/pokemon-151-japansk-booster-box.webp',
+    '/shop-icons/pokemon-surging-sparks-booster-box.webp',
+    '/shop-icons/N64-Retro-Gaming-Console.webp',
+    '/shop-icons/Nintendo64KontrollTredjepartOrange_8cc0d6a1-427d-4f0f-95c7-d0e65a8cd766.webp',
+  ]
+
   return (
     <main className="store-page">
       <AppNavbar user={user} isAdmin={isAdmin} onLogout={onLogout} />
 
-      <header className="store-header">
-        <div>
-          <p className="eyebrow">Dashboard</p>
-          <h1>NovaCart</h1>
-          <p className="subtitle">Welcome, {user.firstName}. Start shopping now.</p>
+      <header className="store-hero">
+        <div className="hero-copy">
+          <p className="eyebrow">Bestsellers and collector favorites</p>
+          <h1>Everything in trading cards, accessories and retro console finds.</h1>
+          <p className="hero-lede">
+            Welcome {user.firstName}. Shop category by category and discover what's new in stock
+            right now.
+          </p>
+          <div className="hero-actions">
+            <a className="submit-btn hero-primary" href="#new-in-stock">
+              New in stock
+            </a>
+            <a className="ghost-btn hero-secondary" href="#best-sellers">
+              Best sellers
+            </a>
+          </div>
+          <div className="hero-tabs" aria-label="Hero highlights">
+            <span>BEST SELLERS</span>
+            <span>ALL TRADING CARDS</span>
+            <span>PROTECT YOUR COLLECTION</span>
+          </div>
+        </div>
+
+        <div className="hero-showcase" aria-label="Featured showcase">
+          <img src={heroImage} alt="Trading card and console showcase" />
+          <div className="hero-showcase-gallery">
+            <img
+              src="/shop-icons/pokemon-surging-sparks-booster-box.webp"
+              alt="Pokemon booster box product"
+            />
+            <img
+              src="/shop-icons/N64-Retro-Gaming-Console.webp"
+              alt="Nintendo 64 retro gaming console"
+            />
+          </div>
+          <div className="hero-card-callout">
+            <strong>Collector drop this week</strong>
+            <p>Pokemon, Magic and One Piece restocks are live.</p>
+          </div>
         </div>
       </header>
 
-      <section className="hero-panel">
-        <h2>Simple Ecommerce Front Page</h2>
-        <p>
-          Products are loaded dynamically from the Catalog API.
-        </p>
-        <p>Open a product to see inventory stock and reservation details.</p>
-        {productsError && <p className="feedback error">{productsError}</p>}
-        {cartError && <p className="feedback error">{cartError}</p>}
-        {cartFeedback && <p className="feedback success">{cartFeedback}</p>}
+      <section id="categories" className="category-overview">
+        <div className="section-head">
+          <div>
+            <p className="eyebrow">Shop by category</p>
+            <h2>Main categories</h2>
+          </div>
+          <a className="ghost-btn" href="#new-in-stock">
+            Show all
+          </a>
+        </div>
+        <div className="category-grid">
+          {CATEGORY_SECTIONS.map((category) => (
+            <article key={category.id} id={category.id} className="category-card">
+              <img src={category.image} alt={`${category.title} category`} />
+              <p className="chip">{category.title}</p>
+              <h3>{category.title}</h3>
+              <p>{category.description}</p>
+            </article>
+          ))}
+        </div>
       </section>
 
-      <section className="products-grid">
-        {isLoadingProducts ? (
-          <p>Loading products...</p>
-        ) : (
-          products.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              isAdding={addingProductId === product.id}
-              onAddToCart={handleAddToCart}
-            />
-          ))
+      <section id="new-in-stock" className="product-section">
+        <div className="section-head">
+          <div>
+            <p className="eyebrow">New in stock</p>
+            <h2>Latest products</h2>
+          </div>
+          <a className="ghost-btn" href="#best-sellers">
+            Jump to best sellers
+          </a>
+        </div>
+
+        {(productsError || cartError || cartFeedback) && (
+          <div className="toolbar-feedback" aria-live="polite">
+            {productsError && <p className="feedback error">{productsError}</p>}
+            {cartError && <p className="feedback error">{cartError}</p>}
+            {cartFeedback && <p className="feedback success">{cartFeedback}</p>}
+          </div>
         )}
+
+        <div className="products-grid">
+          {isLoadingProducts ? (
+            <p className="loading-copy">Loading products...</p>
+          ) : (
+            newInStock.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                isAdding={addingProductId === product.id}
+                onAddToCart={handleAddToCart}
+                  imageUrl={productImageUrls[product.id]}
+              />
+            ))
+          )}
+        </div>
       </section>
 
-      <section className="token-panel">
+      <section id="best-sellers" className="best-seller-section">
+        <div className="section-head">
+          <div>
+            <p className="eyebrow">Best sellers</p>
+            <h2>Most popular right now</h2>
+          </div>
+        </div>
+        <div className="best-seller-grid">
+          {(isLoadingProducts ? [] : bestSellers).map((product, index) => (
+            <article key={`best-${product.id}`} className="best-seller-card">
+              <img
+                src={bestSellerImages[index % bestSellerImages.length]}
+                alt={`${product.name} product`}
+              />
+              <span className="best-seller-rank">#{index + 1}</span>
+              <h3>{product.name}</h3>
+              <p>{product.shortDescription || 'Collector favorite product.'}</p>
+              <p className="price">
+                {new Intl.NumberFormat('sv-SE', {
+                  style: 'currency',
+                  currency: product.currency,
+                  maximumFractionDigits: 2,
+                }).format(product.price)}
+              </p>
+              <button
+                type="button"
+                className="buy-btn"
+                onClick={() => void handleAddToCart(product)}
+                disabled={addingProductId === product.id}
+              >
+                {addingProductId === product.id ? 'Adding...' : 'Add to cart'}
+              </button>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section id="reviews" className="review-section">
+        <div className="section-head">
+          <div>
+            <p className="eyebrow">Reviews</p>
+            <h2>What our customers say</h2>
+          </div>
+        </div>
+        <div className="review-grid">
+          {REVIEW_CARDS.map((review) => (
+            <article key={review.name} className="review-card">
+              <img src={review.image} alt={`${review.name} favorite item`} />
+              <p className="review-rating">{review.rating}</p>
+              <p>{review.text}</p>
+              <strong>{review.name}</strong>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section id="brands" className="story-section">
+        <p className="eyebrow">Your passion, our range</p>
+        <h2>Your online trading card store</h2>
         <p>
-          <strong>Signed in as:</strong> {user.email}
+          We focus on authentic products, fair pricing and fast delivery. Whether you are
+          building your first deck or protecting a premium collection, NovaCart TCG is built
+          to make shopping simple and safe.
         </p>
-        <p>
-          <strong>Expires at:</strong> {expiresAt || 'Unknown'}
-        </p>
+        <div className="story-links">
+          <a id="deals" href="#new-in-stock">
+            View deals
+          </a>
+          <Link id="preorders" to="/wishlist">
+            Manage preorders
+          </Link>
+        </div>
+      </section>
+
+      <section className="session-panel">
+        <div>
+          <p className="eyebrow">Account session</p>
+          <h2>{user.email}</h2>
+          <p className="subtitle">Session expiry: {expiresAt || 'Unknown'}</p>
+        </div>
         <button type="button" className="ghost-btn" onClick={() => setShowToken((v) => !v)}>
           {showToken ? 'Hide token' : 'Show token'}
         </button>
         {showToken && <textarea readOnly value={token} rows={5} aria-label="JWT token" />}
-        <p className="note">JWT is also saved in localStorage under authToken.</p>
       </section>
+
+      <SiteFooter />
     </main>
   )
 }

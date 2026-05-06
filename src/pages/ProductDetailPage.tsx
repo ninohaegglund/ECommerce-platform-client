@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import AppNavbar from '../components/AppNavbar'
+import SiteFooter from '../components/SiteFooter'
 import { addCartItem } from '../services/cartApi'
 import { getCatalogProducts } from '../services/catalogApi'
 import { getInventoryStock } from '../services/inventoryApi'
@@ -154,6 +155,8 @@ function ProductDetailPage({ user, isAdmin, onLogout }: ProductDetailPageProps) 
           </div>
         ) : null}
       </section>
+
+      <SiteFooter />
     </main>
   )
 }

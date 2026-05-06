@@ -1,4 +1,5 @@
 import AppNavbar from '../components/AppNavbar'
+import SiteFooter from '../components/SiteFooter'
 import type { AuthUser } from '../types/auth'
 
 type SimplePageProps = {
@@ -18,6 +19,8 @@ function SimplePage({ user, title, description, isAdmin, onLogout }: SimplePageP
         <h2>{title}</h2>
         <p>{description}</p>
       </section>
+
+      <SiteFooter />
     </main>
   )
 }

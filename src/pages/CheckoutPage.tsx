@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AppNavbar from '../components/AppNavbar'
+import SiteFooter from '../components/SiteFooter'
 import { checkoutCart, getCart } from '../services/cartApi'
 import { getInventoryStock, reserveInventory } from '../services/inventoryApi'
 import type { AuthUser } from '../types/auth'
@@ -253,6 +254,8 @@ function CheckoutPage({ user, isAdmin, onLogout }: CheckoutPageProps) {
           </button>
         </form>
       </section>
+
+      <SiteFooter />
     </main>
   )
 }

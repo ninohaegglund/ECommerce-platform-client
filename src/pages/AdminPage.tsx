@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import AppNavbar from '../components/AppNavbar'
+import SiteFooter from '../components/SiteFooter'
+import ProductImageUpload from '../components/ProductImageUpload'
 import type { Product } from '../data/products'
 import { getCatalogProducts } from '../services/catalogApi'
 import { getInventoryStock, setInventoryStock } from '../services/inventoryApi'
@@ -172,7 +174,15 @@ function AdminPage({ user, onLogout }: AdminPageProps) {
             </p>
           )}
         </div>
+
+        {selectedProductId && !isLoading && (
+          <div className="admin-images-panel">
+            <ProductImageUpload productId={selectedProductId} />
+          </div>
+        )}
       </section>
+
+      <SiteFooter />
     </main>
   )
 }

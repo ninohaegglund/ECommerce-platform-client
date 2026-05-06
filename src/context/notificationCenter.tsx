@@ -132,6 +132,7 @@ export function NotificationCenterProvider({ userId, children }: NotificationCen
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useNotificationCenter() {
   const context = useContext(NotificationCenterContext)
 

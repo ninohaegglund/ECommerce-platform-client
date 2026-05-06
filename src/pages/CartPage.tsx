@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AppNavbar from '../components/AppNavbar'
+import SiteFooter from '../components/SiteFooter'
 import { getCart, removeCartItem, updateCartItem } from '../services/cartApi'
 import type { AuthUser } from '../types/auth'
 import type { Cart, CartItem } from '../types/cart'
@@ -177,6 +178,8 @@ function CartPage({ user, isAdmin, onLogout }: CartPageProps) {
           </>
         )}
       </section>
+
+      <SiteFooter />
     </main>
   )
 }
