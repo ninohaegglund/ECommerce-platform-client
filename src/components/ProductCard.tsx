@@ -12,9 +12,9 @@ function getProductProfile(product: Product) {
 
   if (searchable.includes('pokemon') || searchable.includes('card')) {
     return {
-      label: 'Pokemon cards',
+      label: 'Card game',
       tone: 'cards',
-      detail: 'Sleeved and packed',
+      detail: 'Collector pick',
     }
   }
 
@@ -28,14 +28,14 @@ function getProductProfile(product: Product) {
     return {
       label: 'Retro console',
       tone: 'console',
-      detail: 'Power tested',
+      detail: 'Hardware tested',
     }
   }
 
   return {
-    label: 'Collector drop',
+    label: 'Accessory',
     tone: 'drop',
-    detail: 'Vault selected',
+    detail: 'Fast moving',
   }
 }
 
@@ -44,21 +44,17 @@ function ProductCard({ product, isAdding, onAddToCart }: ProductCardProps) {
 
   return (
     <article className={`product-card product-card-${profile.tone}`}>
-      <div className="product-art" aria-hidden="true">
-        <span className="product-art-screen" />
-        <span className="product-art-card" />
-        <span className="product-art-button" />
-        <span className="product-art-glint" />
+      <div className="product-thumbnail" aria-hidden="true">
+        <span>{profile.label}</span>
       </div>
 
       <div className="product-card-content">
         <div className="product-card-topline">
-          <p className="chip">{profile.label}</p>
-          <span>{profile.detail}</span>
+          <p className="chip">{profile.detail}</p>
         </div>
 
         <h3>{product.name}</h3>
-        <p className="subtitle">{product.shortDescription || 'Fresh from the vault.'}</p>
+        <p className="subtitle">{product.shortDescription || 'Fresh in stock.'}</p>
       </div>
 
       <div className="product-card-footer">
@@ -77,10 +73,10 @@ function ProductCard({ product, isAdding, onAddToCart }: ProductCardProps) {
             onClick={() => void onAddToCart(product)}
             disabled={isAdding}
           >
-            {isAdding ? 'Adding...' : 'Add to bag'}
+            {isAdding ? 'Adding...' : 'Add'}
           </button>
           <Link className="product-link" to={`/products/${product.id}`}>
-            Stock
+            Details
           </Link>
         </div>
       </div>
