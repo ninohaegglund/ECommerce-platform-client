@@ -22,31 +22,37 @@ const CATEGORY_SECTIONS = [
     id: 'pokemon',
     title: 'Pokemon',
     description: 'Booster packs, ETB, singles and collector boxes.',
+    image: '/shop-icons/pokemon-surging-sparks-booster-box.webp',
   },
   {
     id: 'magic',
     title: 'Magic: The Gathering',
     description: 'Play boosters, commander decks and bundle boxes.',
+    image: '/shop-icons/simisear-214-vstar-universe-raukcard-10.webp',
   },
   {
     id: 'one-piece',
     title: 'One Piece',
     description: 'Latest OP sets, decks and display products.',
+    image: '/shop-icons/642461276_99944b76-c506-4fa4-93ee-a00502756c0a.jpg',
   },
   {
     id: 'yu-gi-oh',
     title: 'Yu-Gi-Oh!',
     description: 'Boosters, starter decks and collector tins.',
+    image: '/shop-icons/cynthias-garchump-ex-087-sar-raukcard-10-pokemon-kort.webp',
   },
   {
     id: 'lorcana',
     title: 'Disney Lorcana',
     description: "Booster boxes, troves and starter decks.",
+    image: '/shop-icons/pokemon-151-japansk-booster-box.webp',
   },
   {
     id: 'accessories',
     title: 'Accessories',
     description: 'Sleeves, binders, top loaders and storage.',
+    image: '/shop-icons/img20260422_15443916.webp',
   },
 ]
 
@@ -55,16 +61,19 @@ const REVIEW_CARDS = [
     name: 'Elias N.',
     rating: '5/5',
     text: 'Fast delivery and really solid packaging for graded cards.',
+    image: '/shop-icons/2020POKEMONSWSHBLACKSTARPROMO_050CHARIZARDVCHMPN.PATHELITETRNR.BOX_PSA10_FRONT.webp',
   },
   {
     name: 'Sara L.',
     rating: '5/5',
     text: 'Best place for preorder drops. Clear communication and fair prices.',
+    image: '/shop-icons/pokemon-surging-sparks-booster-box.webp',
   },
   {
     name: 'Mikael P.',
     rating: '4.9/5',
     text: 'Clean checkout and always good stock on sleeves and binders.',
+    image: '/shop-icons/Nintendo64KontrollTredjepartOrange_8cc0d6a1-427d-4f0f-95c7-d0e65a8cd766.webp',
   },
 ]
 
@@ -121,6 +130,12 @@ function DashboardPage({ user, isAdmin, token, expiresAt, onLogout }: DashboardP
     () => [...products].sort((a, b) => b.price - a.price).slice(0, 4),
     [products],
   )
+  const bestSellerImages = [
+    '/shop-icons/pokemon-151-japansk-booster-box.webp',
+    '/shop-icons/pokemon-surging-sparks-booster-box.webp',
+    '/shop-icons/N64-Retro-Gaming-Console.webp',
+    '/shop-icons/Nintendo64KontrollTredjepartOrange_8cc0d6a1-427d-4f0f-95c7-d0e65a8cd766.webp',
+  ]
 
   return (
     <main className="store-page">
@@ -151,6 +166,16 @@ function DashboardPage({ user, isAdmin, token, expiresAt, onLogout }: DashboardP
 
         <div className="hero-showcase" aria-label="Featured showcase">
           <img src={heroImage} alt="Trading card and console showcase" />
+          <div className="hero-showcase-gallery">
+            <img
+              src="/shop-icons/pokemon-surging-sparks-booster-box.webp"
+              alt="Pokemon booster box product"
+            />
+            <img
+              src="/shop-icons/N64-Retro-Gaming-Console.webp"
+              alt="Nintendo 64 retro gaming console"
+            />
+          </div>
           <div className="hero-card-callout">
             <strong>Collector drop this week</strong>
             <p>Pokemon, Magic and One Piece restocks are live.</p>
@@ -171,6 +196,7 @@ function DashboardPage({ user, isAdmin, token, expiresAt, onLogout }: DashboardP
         <div className="category-grid">
           {CATEGORY_SECTIONS.map((category) => (
             <article key={category.id} id={category.id} className="category-card">
+              <img src={category.image} alt={`${category.title} category`} />
               <p className="chip">{category.title}</p>
               <h3>{category.title}</h3>
               <p>{category.description}</p>
@@ -224,6 +250,10 @@ function DashboardPage({ user, isAdmin, token, expiresAt, onLogout }: DashboardP
         <div className="best-seller-grid">
           {(isLoadingProducts ? [] : bestSellers).map((product, index) => (
             <article key={`best-${product.id}`} className="best-seller-card">
+              <img
+                src={bestSellerImages[index % bestSellerImages.length]}
+                alt={`${product.name} product`}
+              />
               <span className="best-seller-rank">#{index + 1}</span>
               <h3>{product.name}</h3>
               <p>{product.shortDescription || 'Collector favorite product.'}</p>
@@ -257,6 +287,7 @@ function DashboardPage({ user, isAdmin, token, expiresAt, onLogout }: DashboardP
         <div className="review-grid">
           {REVIEW_CARDS.map((review) => (
             <article key={review.name} className="review-card">
+              <img src={review.image} alt={`${review.name} favorite item`} />
               <p className="review-rating">{review.rating}</p>
               <p>{review.text}</p>
               <strong>{review.name}</strong>
