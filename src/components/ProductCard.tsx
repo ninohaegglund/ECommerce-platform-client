@@ -39,12 +39,35 @@ function getProductProfile(product: Product) {
   }
 }
 
+function getProductImagePath(product: Product, tone: string) {
+  const cards = [
+    '/shop-icons/pokemon-surging-sparks-booster-box.webp',
+    '/shop-icons/pokemon-151-japansk-booster-box.webp',
+    '/shop-icons/cynthias-garchump-ex-087-sar-raukcard-10-pokemon-kort.webp',
+    '/shop-icons/simisear-214-vstar-universe-raukcard-10.webp',
+  ]
+  const consoles = [
+    '/shop-icons/N64-Retro-Gaming-Console.webp',
+    '/shop-icons/Nintendo64KontrollTredjepartOrange_8cc0d6a1-427d-4f0f-95c7-d0e65a8cd766.webp',
+  ]
+  const accessories = [
+    '/shop-icons/img20260422_15443916.webp',
+    '/shop-icons/wyf1f4xupwlelyxoksio.jpg',
+  ]
+
+  const source = tone === 'cards' ? cards : tone === 'console' ? consoles : accessories
+  const seed = product.id.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0)
+  return source[seed % source.length]
+}
+
 function ProductCard({ product, isAdding, onAddToCart }: ProductCardProps) {
   const profile = getProductProfile(product)
+  const imagePath = getProductImagePath(product, profile.tone)
 
   return (
     <article className={`product-card product-card-${profile.tone}`}>
       <div className="product-thumbnail" aria-hidden="true">
+        <img src={imagePath} alt={`${product.name} product`} />
         <span>{profile.label}</span>
       </div>
 
