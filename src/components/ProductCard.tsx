@@ -5,6 +5,7 @@ type ProductCardProps = {
   product: Product
   isAdding: boolean
   onAddToCart: (product: Product) => Promise<void>
+  imageUrl?: string
 }
 
 function getProductProfile(product: Product) {
@@ -60,14 +61,23 @@ function getProductImagePath(product: Product, tone: string) {
   return source[seed % source.length]
 }
 
-function ProductCard({ product, isAdding, onAddToCart }: ProductCardProps) {
+function ProductCard({ product, isAdding, onAddToCart, imageUrl }: ProductCardProps) {
   const profile = getProductProfile(product)
-  const imagePath = getProductImagePath(product, profile.tone)
+  const fallbackImagePath = getProductImagePath(product, profile.tone)
+  const resolvedImagePath = imageUrl?.trim() ? imageUrl : fallbackImagePath
 
   return (
     <article className={`product-card product-card-${profile.tone}`}>
       <div className="product-thumbnail" aria-hidden="true">
-        <img src={imagePath} alt={`${product.name} product`} />
+        <img
+          src={resolvedImagePath}
+          alt={`${product.name} product`}
+          onError={(event) => {
+            if (event.currentTarget.src !== fallbackImagePath) {
+              event.currentTarget.src = fallbackImagePath
+            }
+          }}
+        />
         <span>{profile.label}</span>
       </div>
 

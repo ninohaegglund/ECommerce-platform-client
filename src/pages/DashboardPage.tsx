@@ -7,7 +7,9 @@ import SiteFooter from '../components/SiteFooter'
 import type { Product } from '../data/products'
 import { addCartItem } from '../services/cartApi'
 import { getCatalogProducts } from '../services/catalogApi'
+import { getProductImages } from '../services/productImagesApi'
 import type { AuthUser } from '../types/auth'
+import type { ProductImage } from '../types/product-image'
 
 type DashboardPageProps = {
   user: AuthUser
@@ -80,11 +82,42 @@ const REVIEW_CARDS = [
 function DashboardPage({ user, isAdmin, token, expiresAt, onLogout }: DashboardPageProps) {
   const [showToken, setShowToken] = useState(false)
   const [products, setProducts] = useState<Product[]>([])
+  const [productImageUrls, setProductImageUrls] = useState<Record<string, string>>({})
   const [isLoadingProducts, setIsLoadingProducts] = useState(true)
   const [productsError, setProductsError] = useState('')
   const [addingProductId, setAddingProductId] = useState('')
   const [cartFeedback, setCartFeedback] = useState('')
   const [cartError, setCartError] = useState('')
+
+  const getProductImageCandidates = (images: ProductImage[]) => {
+    return images
+      .filter((image) => image.imageUrl.trim().length > 0)
+      .sort((left, right) => {
+        if (left.isPrimary !== right.isPrimary) {
+          return left.isPrimary ? -1 : 1
+        }
+
+        return left.sortOrder - right.sortOrder
+      })
+      .map((image) => image.imageUrl.trim())
+  }
+
+  const resolveWorkingImageUrl = async (candidates: string[]) => {
+    for (const candidate of candidates) {
+      const isAvailable = await new Promise<boolean>((resolve) => {
+        const img = new Image()
+        img.onload = () => resolve(true)
+        img.onerror = () => resolve(false)
+        img.src = candidate
+      })
+
+      if (isAvailable) {
+        return candidate
+      }
+    }
+
+    return ''
+  }
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -104,6 +137,44 @@ function DashboardPage({ user, isAdmin, token, expiresAt, onLogout }: DashboardP
 
     void loadProducts()
   }, [])
+
+  useEffect(() => {
+    if (products.length === 0) {
+      setProductImageUrls({})
+      return
+    }
+
+    let isCancelled = false
+
+    const loadProductImages = async () => {
+      const imageEntries = await Promise.all(
+        products.map(async (product) => {
+          try {
+            const images = await getProductImages(product.id)
+            const imageUrl = await resolveWorkingImageUrl(getProductImageCandidates(images))
+
+            return imageUrl ? [product.id, imageUrl] : null
+          } catch {
+            return null
+          }
+        }),
+      )
+
+      if (isCancelled) {
+        return
+      }
+
+      setProductImageUrls(
+        Object.fromEntries(imageEntries.filter((entry): entry is [string, string] => entry !== null)),
+      )
+    }
+
+    void loadProductImages()
+
+    return () => {
+      isCancelled = true
+    }
+  }, [products])
 
   const handleAddToCart = async (product: Product) => {
     setAddingProductId(product.id)
@@ -234,6 +305,7 @@ function DashboardPage({ user, isAdmin, token, expiresAt, onLogout }: DashboardP
                 product={product}
                 isAdding={addingProductId === product.id}
                 onAddToCart={handleAddToCart}
+                  imageUrl={productImageUrls[product.id]}
               />
             ))
           )}

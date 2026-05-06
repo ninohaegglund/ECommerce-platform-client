@@ -903,7 +903,7 @@
   background: rgba(255, 249, 239, 0.94);
   box-shadow: var(--shadow-soft);
   display: grid;
-  grid-template-rows: 190px 1fr auto;
+  grid-template-rows: auto 1fr auto;
   gap: 12px;
   overflow: hidden;
 }
@@ -1959,7 +1959,7 @@
 
 .product-card {
   min-height: 330px;
-  grid-template-rows: 132px 1fr auto;
+  grid-template-rows: auto 1fr auto;
   border-color: #dbe3f1;
   background: #ffffff;
   box-shadow: 0 10px 24px rgba(21, 35, 63, 0.07);
@@ -1974,13 +1974,20 @@
   place-items: center;
   position: relative;
   overflow: hidden;
+  padding: 8px; /* keep a small inner spacing for the thumbnail container */
+  box-sizing: border-box;
+  width: 100%;
+  aspect-ratio: 16 / 9; /* fixed thumbnail aspect ratio for consistent cropping */
 }
 
 .product-thumbnail img {
+  display: block;
+  box-sizing: border-box;
   width: 100%;
-  height: 100%;
-  object-fit: contain;
-  padding: 8px;
+  height: 140px;
+  object-fit: contain; /* fill the card, cropping when necessary */
+  object-position: center;
+  padding: 0; /* remove padding from image so sizing is predictable */
 }
 
 .product-thumbnail span {
@@ -1999,6 +2006,157 @@
 .product-card-cards .product-thumbnail {
   background:
     linear-gradient(160deg, #fff6f2, #ffece2 60%, #fff7ef);
+}
+
+/* Product Image Upload Styles */
+.admin-images-panel {
+  margin-top: 14px;
+  border: 1px solid rgba(23, 24, 29, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.48);
+  padding: 14px;
+}
+
+.product-image-upload {
+  display: grid;
+  gap: 18px;
+}
+
+.product-image-upload h3 {
+  margin: 0 0 8px;
+  color: var(--color-ink);
+  font-size: 1.15rem;
+}
+
+.image-upload-form {
+  display: grid;
+  gap: 12px;
+  max-width: 430px;
+}
+
+.image-upload-form label {
+  display: grid;
+  gap: 6px;
+  text-align: left;
+  color: var(--color-ink-soft);
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.image-upload-form input[type="file"],
+.image-upload-form input[type="text"],
+.image-upload-form input[type="number"] {
+  width: 100%;
+  border: 1px solid rgba(23, 24, 29, 0.16);
+  background: var(--color-paper-strong);
+  border-radius: 8px;
+  padding: 11px 12px;
+  font-size: 0.95rem;
+  color: var(--color-ink);
+}
+
+.image-upload-form input:focus {
+  outline: 3px solid rgba(31, 157, 138, 0.22);
+  outline-offset: 1px;
+  border-color: var(--color-mint);
+}
+
+.image-preview {
+  border: 1px solid rgba(23, 24, 29, 0.16);
+  border-radius: 8px;
+  padding: 12px;
+  background: rgba(23, 24, 29, 0.04);
+  display: grid;
+  gap: 8px;
+  align-items: center;
+}
+
+.image-preview img {
+  max-width: 100%;
+  max-height: 200px;
+  border-radius: 6px;
+  object-fit: contain;
+}
+
+.preview-label {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.image-list {
+  border-top: 1px solid rgba(23, 24, 29, 0.12);
+  padding-top: 16px;
+}
+
+.image-list h4 {
+  margin: 0 0 12px;
+  color: var(--color-ink);
+  font-size: 1rem;
+}
+
+.images-gallery {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
+}
+
+.image-item {
+  border: 1px solid rgba(23, 24, 29, 0.12);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--color-paper-strong);
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 8px;
+  position: relative;
+}
+
+.image-item img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  display: block;
+}
+
+.image-info {
+  padding: 8px;
+  display: grid;
+  gap: 6px;
+  align-content: start;
+}
+
+.badge {
+  display: inline-flex;
+  width: fit-content;
+  background: #e8f8f3;
+  color: #176257;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 950;
+}
+
+.image-order {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.8rem;
+}
+
+.image-alt {
+  margin: 0;
+  color: var(--color-ink-soft);
+  font-size: 0.8rem;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .product-card-console .product-thumbnail {
