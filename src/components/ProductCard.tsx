@@ -13,37 +13,46 @@ type ProductProfile = {
   label: string
   tone: string
   color: string
-  badge?: string
+  refurbished: boolean
 }
 
 function getProductProfile(product: Product): ProductProfile {
   const s = `${product.name} ${product.shortDescription}`.toLowerCase()
 
+  const refurbished =
+    s.includes('refurbished') ||
+    s.includes('renoverad') ||
+    s.includes('refurb')
+
   if (s.includes('pokemon') || s.includes('pokémon')) {
-    return { label: 'Pokémon', tone: 'cards', color: 'var(--red)' }
-  }
-  if (s.includes('magic')) {
-    return { label: 'Magic', tone: 'cards', color: 'var(--blue)' }
-  }
-  if (s.includes('one piece')) {
-    return { label: 'One Piece', tone: 'cards', color: 'var(--amber)' }
-  }
-  if (s.includes('lorcana')) {
-    return { label: 'Lorcana', tone: 'cards', color: 'var(--mint)' }
-  }
-  if (s.includes('yu-gi-oh') || s.includes('yugioh')) {
-    return { label: 'Yu-Gi-Oh!', tone: 'cards', color: 'var(--ink)' }
+    return { label: 'Pokémon-kort', tone: 'cards', color: 'var(--red)', refurbished }
   }
   if (
+    s.includes('spel') ||
+    s.includes('game') ||
+    s.includes('zelda') ||
+    s.includes('mario') ||
+    s.includes('sonic') ||
+    s.includes('snes') ||
+    s.includes('nes ') ||
+    s.includes('mega drive') ||
+    s.includes('game boy')
+  ) {
+    return { label: 'Spel', tone: 'cards', color: 'var(--blue)', refurbished }
+  }
+  if (
+    s.includes('konsol') ||
     s.includes('console') ||
-    s.includes('game boy') ||
     s.includes('nintendo') ||
     s.includes('playstation') ||
-    s.includes('sega')
+    s.includes('xbox') ||
+    s.includes('sega') ||
+    s.includes('n64') ||
+    s.includes('switch')
   ) {
-    return { label: 'Konsoler', tone: 'console', color: 'var(--ink-2)' }
+    return { label: refurbished ? 'Refurbished' : 'Konsoler', tone: 'console', color: refurbished ? 'var(--mint)' : 'var(--ink-2)', refurbished }
   }
-  return { label: 'Tillbehör', tone: 'drop', color: 'var(--ink-2)' }
+  return { label: 'Spel & Konsoler', tone: 'drop', color: 'var(--ink-2)', refurbished }
 }
 
 function getProductImagePath(product: Product, tone: string) {
@@ -97,6 +106,14 @@ function ProductCard({ product, isAdding, added, onAddToCart, imageUrl }: Produc
           >
             {profile.label.toUpperCase()}
           </span>
+          {profile.refurbished && (
+            <span
+              className="sv-product-badge-chip"
+              style={{ background: 'var(--mint)' }}
+            >
+              REFURBISHED
+            </span>
+          )}
         </div>
         <button type="button" className="sv-product-heart" aria-label="Lägg till i önskelista">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-2)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
