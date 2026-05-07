@@ -4,6 +4,7 @@ import './App.css'
 import { NotificationCenterProvider } from './context/notificationCenter'
 import AuthPage from './pages/AuthPage'
 import AdminPage from './pages/AdminPage'
+import CategoryPage from './pages/CategoryPage'
 import CartPage from './pages/CartPage'
 import CheckoutPage from './pages/CheckoutPage'
 import DashboardPage from './pages/DashboardPage'
@@ -307,6 +308,78 @@ function App() {
               onLogout={handleLogout}
               title="Om Spelvalvet"
               description="Vi säljer Pokémon-kort, spel, konsoler och refurbished klassiker — nya och gamla. Alla produkter kontrolleras av oss innan de skickas, och vi erbjuder 14 dagars prislöfte och 90 dagars garanti på refurbished konsoler."
+            />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+      <Route
+        path="/pokemon-kort"
+        element={
+          canAccessStore && activeUser ? (
+            <CategoryPage user={activeUser} isAdmin={isAdmin} onLogout={handleLogout} category="pokemon-kort" />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+      <Route
+        path="/spel"
+        element={
+          canAccessStore && activeUser ? (
+            <CategoryPage user={activeUser} isAdmin={isAdmin} onLogout={handleLogout} category="spel" />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+      <Route
+        path="/konsoler"
+        element={
+          canAccessStore && activeUser ? (
+            <CategoryPage user={activeUser} isAdmin={isAdmin} onLogout={handleLogout} category="konsoler" />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+      <Route
+        path="/refurbished"
+        element={
+          canAccessStore && activeUser ? (
+            <CategoryPage user={activeUser} isAdmin={isAdmin} onLogout={handleLogout} category="refurbished" />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+      <Route
+        path="/erbjudanden"
+        element={
+          canAccessStore && activeUser ? (
+            <SimplePage
+              user={activeUser}
+              isAdmin={isAdmin}
+              onLogout={handleLogout}
+              title="Erbjudanden"
+              description="Veckans bästa deals på Pokémon-kort, spel och konsoler — uppdateras varje måndag. Missa inte dagens fynd och tidsbegränsade reapriser."
+            />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+      <Route
+        path="/support"
+        element={
+          canAccessStore && activeUser ? (
+            <SimplePage
+              user={activeUser}
+              isAdmin={isAdmin}
+              onLogout={handleLogout}
+              title="Support"
+              description="Frågor om din order, retur eller produkt? Kontakta oss på support@spelvalvet.se eller via chatten nedan. Vi svarar inom 24 timmar på vardagar."
             />
           ) : (
             <Navigate to="/login" replace />

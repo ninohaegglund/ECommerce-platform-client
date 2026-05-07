@@ -213,6 +213,9 @@ function DashboardPage({ user, isAdmin, token: _token, expiresAt: _expiresAt, on
     try {
       await addCartItem({ productId: product.id, quantity: 1, currency: product.currency })
       setAddedSkus((prev) => new Set(prev).add(product.id))
+      setTimeout(() => {
+        setAddedSkus((prev) => { const next = new Set(prev); next.delete(product.id); return next })
+      }, 1000)
       setToast(`${product.name} tillagd`)
       setTimeout(() => setToast(null), 1800)
     } catch (err) {

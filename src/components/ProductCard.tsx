@@ -16,7 +16,7 @@ type ProductProfile = {
   refurbished: boolean
 }
 
-function getProductProfile(product: Product): ProductProfile {
+export function getProductProfile(product: Product): ProductProfile {
   const s = `${product.name} ${product.shortDescription}`.toLowerCase()
 
   const refurbished =
@@ -55,7 +55,7 @@ function getProductProfile(product: Product): ProductProfile {
   return { label: 'Spel & Konsoler', tone: 'drop', color: 'var(--ink-2)', refurbished }
 }
 
-function getProductImagePath(product: Product, tone: string) {
+export function getProductImagePath(product: Product, tone: string) {
   const cards = [
     '/shop-icons/pokemon-surging-sparks-booster-box.webp',
     '/shop-icons/pokemon-151-japansk-booster-box.webp',

@@ -17,13 +17,13 @@ const CATEGORIES = [
 ]
 
 const mainNavItems = [
-  { label: 'Produkter', to: '/dashboard#categories' },
-  { label: 'Pokémon-kort', to: '/dashboard#pokemon-kort' },
-  { label: 'Spel', to: '/dashboard#spel' },
-  { label: 'Konsoler', to: '/dashboard#konsoler' },
-  { label: 'Refurbished', to: '/dashboard#refurbished' },
-  { label: 'Erbjudanden', to: '/dashboard#best-sellers' },
-  { label: 'Support', to: '/about' },
+  { label: 'Produkter', to: '/dashboard' },
+  { label: 'Pokémon-kort', to: '/pokemon-kort' },
+  { label: 'Spel', to: '/spel' },
+  { label: 'Konsoler', to: '/konsoler' },
+  { label: 'Refurbished', to: '/refurbished' },
+  { label: 'Erbjudanden', to: '/erbjudanden' },
+  { label: 'Support', to: '/support' },
 ]
 
 function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
