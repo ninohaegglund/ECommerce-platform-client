@@ -4,40 +4,46 @@ import type { Product } from '../data/products'
 type ProductCardProps = {
   product: Product
   isAdding: boolean
+  added: boolean
   onAddToCart: (product: Product) => Promise<void>
   imageUrl?: string
 }
 
-function getProductProfile(product: Product) {
-  const searchable = `${product.name} ${product.shortDescription}`.toLowerCase()
+type ProductProfile = {
+  label: string
+  tone: string
+  color: string
+  badge?: string
+}
 
-  if (searchable.includes('pokemon') || searchable.includes('card')) {
-    return {
-      label: 'Card game',
-      tone: 'cards',
-      detail: 'Collector pick',
-    }
+function getProductProfile(product: Product): ProductProfile {
+  const s = `${product.name} ${product.shortDescription}`.toLowerCase()
+
+  if (s.includes('pokemon') || s.includes('pokémon')) {
+    return { label: 'Pokémon', tone: 'cards', color: 'var(--red)' }
   }
-
+  if (s.includes('magic')) {
+    return { label: 'Magic', tone: 'cards', color: 'var(--blue)' }
+  }
+  if (s.includes('one piece')) {
+    return { label: 'One Piece', tone: 'cards', color: 'var(--amber)' }
+  }
+  if (s.includes('lorcana')) {
+    return { label: 'Lorcana', tone: 'cards', color: 'var(--mint)' }
+  }
+  if (s.includes('yu-gi-oh') || s.includes('yugioh')) {
+    return { label: 'Yu-Gi-Oh!', tone: 'cards', color: 'var(--ink)' }
+  }
   if (
-    searchable.includes('console') ||
-    searchable.includes('game boy') ||
-    searchable.includes('nintendo') ||
-    searchable.includes('playstation') ||
-    searchable.includes('sega')
+    s.includes('console') ||
+    s.includes('game boy') ||
+    s.includes('nintendo') ||
+    s.includes('playstation') ||
+    s.includes('sega')
   ) {
-    return {
-      label: 'Retro console',
-      tone: 'console',
-      detail: 'Hardware tested',
-    }
+    return { label: 'Konsoler', tone: 'console', color: 'var(--ink-2)' }
   }
-
-  return {
-    label: 'Accessory',
-    tone: 'drop',
-    detail: 'Fast moving',
-  }
+  return { label: 'Tillbehör', tone: 'drop', color: 'var(--ink-2)' }
 }
 
 function getProductImagePath(product: Product, tone: string) {
@@ -61,58 +67,94 @@ function getProductImagePath(product: Product, tone: string) {
   return source[seed % source.length]
 }
 
-function ProductCard({ product, isAdding, onAddToCart, imageUrl }: ProductCardProps) {
+function ProductCard({ product, isAdding, added, onAddToCart, imageUrl }: ProductCardProps) {
   const profile = getProductProfile(product)
   const fallbackImagePath = getProductImagePath(product, profile.tone)
   const resolvedImagePath = imageUrl?.trim() ? imageUrl : fallbackImagePath
 
+  const formattedPrice = new Intl.NumberFormat('sv-SE', {
+    style: 'currency',
+    currency: product.currency,
+    maximumFractionDigits: 0,
+  }).format(product.price)
+
   return (
-    <article className={`product-card product-card-${profile.tone}`}>
-      <div className="product-thumbnail" aria-hidden="true">
+    <article className="sv-product-card">
+      <div className="sv-product-image">
         <img
           src={resolvedImagePath}
-          alt={`${product.name} product`}
-          onError={(event) => {
-            if (event.currentTarget.src !== fallbackImagePath) {
-              event.currentTarget.src = fallbackImagePath
+          alt={product.name}
+          onError={(e) => {
+            if (e.currentTarget.src !== fallbackImagePath) {
+              e.currentTarget.src = fallbackImagePath
             }
           }}
         />
-        <span>{profile.label}</span>
-      </div>
-
-      <div className="product-card-content">
-        <div className="product-card-topline">
-          <p className="chip">{profile.detail}</p>
+        <div className="sv-product-badges">
+          <span
+            className="sv-product-cat-chip"
+            style={{ color: profile.color, borderColor: profile.color }}
+          >
+            {profile.label.toUpperCase()}
+          </span>
         </div>
-
-        <h3>{product.name}</h3>
-        <p className="subtitle">{product.shortDescription || 'Fresh in stock.'}</p>
+        <button type="button" className="sv-product-heart" aria-label="Lägg till i önskelista">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-2)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M12 20s-7-4.3-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.7-7 10-7 10Z"/>
+          </svg>
+        </button>
+        <div className="sv-product-sku">› {product.id.slice(0, 12).toUpperCase()}</div>
       </div>
 
-      <div className="product-card-footer">
-        <p className="price">
-          {new Intl.NumberFormat('sv-SE', {
-            style: 'currency',
-            currency: product.currency,
-            maximumFractionDigits: 2,
-          }).format(product.price)}
-        </p>
+      <div className="sv-product-body">
+        <h3 className="sv-product-name">{product.name}</h3>
+        <p className="sv-product-desc">{product.shortDescription || 'Ny i lager.'}</p>
 
-        <div className="product-card-actions">
+        <div className="sv-product-divider">
+          <div className="sv-product-price-row">
+            <span className="sv-product-price mono">{formattedPrice}</span>
+            <span
+              className="sv-stock-label"
+              style={{ color: 'var(--mint)' }}
+            >
+              <span className="sv-stock-dot" />
+              I lager
+            </span>
+          </div>
+
           <button
             type="button"
-            className="buy-btn"
+            className={`sv-add-btn${added ? ' sv-add-btn--added' : ''}`}
             onClick={() => void onAddToCart(product)}
             disabled={isAdding}
           >
-            {isAdding ? 'Adding...' : 'Add'}
+            {added ? (
+              <>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6l-8-3Z"/><path d="m9 12 2 2 4-4"/>
+                </svg>
+                Tillagd i varukorg
+              </>
+            ) : (
+              <>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M12 5v14M5 12h14"/>
+                </svg>
+                {isAdding ? 'Lägger till…' : 'Lägg i varukorg'}
+              </>
+            )}
           </button>
-          <Link className="product-link" to={`/products/${product.id}`}>
-            Details
-          </Link>
         </div>
       </div>
+
+      <Link
+        className="sv-product-detail-link sr-only"
+        to={`/products/${product.id}`}
+        tabIndex={-1}
+        aria-hidden="true"
+      >
+        Visa detaljer
+      </Link>
     </article>
   )
 }
