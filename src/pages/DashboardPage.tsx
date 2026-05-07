@@ -20,58 +20,58 @@ type DashboardPageProps = {
 
 const CATEGORY_DATA = [
   {
-    id: 'pokemon',
-    name: 'Pokémon TCG',
-    desc: 'Booster boxes, ETBs och singles från Base Set till Surging Sparks.',
+    id: 'pokemon-kort',
+    name: 'Pokémon-kort · Nya',
+    desc: 'Senaste booster-seten, ETBs och nyutgivna singles — alltid i lager på lanseringsdagen.',
     color: 'var(--red)',
-    count: '1 248 produkter',
+    count: '874 produkter',
     icon: '★',
     image: '/shop-icons/pokemon-surging-sparks-booster-box.webp',
   },
   {
-    id: 'magic',
-    name: 'Magic: The Gathering',
-    desc: 'Commander, draft och vintage. Allt från Alpha till senaste setet.',
+    id: 'pokemon-kort-gamla',
+    name: 'Pokémon-kort · Gamla',
+    desc: 'Vintage-kort, Base Set, Jungle och Fossil — äkthetsgranskade och prisvärderade.',
+    color: 'var(--amber)',
+    count: '374 produkter',
+    icon: '★',
+    image: '/shop-icons/2020POKEMONSWSHBLACKSTARPROMO_050CHARIZARDVCHMPN.PATHELITETRNR.BOX_PSA10_FRONT.webp',
+  },
+  {
+    id: 'spel',
+    name: 'Spel · Nya',
+    desc: 'Nya spel till PS5, Xbox, Switch och PC — snabb leverans direkt till dörren.',
     color: 'var(--blue)',
-    count: '892 produkter',
-    icon: '✦',
+    count: '512 produkter',
+    icon: '▶',
     image: '/shop-icons/simisear-214-vstar-universe-raukcard-10.webp',
   },
   {
-    id: 'one-piece',
-    name: 'One Piece TCG',
-    desc: 'Den nya storheten. OP01 till OP09 plus förbokningar och promos.',
-    color: 'var(--amber)',
-    count: '417 produkter',
-    icon: '✪',
-    image: '/shop-icons/642461276_99944b76-c506-4fa4-93ee-a00502756c0a.jpg',
-  },
-  {
-    id: 'yu-gi-oh',
-    name: 'Yu-Gi-Oh!',
-    desc: 'Strukturpaket, klassiker och meta-kort till turneringsspelaren.',
+    id: 'retrogaming',
+    name: 'Spel · Retro',
+    desc: 'Klassiska titlar till NES, SNES, Mega Drive, PS1 och Game Boy — sorterade och testade.',
     color: 'var(--ink)',
-    count: '634 produkter',
-    icon: '✧',
+    count: '418 produkter',
+    icon: '▶',
     image: '/shop-icons/cynthias-garchump-ex-087-sar-raukcard-10-pokemon-kort.webp',
   },
   {
-    id: 'lorcana',
-    name: 'Lorcana',
-    desc: 'Disneys magiska kortspel — från First Chapter till Azurite Sea.',
-    color: 'var(--mint)',
-    count: '289 produkter',
-    icon: '❀',
-    image: '/shop-icons/pokemon-151-japansk-booster-box.webp',
+    id: 'konsoler',
+    name: 'Konsoler',
+    desc: 'Nya och begagnade konsoler — PS5, Xbox Series, Switch samt retrokonsoler i gott skick.',
+    color: 'var(--ink-2)',
+    count: '417 produkter',
+    icon: '◈',
+    image: '/shop-icons/N64-Retro-Gaming-Console.webp',
   },
   {
-    id: 'consoles',
-    name: 'Retro-konsoler',
-    desc: 'NES, SNES, GameBoy, Mega Drive och PS1 — testade och garanterade.',
-    color: 'var(--ink-2)',
+    id: 'refurbished',
+    name: 'Refurbished',
+    desc: 'Renoverade konsoler med ny optik, rengjorda kretskort och 90 dagars garanti.',
+    color: 'var(--mint)',
     count: '186 produkter',
-    icon: '▸',
-    image: '/shop-icons/N64-Retro-Gaming-Console.webp',
+    icon: '✓',
+    image: '/shop-icons/Nintendo64KontrollTredjepartOrange_8cc0d6a1-427d-4f0f-95c7-d0e65a8cd766.webp',
   },
 ]
 
@@ -79,7 +79,7 @@ const REVIEW_DATA = [
   {
     rating: 5,
     quote:
-      'Beställde en Charizard på onsdag kväll, hade den i brevlådan torsdag lunch. Skicket var bättre än beskrivet — Spelvalvet är min nya husbutik.',
+      'Beställde en Charizard Base Set på onsdag kväll, hade den i brevlådan torsdag lunch. Äkthetskontrollen var noggrann och kortet var i bättre skick än beskrivet.',
     name: 'Erik N.',
     role: 'Pokémon-samlare',
     color: 'var(--red)',
@@ -87,18 +87,18 @@ const REVIEW_DATA = [
   {
     rating: 5,
     quote:
-      'Hittade en originalförpackad SNES här som jag letat efter i åratal. Bra kommunikation, snygg paketering och prisvärd leverans.',
+      'Köpte en refurbished N64 och den ser ut och fungerar som ny. 90 dagars garanti och snabb frakt — kan varmt rekommendera Spelvalvet.',
     name: 'Linnea S.',
     role: 'Retro-entusiast',
-    color: 'var(--blue)',
+    color: 'var(--mint)',
   },
   {
     rating: 5,
     quote:
-      'Bästa One Piece-utbudet i Sverige. Förbokningar levereras alltid på release-dagen och kundservicen är otroligt trevlig.',
+      'Bästa stället för gamla spel i Sverige. Hittade titlar till SNES som jag letat efter länge — alla testade och i gott skick. Nöjd kund!',
     name: 'Kalle M.',
-    role: 'OP TCG-spelare',
-    color: 'var(--amber)',
+    role: 'Retrogaming-spelare',
+    color: 'var(--blue)',
   },
 ]
 
@@ -110,10 +110,10 @@ const BESTSELLER_IMAGES = [
 ]
 
 const BESTSELLER_CATS = [
-  { label: 'Pokémon', color: 'var(--red)' },
-  { label: 'Lorcana', color: 'var(--mint)' },
-  { label: 'Magic', color: 'var(--blue)' },
-  { label: 'Tillbehör', color: 'var(--amber)' },
+  { label: 'Pokémon-kort', color: 'var(--red)' },
+  { label: 'Refurbished', color: 'var(--mint)' },
+  { label: 'Spel', color: 'var(--blue)' },
+  { label: 'Konsoler', color: 'var(--ink-2)' },
 ]
 
 const BESTSELLER_CHANGES = ['+412 sålda', '+298 sålda', '+241 sålda', '+187 sålda']
@@ -238,29 +238,29 @@ function DashboardPage({ user, isAdmin, token: _token, expiresAt: _expiresAt, on
           <div>
             <div className="sv-hero-new-chip">
               <span className="sv-hero-new-badge">NYTT</span>
-              <span className="sv-hero-chip-text">Pokémon TCG: Prismatic Evolutions ute nu</span>
+              <span className="sv-hero-chip-text">Refurbished N64 — nu i lager med 90 dagars garanti</span>
               <ArrowRight size={13} />
             </div>
 
             <h1 className="sv-hero-h1">
-              Allt inom{' '}
-              <span className="sv-hero-accent-red">samlarkort</span>,<br />
-              tillbehör och{' '}
-              <span className="sv-hero-accent-blue">retro-fynd</span>.
+              Köp{' '}
+              <span className="sv-hero-accent-red">Pokémon-kort</span>,<br />
+              spel, konsoler och{' '}
+              <span className="sv-hero-accent-blue">refurbished</span>.
             </h1>
 
             <p className="sv-hero-body">
-              Från första boostern till sällsynta GameBoy-kassetter — Sveriges trevligaste
-              samlarbutik med snabb leverans, garanterad äkthet och prislöfte i 14 dagar.
+              Nya och gamla Pokémon-kort, retrogaming, konsoler och renoverade
+              klassiker — allt på ett ställe med snabb leverans och 14 dagars prislöfte.
             </p>
 
             <div className="sv-hero-ctas">
               <a className="sv-btn-primary" href="#new-in-stock">
-                Handla nya släpp
+                Se alla produkter
                 <ArrowRight size={16} />
               </a>
-              <a className="sv-btn-ghost" href="#best-sellers">
-                Utforska retro-konsoler
+              <a className="sv-btn-ghost" href="#refurbished">
+                Utforska Refurbished
               </a>
             </div>
 
@@ -301,9 +301,9 @@ function DashboardPage({ user, isAdmin, token: _token, expiresAt: _expiresAt, on
                 />
               </div>
               <div className="sv-card-meta">
-                <p className="sv-card-sku mono">POKÉMON · #PSV-038</p>
-                <p className="sv-card-name">Charizard ex</p>
-                <p className="sv-card-sub">Prismatic Evolutions · Holo</p>
+                <p className="sv-card-sku mono">POKÉMON · #BS-004</p>
+                <p className="sv-card-name">Charizard</p>
+                <p className="sv-card-sub">Base Set · Holo · PSA 10</p>
                 <div className="sv-card-footer">
                   <span className="sv-card-price mono">1 249 kr</span>
                   <span className="sv-card-stock">I lager</span>
@@ -321,10 +321,10 @@ function DashboardPage({ user, isAdmin, token: _token, expiresAt: _expiresAt, on
                 />
               </div>
               <div style={{ padding: '10px 6px 4px' }}>
-                <p className="sv-card-sku mono" style={{ marginBottom: 4 }}>RETRO · #GB-CLR-12</p>
+                <p className="sv-card-sku mono" style={{ marginBottom: 4 }}>REFURBISHED · #N64-R-07</p>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                  <span style={{ fontWeight: 700, fontSize: 14 }}>GameBoy Color</span>
-                  <span className="sv-card-price mono" style={{ fontSize: 14 }}>895 kr</span>
+                  <span style={{ fontWeight: 700, fontSize: 14 }}>Nintendo 64 · Refurbished</span>
+                  <span className="sv-card-price mono" style={{ fontSize: 14 }}>1 295 kr</span>
                 </div>
               </div>
             </div>
@@ -339,8 +339,8 @@ function DashboardPage({ user, isAdmin, token: _token, expiresAt: _expiresAt, on
                 />
               </div>
               <div style={{ padding: '8px 4px 0' }}>
-                <p style={{ margin: 0, fontSize: 13, fontWeight: 600 }}>Magic: Bloomburrow</p>
-                <p className="sv-card-price mono" style={{ fontSize: 13, margin: '2px 0 0' }}>4 690 kr</p>
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 600 }}>The Legend of Zelda · SNES</p>
+                <p className="sv-card-price mono" style={{ fontSize: 13, margin: '2px 0 0' }}>395 kr</p>
               </div>
             </div>
 
@@ -376,8 +376,8 @@ function DashboardPage({ user, isAdmin, token: _token, expiresAt: _expiresAt, on
               <p className="sv-section-kicker">01 — KATEGORIER</p>
               <h2 id="cat-title" className="sv-section-title">Hitta din samling.</h2>
               <p className="sv-section-subtitle">
-                Sju kategorier, en butik. Vi katalogiserar varje produkt själva — du får skick,
-                äkthet och tillgänglighet utan gissningar.
+                Pokémon-kort, spel, konsoler och refurbished — vi kontrollerar skick och äkthet
+                på varje produkt så att du slipper gissa.
               </p>
             </div>
             <a className="sv-section-link" href="#new-in-stock">
@@ -432,7 +432,7 @@ function DashboardPage({ user, isAdmin, token: _token, expiresAt: _expiresAt, on
               <p className="sv-section-kicker">02 — POPULÄRT JUST NU</p>
               <h2 id="products-title" className="sv-section-title">Färska släpp & samlarguld.</h2>
               <p className="sv-section-subtitle">
-                Handplockat ur lagret den här veckan. Allt skickas inom 24 timmar från Stockholm.
+                Nya och begagnade produkter från hela sortimentet. Allt skickas inom 24 timmar.
               </p>
             </div>
             <a className="sv-section-link" href="#best-sellers">
