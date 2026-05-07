@@ -273,8 +273,8 @@ function App() {
               user={activeUser}
               isAdmin={isAdmin}
               onLogout={handleLogout}
-              title="Your Wishlist"
-              description="This is a simple placeholder page for saved products."
+              title="Önskelista"
+              description="Spara Pokémon-kort, spel och konsoler du vill ha — så hittar du dem snabbt nästa gång du besöker butiken."
             />
           ) : (
             <Navigate to="/login" replace />
@@ -289,8 +289,8 @@ function App() {
               user={activeUser}
               isAdmin={isAdmin}
               onLogout={handleLogout}
-              title="Account Settings"
-              description="This is a simple placeholder page for profile details and preferences."
+              title="Kontoinställningar"
+              description="Hantera din e-postadress, leveransadress och lösenord. Här kan du också se dina köphistorik och aktiva prenumerationer."
             />
           ) : (
             <Navigate to="/login" replace />
@@ -305,8 +305,8 @@ function App() {
               user={activeUser}
               isAdmin={isAdmin}
               onLogout={handleLogout}
-              title="Om oss"
-              description="NovaCart är en modern e-handelsupplevelse med fokus på smidig shopping och snabba leveranser."
+              title="Om Spelvalvet"
+              description="Vi säljer Pokémon-kort, spel, konsoler och refurbished klassiker — nya och gamla. Alla produkter kontrolleras av oss innan de skickas, och vi erbjuder 14 dagars prislöfte och 90 dagars garanti på refurbished konsoler."
             />
           ) : (
             <Navigate to="/login" replace />
