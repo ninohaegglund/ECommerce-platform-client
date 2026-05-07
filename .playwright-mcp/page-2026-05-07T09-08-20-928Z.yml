@@ -1,0 +1,454 @@
+- main [ref=e658]:
+  - generic [ref=e659]:
+    - generic [ref=e661]:
+      - generic [ref=e662]:
+        - generic [ref=e663]:
+          - img [ref=e664]
+          - text: 5% medlemsrabatt
+        - generic [ref=e667]:
+          - img [ref=e668]
+          - text: 1–4 dagars leverans
+        - generic [ref=e673]:
+          - img [ref=e674]
+          - text: 14 dagars prislöfte
+        - generic [ref=e677]:
+          - img [ref=e678]
+          - text: 20 000+ nöjda samlare
+      - generic [ref=e683]:
+        - generic [ref=e684]: SE · SEK
+        - generic [ref=e685]: "|"
+        - link "Spåra order" [ref=e686] [cursor=pointer]:
+          - /url: "#"
+        - link "Hjälp" [ref=e687] [cursor=pointer]:
+          - /url: "#"
+        - link "Logga in" [ref=e688] [cursor=pointer]:
+          - /url: "#"
+    - generic [ref=e690]:
+      - link "Spelvalvet hem" [ref=e691] [cursor=pointer]:
+        - /url: /dashboard
+        - generic [ref=e695]:
+          - strong [ref=e696]: Spelvalvet
+          - generic [ref=e697]: SAMLARENS HEM · EST. 2019
+      - search "Sök produkter" [ref=e698]:
+        - img [ref=e699]
+        - searchbox "Sök" [ref=e702]
+        - generic [ref=e703]: ⌘K
+      - generic [ref=e704]:
+        - button "Önskelista" [ref=e705] [cursor=pointer]:
+          - img [ref=e706]
+        - link "Aviseringar" [ref=e708] [cursor=pointer]:
+          - /url: /notifications
+          - img [ref=e709]
+        - link "Varukorg" [ref=e712] [cursor=pointer]:
+          - /url: /cart
+          - img [ref=e713]
+          - generic [ref=e717]: Varukorg
+        - button "Kontomeny" [ref=e719] [cursor=pointer]: GU
+    - generic [ref=e721]:
+      - navigation "Primär navigation" [ref=e722]:
+        - link "Produkter" [ref=e723] [cursor=pointer]:
+          - /url: /dashboard#categories
+        - link "Märken" [ref=e724] [cursor=pointer]:
+          - /url: /dashboard#brands
+        - link "Förbokning" [ref=e725] [cursor=pointer]:
+          - /url: /dashboard#preorders
+          - text: Förbokning
+        - link "Erbjudanden" [ref=e727] [cursor=pointer]:
+          - /url: /dashboard#deals
+        - link "Topplista" [ref=e728] [cursor=pointer]:
+          - /url: /dashboard#best-sellers
+        - link "Recensioner" [ref=e729] [cursor=pointer]:
+          - /url: /dashboard#reviews
+        - link "Support" [ref=e730] [cursor=pointer]:
+          - /url: /about
+      - generic [ref=e731]:
+        - img [ref=e732]
+        - generic [ref=e735]:
+          - text: "Nytt:"
+          - strong [ref=e736]: Surging Sparks
+          - text: nu i butik
+        - img [ref=e737]
+    - generic [ref=e740]:
+      - generic [ref=e741]: BLÄDDRA →
+      - button "Pokémon 1 248" [ref=e742] [cursor=pointer]:
+        - text: Pokémon
+        - generic [ref=e744]: 1 248
+      - button "Magic 892" [ref=e745] [cursor=pointer]:
+        - text: Magic
+        - generic [ref=e747]: "892"
+      - button "One Piece 417" [ref=e748] [cursor=pointer]:
+        - text: One Piece
+        - generic [ref=e750]: "417"
+      - button "Yu-Gi-Oh! 634" [ref=e751] [cursor=pointer]:
+        - text: Yu-Gi-Oh!
+        - generic [ref=e753]: "634"
+      - button "Lorcana 289" [ref=e754] [cursor=pointer]:
+        - text: Lorcana
+        - generic [ref=e756]: "289"
+      - button "Tillbehör 512" [ref=e757] [cursor=pointer]:
+        - text: Tillbehör
+        - generic [ref=e759]: "512"
+      - button "Konsoler 186" [ref=e760] [cursor=pointer]:
+        - text: Konsoler
+        - generic [ref=e762]: "186"
+    - dialog "Navigation" [ref=e763]:
+      - link "Produkter" [ref=e764] [cursor=pointer]:
+        - /url: /dashboard#categories
+      - link "Märken" [ref=e765] [cursor=pointer]:
+        - /url: /dashboard#brands
+      - link "Förbokning" [ref=e766] [cursor=pointer]:
+        - /url: /dashboard#preorders
+      - link "Erbjudanden" [ref=e767] [cursor=pointer]:
+        - /url: /dashboard#deals
+      - link "Topplista" [ref=e768] [cursor=pointer]:
+        - /url: /dashboard#best-sellers
+      - link "Recensioner" [ref=e769] [cursor=pointer]:
+        - /url: /dashboard#reviews
+      - link "Support" [ref=e770] [cursor=pointer]:
+        - /url: /about
+      - link "Pokémon" [ref=e771] [cursor=pointer]:
+        - /url: /dashboard#pokémon
+      - link "Magic" [ref=e772] [cursor=pointer]:
+        - /url: /dashboard#magic
+      - link "One Piece" [ref=e773] [cursor=pointer]:
+        - /url: /dashboard#one piece
+      - link "Yu-Gi-Oh!" [ref=e774] [cursor=pointer]:
+        - /url: /dashboard#yu-gi-oh!
+      - link "Lorcana" [ref=e775] [cursor=pointer]:
+        - /url: /dashboard#lorcana
+      - link "Tillbehör" [ref=e776] [cursor=pointer]:
+        - /url: /dashboard#tillbehör
+      - link "Konsoler" [ref=e777] [cursor=pointer]:
+        - /url: /dashboard#konsoler
+  - region "Välkommen till Spelvalvet" [ref=e778]:
+    - generic [ref=e779]:
+      - generic [ref=e780]:
+        - generic [ref=e781]:
+          - generic [ref=e782]: NYTT
+          - generic [ref=e783]: "Pokémon TCG: Prismatic Evolutions ute nu"
+          - img [ref=e784]
+        - heading "Allt inom samlarkort, tillbehör och retro-fynd." [level=1] [ref=e786]:
+          - text: Allt inom samlarkort,
+          - text: tillbehör och retro-fynd.
+        - paragraph [ref=e787]: Från första boostern till sällsynta GameBoy-kassetter — Sveriges trevligaste samlarbutik med snabb leverans, garanterad äkthet och prislöfte i 14 dagar.
+        - generic [ref=e788]:
+          - link "Handla nya släpp" [ref=e789] [cursor=pointer]:
+            - /url: "#new-in-stock"
+            - text: Handla nya släpp
+            - img [ref=e790]
+          - link "Utforska retro-konsoler" [ref=e792] [cursor=pointer]:
+            - /url: "#best-sellers"
+        - generic [ref=e793]:
+          - generic [ref=e794]:
+            - generic [ref=e795]: 20K+
+            - generic [ref=e796]: Nöjda samlare
+          - generic [ref=e797]:
+            - generic [ref=e798]:
+              - text: "4.9"
+              - img [ref=e799]
+            - generic [ref=e801]: Trustpilot
+          - generic [ref=e802]:
+            - generic [ref=e803]: 48h
+            - generic [ref=e804]: Snabbleverans
+          - generic [ref=e805]:
+            - generic [ref=e806]: 100%
+            - generic [ref=e807]: Äkthetsgaranti
+      - generic [ref=e808]:
+        - generic [ref=e812]:
+          - paragraph [ref=e813]: "POKÉMON · #PSV-038"
+          - paragraph [ref=e814]: Charizard ex
+          - paragraph [ref=e815]: Prismatic Evolutions · Holo
+          - generic [ref=e816]:
+            - generic [ref=e817]: 1 249 kr
+            - generic [ref=e818]: I lager
+        - generic [ref=e821]:
+          - paragraph [ref=e822]: "RETRO · #GB-CLR-12"
+          - generic [ref=e823]:
+            - generic [ref=e824]: GameBoy Color
+            - generic [ref=e825]: 895 kr
+        - generic [ref=e828]:
+          - paragraph [ref=e829]: "Magic: Bloomburrow"
+          - paragraph [ref=e830]: 4 690 kr
+        - generic [ref=e831]:
+          - img [ref=e833]
+          - generic [ref=e836]: Äkthet garanterad
+        - generic [ref=e837]:
+          - img [ref=e838]
+          - generic [ref=e841]:
+            - generic [ref=e842]: DAGENS FYND
+            - generic [ref=e843]: −25% på sleeves
+  - region "Hitta din samling." [ref=e844]:
+    - generic [ref=e845]:
+      - generic [ref=e846]:
+        - generic [ref=e847]:
+          - paragraph [ref=e848]: 01 — KATEGORIER
+          - heading "Hitta din samling." [level=2] [ref=e849]
+          - paragraph [ref=e850]: Sju kategorier, en butik. Vi katalogiserar varje produkt själva — du får skick, äkthet och tillgänglighet utan gissningar.
+        - link "Se alla kategorier" [ref=e851] [cursor=pointer]:
+          - /url: "#new-in-stock"
+          - text: Se alla kategorier
+          - img [ref=e852]
+      - generic [ref=e855]:
+        - link "Pokémon TCG ★ 01 Pokémon TCG 1 248 produkter Booster boxes, ETBs och singles från Base Set till Surging Sparks. Bläddra" [ref=e856] [cursor=pointer]:
+          - /url: "#pokemon"
+          - generic [ref=e857]:
+            - img "Pokémon TCG" [ref=e858]
+            - generic [ref=e859]: ★ 01
+            - generic [ref=e860]: ★
+          - generic [ref=e861]:
+            - generic [ref=e862]:
+              - heading "Pokémon TCG" [level=3] [ref=e863]
+              - generic [ref=e864]: 1 248 produkter
+            - paragraph [ref=e865]: Booster boxes, ETBs och singles från Base Set till Surging Sparks.
+            - generic [ref=e866]:
+              - text: Bläddra
+              - img [ref=e867]
+        - 'link "Magic: The Gathering ✦ 02 Magic: The Gathering 892 produkter Commander, draft och vintage. Allt från Alpha till senaste setet. Bläddra" [ref=e869] [cursor=pointer]':
+          - /url: "#magic"
+          - generic [ref=e870]:
+            - 'img "Magic: The Gathering" [ref=e871]'
+            - generic [ref=e872]: ✦ 02
+            - generic [ref=e873]: ✦
+          - generic [ref=e874]:
+            - generic [ref=e875]:
+              - 'heading "Magic: The Gathering" [level=3] [ref=e876]'
+              - generic [ref=e877]: 892 produkter
+            - paragraph [ref=e878]: Commander, draft och vintage. Allt från Alpha till senaste setet.
+            - generic [ref=e879]:
+              - text: Bläddra
+              - img [ref=e880]
+        - link "One Piece TCG ✪ 03 One Piece TCG 417 produkter Den nya storheten. OP01 till OP09 plus förbokningar och promos. Bläddra" [ref=e882] [cursor=pointer]:
+          - /url: "#one-piece"
+          - generic [ref=e883]:
+            - img "One Piece TCG" [ref=e884]
+            - generic [ref=e885]: ✪ 03
+            - generic [ref=e886]: ✪
+          - generic [ref=e887]:
+            - generic [ref=e888]:
+              - heading "One Piece TCG" [level=3] [ref=e889]
+              - generic [ref=e890]: 417 produkter
+            - paragraph [ref=e891]: Den nya storheten. OP01 till OP09 plus förbokningar och promos.
+            - generic [ref=e892]:
+              - text: Bläddra
+              - img [ref=e893]
+        - link "Yu-Gi-Oh! ✧ 04 Yu-Gi-Oh! 634 produkter Strukturpaket, klassiker och meta-kort till turneringsspelaren. Bläddra" [ref=e895] [cursor=pointer]:
+          - /url: "#yu-gi-oh"
+          - generic [ref=e896]:
+            - img "Yu-Gi-Oh!" [ref=e897]
+            - generic [ref=e898]: ✧ 04
+            - generic [ref=e899]: ✧
+          - generic [ref=e900]:
+            - generic [ref=e901]:
+              - heading "Yu-Gi-Oh!" [level=3] [ref=e902]
+              - generic [ref=e903]: 634 produkter
+            - paragraph [ref=e904]: Strukturpaket, klassiker och meta-kort till turneringsspelaren.
+            - generic [ref=e905]:
+              - text: Bläddra
+              - img [ref=e906]
+        - link "Lorcana ❀ 05 Lorcana 289 produkter Disneys magiska kortspel — från First Chapter till Azurite Sea. Bläddra" [ref=e908] [cursor=pointer]:
+          - /url: "#lorcana"
+          - generic [ref=e909]:
+            - img "Lorcana" [ref=e910]
+            - generic [ref=e911]: ❀ 05
+            - generic [ref=e912]: ❀
+          - generic [ref=e913]:
+            - generic [ref=e914]:
+              - heading "Lorcana" [level=3] [ref=e915]
+              - generic [ref=e916]: 289 produkter
+            - paragraph [ref=e917]: Disneys magiska kortspel — från First Chapter till Azurite Sea.
+            - generic [ref=e918]:
+              - text: Bläddra
+              - img [ref=e919]
+        - link "Retro-konsoler ▸ 06 Retro-konsoler 186 produkter NES, SNES, GameBoy, Mega Drive och PS1 — testade och garanterade. Bläddra" [ref=e921] [cursor=pointer]:
+          - /url: "#consoles"
+          - generic [ref=e922]:
+            - img "Retro-konsoler" [ref=e923]
+            - generic [ref=e924]: ▸ 06
+            - generic [ref=e925]: ▸
+          - generic [ref=e926]:
+            - generic [ref=e927]:
+              - heading "Retro-konsoler" [level=3] [ref=e928]
+              - generic [ref=e929]: 186 produkter
+            - paragraph [ref=e930]: NES, SNES, GameBoy, Mega Drive och PS1 — testade och garanterade.
+            - generic [ref=e931]:
+              - text: Bläddra
+              - img [ref=e932]
+  - region "Färska släpp & samlarguld." [ref=e934]:
+    - generic [ref=e935]:
+      - generic [ref=e936]:
+        - generic [ref=e937]:
+          - paragraph [ref=e938]: 02 — POPULÄRT JUST NU
+          - heading "Färska släpp & samlarguld." [level=2] [ref=e939]
+          - paragraph [ref=e940]: Handplockat ur lagret den här veckan. Allt skickas inom 24 timmar från Stockholm.
+        - link "Se hela sortimentet" [ref=e941] [cursor=pointer]:
+          - /url: "#best-sellers"
+          - text: Se hela sortimentet
+          - img [ref=e942]
+      - paragraph [ref=e946]: Failed to fetch
+  - region "Mest köpt just nu." [ref=e947]:
+    - generic [ref=e949]:
+      - generic [ref=e950]:
+        - paragraph [ref=e951]: 03 — TOPPLISTAN · DENNA VECKA
+        - heading "Mest köpt just nu." [level=2] [ref=e952]
+        - paragraph [ref=e953]: Uppdaterad varje måndag kl 09:00. Ranking baserad på antal sålda enheter senaste 7 dagarna.
+      - link "Se hela topplistan" [ref=e954] [cursor=pointer]:
+        - /url: "#reviews"
+        - text: Se hela topplistan
+        - img [ref=e955]
+  - region "20 000+ samlare. En butik." [ref=e958]:
+    - generic [ref=e959]:
+      - generic [ref=e961]:
+        - paragraph [ref=e962]: 04 — RECENSIONER · TRUSTPILOT 4.9
+        - heading "20 000+ samlare. En butik." [level=2] [ref=e963]
+        - paragraph [ref=e964]: Vi läser varje recension och svarar inom 24 timmar. Tack för att ni hjälper oss bli bättre.
+      - generic [ref=e965]:
+        - blockquote [ref=e966]:
+          - generic [ref=e967]: VERIFIERAD KÖPARE
+          - generic [ref=e968]:
+            - img [ref=e969]
+            - img [ref=e971]
+            - img [ref=e973]
+            - img [ref=e975]
+            - img [ref=e977]
+            - generic [ref=e979]: 5.0 / 5.0
+          - paragraph [ref=e980]: "\"Beställde en Charizard på onsdag kväll, hade den i brevlådan torsdag lunch. Skicket var bättre än beskrivet — Spelvalvet är min nya husbutik.\""
+          - generic [ref=e981]:
+            - generic [ref=e982]: E
+            - generic [ref=e983]:
+              - generic [ref=e984]: Erik N.
+              - generic [ref=e985]: Pokémon-samlare
+        - blockquote [ref=e986]:
+          - generic [ref=e987]: VERIFIERAD KÖPARE
+          - generic [ref=e988]:
+            - img [ref=e989]
+            - img [ref=e991]
+            - img [ref=e993]
+            - img [ref=e995]
+            - img [ref=e997]
+            - generic [ref=e999]: 5.0 / 5.0
+          - paragraph [ref=e1000]: "\"Hittade en originalförpackad SNES här som jag letat efter i åratal. Bra kommunikation, snygg paketering och prisvärd leverans.\""
+          - generic [ref=e1001]:
+            - generic [ref=e1002]: L
+            - generic [ref=e1003]:
+              - generic [ref=e1004]: Linnea S.
+              - generic [ref=e1005]: Retro-entusiast
+        - blockquote [ref=e1006]:
+          - generic [ref=e1007]: VERIFIERAD KÖPARE
+          - generic [ref=e1008]:
+            - img [ref=e1009]
+            - img [ref=e1011]
+            - img [ref=e1013]
+            - img [ref=e1015]
+            - img [ref=e1017]
+            - generic [ref=e1019]: 5.0 / 5.0
+          - paragraph [ref=e1020]: "\"Bästa One Piece-utbudet i Sverige. Förbokningar levereras alltid på release-dagen och kundservicen är otroligt trevlig.\""
+          - generic [ref=e1021]:
+            - generic [ref=e1022]: K
+            - generic [ref=e1023]:
+              - generic [ref=e1024]: Kalle M.
+              - generic [ref=e1025]: OP TCG-spelare
+  - generic [ref=e1027]:
+    - generic [ref=e1028]:
+      - generic [ref=e1029]:
+        - link "Spelvalvet hem" [ref=e1030] [cursor=pointer]:
+          - /url: /dashboard
+          - generic [ref=e1034]: Spelvalvet
+        - paragraph [ref=e1035]: "\"Vi öppnar valvet, du fyller hyllan.\""
+        - paragraph [ref=e1036]: Spelvalvet AB · Götgatan 24, 116 21 Stockholm · org.nr 559214-9876. Vi handlar och säljer trading cards, retro-konsoler och tillbehör sedan 2019.
+      - navigation "Handla" [ref=e1037]:
+        - generic [ref=e1038]: Handla
+        - list [ref=e1039]:
+          - listitem [ref=e1040]:
+            - link "Pokémon TCG" [ref=e1041] [cursor=pointer]:
+              - /url: /dashboard#pokemon
+          - listitem [ref=e1042]:
+            - 'link "Magic: The Gathering" [ref=e1043] [cursor=pointer]':
+              - /url: /dashboard#magic
+          - listitem [ref=e1044]:
+            - link "One Piece" [ref=e1045] [cursor=pointer]:
+              - /url: /dashboard#one-piece
+          - listitem [ref=e1046]:
+            - link "Yu-Gi-Oh!" [ref=e1047] [cursor=pointer]:
+              - /url: /dashboard#yu-gi-oh
+          - listitem [ref=e1048]:
+            - link "Lorcana" [ref=e1049] [cursor=pointer]:
+              - /url: /dashboard#lorcana
+          - listitem [ref=e1050]:
+            - link "Retro-konsoler" [ref=e1051] [cursor=pointer]:
+              - /url: /dashboard#consoles
+          - listitem [ref=e1052]:
+            - link "Tillbehör" [ref=e1053] [cursor=pointer]:
+              - /url: /dashboard#accessories
+      - navigation "Service" [ref=e1054]:
+        - generic [ref=e1055]: Service
+        - list [ref=e1056]:
+          - listitem [ref=e1057]:
+            - link "Kontakta oss" [ref=e1058] [cursor=pointer]:
+              - /url: /about
+          - listitem [ref=e1059]:
+            - link "Frakt & leverans" [ref=e1060] [cursor=pointer]:
+              - /url: /about
+          - listitem [ref=e1061]:
+            - link "Retur & byten" [ref=e1062] [cursor=pointer]:
+              - /url: /about
+          - listitem [ref=e1063]:
+            - link "Prislöfte" [ref=e1064] [cursor=pointer]:
+              - /url: /about
+          - listitem [ref=e1065]:
+            - link "Äkthetsgaranti" [ref=e1066] [cursor=pointer]:
+              - /url: /about
+          - listitem [ref=e1067]:
+            - link "Förbokning" [ref=e1068] [cursor=pointer]:
+              - /url: /dashboard#preorders
+      - navigation "Företag" [ref=e1069]:
+        - generic [ref=e1070]: Företag
+        - list [ref=e1071]:
+          - listitem [ref=e1072]:
+            - link "Om Spelvalvet" [ref=e1073] [cursor=pointer]:
+              - /url: /about
+          - listitem [ref=e1074]:
+            - link "Topplistan" [ref=e1075] [cursor=pointer]:
+              - /url: /dashboard#best-sellers
+          - listitem [ref=e1076]:
+            - link "Recensioner" [ref=e1077] [cursor=pointer]:
+              - /url: /dashboard#reviews
+          - listitem [ref=e1078]:
+            - link "Hållbarhet" [ref=e1079] [cursor=pointer]:
+              - /url: /about
+      - navigation "Konto" [ref=e1080]:
+        - generic [ref=e1081]: Konto
+        - list [ref=e1082]:
+          - listitem [ref=e1083]:
+            - link "Logga in" [ref=e1084] [cursor=pointer]:
+              - /url: /login
+          - listitem [ref=e1085]:
+            - link "Skapa konto" [ref=e1086] [cursor=pointer]:
+              - /url: /register
+          - listitem [ref=e1087]:
+            - link "Mina ordrar" [ref=e1088] [cursor=pointer]:
+              - /url: /orders
+          - listitem [ref=e1089]:
+            - link "Mina favoriter" [ref=e1090] [cursor=pointer]:
+              - /url: /wishlist
+          - listitem [ref=e1091]:
+            - link "Aviseringar" [ref=e1092] [cursor=pointer]:
+              - /url: /notifications
+          - listitem [ref=e1093]:
+            - link "Presentkort" [ref=e1094] [cursor=pointer]:
+              - /url: /about
+    - generic [ref=e1095]:
+      - generic [ref=e1096]:
+        - generic [ref=e1097]: © 2026 Spelvalvet AB
+        - link "Integritetspolicy" [ref=e1098] [cursor=pointer]:
+          - /url: "#"
+        - link "Användarvillkor" [ref=e1099] [cursor=pointer]:
+          - /url: "#"
+        - link "Cookies" [ref=e1100] [cursor=pointer]:
+          - /url: "#"
+      - generic [ref=e1101]:
+        - generic [ref=e1102]: BETALA TRYGGT
+        - generic [ref=e1103]: Klarna
+        - generic [ref=e1104]: Swish
+        - generic [ref=e1105]: Visa
+        - generic [ref=e1106]: MC
+        - generic [ref=e1107]: Trustly
