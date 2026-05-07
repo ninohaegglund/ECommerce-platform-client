@@ -196,7 +196,7 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
         <div className="sv-nav-row1-inner">
           <nav aria-label="Primär navigation">
             {mainNavItems.map((item) => {
-              const isActive = item.label === 'Produkter'
+              const isActive = location.pathname === item.to
               return (
                 <Link
                   key={item.label}
