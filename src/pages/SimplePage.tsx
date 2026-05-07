@@ -12,12 +12,14 @@ type SimplePageProps = {
 
 function SimplePage({ user, title, description, isAdmin, onLogout }: SimplePageProps) {
   return (
-    <main className="store-page">
+    <main className="sv-store">
       <AppNavbar user={user} isAdmin={isAdmin} onLogout={onLogout} />
 
-      <section className="hero-panel">
-        <h2>{title}</h2>
-        <p>{description}</p>
+      <section>
+        <div className="sv-product-section">
+          <h2 className="sv-section-title">{title}</h2>
+          <p className="sv-section-subtitle">{description}</p>
+        </div>
       </section>
 
       <SiteFooter />
