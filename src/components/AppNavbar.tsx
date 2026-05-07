@@ -10,22 +10,19 @@ type AppNavbarProps = {
 }
 
 const CATEGORIES = [
-  { name: 'Pokémon', color: 'var(--red)', count: '1 248' },
-  { name: 'Magic', color: 'var(--blue)', count: '892' },
-  { name: 'One Piece', color: 'var(--amber)', count: '417' },
-  { name: 'Yu-Gi-Oh!', color: 'var(--ink)', count: '634' },
-  { name: 'Lorcana', color: 'var(--mint)', count: '289' },
-  { name: 'Tillbehör', color: 'var(--ink-2)', count: '512' },
-  { name: 'Konsoler', color: 'var(--ink-2)', count: '186' },
+  { name: 'Pokémon-kort', color: 'var(--red)', count: '1 248' },
+  { name: 'Spel', color: 'var(--blue)', count: '634' },
+  { name: 'Konsoler', color: 'var(--ink-2)', count: '417' },
+  { name: 'Refurbished', color: 'var(--mint)', count: '186' },
 ]
 
 const mainNavItems = [
   { label: 'Produkter', to: '/dashboard#categories' },
-  { label: 'Märken', to: '/dashboard#brands' },
-  { label: 'Förbokning', to: '/dashboard#preorders', badge: true },
-  { label: 'Erbjudanden', to: '/dashboard#deals' },
-  { label: 'Topplista', to: '/dashboard#best-sellers' },
-  { label: 'Recensioner', to: '/dashboard#reviews' },
+  { label: 'Pokémon-kort', to: '/dashboard#pokemon-kort' },
+  { label: 'Spel', to: '/dashboard#spel' },
+  { label: 'Konsoler', to: '/dashboard#konsoler' },
+  { label: 'Refurbished', to: '/dashboard#refurbished' },
+  { label: 'Erbjudanden', to: '/dashboard#best-sellers' },
   { label: 'Support', to: '/about' },
 ]
 
@@ -219,7 +216,7 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 3v6M12 15v6M3 12h6M15 12h6"/><path d="m6 6 3 3M15 15l3 3M18 6l-3 3M9 15l-3 3"/>
             </svg>
-            <span>Nytt: <strong>Surging Sparks</strong> nu i butik</span>
+            <span>Nytt: <strong>refurbished N64</strong> nu i lager</span>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
               <path d="m9 6 6 6-6 6"/>
             </svg>
