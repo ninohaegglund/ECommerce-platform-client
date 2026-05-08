@@ -1,4 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
+import AppNavbar from '../components/AppNavbar'
+import SiteFooter from '../components/SiteFooter'
+import type { AuthUser } from '../types/auth'
 
 type SuccessState = {
   orderId?: string
@@ -6,7 +9,13 @@ type SuccessState = {
   message?: string
 }
 
-function OrderSuccessPage() {
+type OrderSuccessPageProps = {
+  user: AuthUser
+  isAdmin: boolean
+  onLogout: () => void
+}
+
+function OrderSuccessPage({ user, isAdmin, onLogout }: OrderSuccessPageProps) {
   const location = useLocation()
   const state = (location.state as SuccessState | null) ?? null
 
@@ -20,30 +29,39 @@ function OrderSuccessPage() {
     : '-'
 
   return (
-    <main className="payment-shell">
-      <section className="success-card">
-        <p className="stripe-badge">Order Completed</p>
-        <h1>Payment Successful</h1>
-        <p className="subtitle">{state?.message ?? 'Your payment has been processed successfully.'}</p>
+    <main className="sv-store">
+      <AppNavbar user={user} isAdmin={isAdmin} onLogout={onLogout} />
 
-        <div className="success-info">
-          <p>
-            <strong>Order ID:</strong> {orderId}
-          </p>
-          <p>
-            <strong>Paid Amount:</strong> {amount}
-          </p>
-        </div>
+      <section>
+        <div className="sv-empty-state success-celebrate">
+          <div className="success-check" aria-hidden="true">
+            ✓
+          </div>
+          <p className="stripe-badge">Beställning klar</p>
+          <h1>Tack för din beställning!</h1>
+          <p>{state?.message ?? 'Din betalning har genomförts.'}</p>
 
-        <div className="success-actions">
-          <Link className="ghost-btn" to="/orders">
-            View Orders
-          </Link>
-          <Link className="submit-btn success-primary" to="/dashboard">
-            Continue Shopping
-          </Link>
+          <div className="success-info">
+            <p>
+              <strong>Ordernummer:</strong> {orderId}
+            </p>
+            <p>
+              <strong>Betalat belopp:</strong> {amount}
+            </p>
+          </div>
+
+          <div className="sv-empty-actions success-actions">
+            <Link className="sv-btn-ghost" to="/orders">
+              Visa beställningar
+            </Link>
+            <Link className="sv-btn-primary" to="/dashboard">
+              Fortsätt handla
+            </Link>
+          </div>
         </div>
       </section>
+
+      <SiteFooter />
     </main>
   )
 }
