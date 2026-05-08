@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import AppNavbar from '../components/AppNavbar'
 import SiteFooter from '../components/SiteFooter'
 import type { AuthUser } from '../types/auth'
@@ -8,16 +9,20 @@ type SimplePageProps = {
   description: string
   isAdmin: boolean
   onLogout: () => void
+  children?: ReactNode
 }
 
-function SimplePage({ user, title, description, isAdmin, onLogout }: SimplePageProps) {
+function SimplePage({ user, title, description, isAdmin, onLogout, children }: SimplePageProps) {
   return (
-    <main className="store-page">
+    <main className="sv-store">
       <AppNavbar user={user} isAdmin={isAdmin} onLogout={onLogout} />
 
-      <section className="hero-panel">
-        <h2>{title}</h2>
-        <p>{description}</p>
+      <section className="sv-simple-section">
+        <div className="sv-product-section">
+          <h2 className="sv-section-title">{title}</h2>
+          <p className="sv-section-subtitle">{description}</p>
+          {children}
+        </div>
       </section>
 
       <SiteFooter />

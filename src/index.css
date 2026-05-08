@@ -1,13 +1,12 @@
 :root {
-  font-family:
-    Inter, Avenir, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: 'Inter Tight', Inter, system-ui, sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  line-height: 1.4;
+  line-height: 1.5;
   color: #17181d;
-  background: #eee5d8;
+  background: #fff9ef;
 }
 
 * {
@@ -21,11 +20,7 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
-  background:
-    linear-gradient(rgba(23, 24, 29, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(23, 24, 29, 0.035) 1px, transparent 1px),
-    linear-gradient(135deg, #f5eadb 0%, #edf7f2 46%, #f8eee7 100%);
-  background-size: 34px 34px, 34px 34px, auto;
+  background: #fff9ef;
 }
 
 button,
@@ -37,6 +32,7 @@ textarea {
 
 a {
   color: inherit;
+  text-decoration: none;
 }
 
 #root {

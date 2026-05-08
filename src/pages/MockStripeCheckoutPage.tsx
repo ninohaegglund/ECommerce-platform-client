@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import AppNavbar from '../components/AppNavbar'
+import SiteFooter from '../components/SiteFooter'
 import { createPayment, processPayment, updateOrderStatus } from '../services/cartApi'
 import { confirmInventoryReservation, releaseInventoryReservation } from '../services/inventoryApi'
 import { useNotificationCenter } from '../context/notificationCenter'
@@ -7,9 +9,11 @@ import type { AuthUser } from '../types/auth'
 
 type MockStripeCheckoutPageProps = {
   user: AuthUser
+  isAdmin: boolean
+  onLogout: () => void
 }
 
-function MockStripeCheckoutPage({ user }: MockStripeCheckoutPageProps) {
+function MockStripeCheckoutPage({ user, isAdmin, onLogout }: MockStripeCheckoutPageProps) {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { refreshNotifications } = useNotificationCenter()
@@ -72,7 +76,7 @@ function MockStripeCheckoutPage({ user }: MockStripeCheckoutPageProps) {
 
   const handlePay = async () => {
     if (!orderId) {
-      setError('Missing orderId. Please restart checkout.')
+      setError('Order saknas. Starta om kassan.')
       return
     }
 
@@ -89,7 +93,7 @@ function MockStripeCheckoutPage({ user }: MockStripeCheckoutPageProps) {
 
       const paymentId = payment.id ?? payment.paymentId
       if (!paymentId) {
-        throw new Error('Payment was created but no payment ID was returned.')
+        throw new Error('Betalningen skapades men inget betalnings-ID returnerades.')
       }
 
       await processPayment(paymentId, {
@@ -109,14 +113,14 @@ function MockStripeCheckoutPage({ user }: MockStripeCheckoutPageProps) {
         state: {
           orderId,
           amount,
-          message: 'Payment successful. Your order is confirmed.',
+          message: 'Betalning genomförd. Din beställning är bekräftad.',
         },
       })
     } catch (err) {
       const message =
         err instanceof Error
           ? err.message
-          : 'Payment failed. Please try again or restart checkout.'
+          : 'Betalningen misslyckades. Försök igen eller starta om kassan.'
       setError(message)
       await releaseReservations()
     } finally {
@@ -125,38 +129,46 @@ function MockStripeCheckoutPage({ user }: MockStripeCheckoutPageProps) {
   }
 
   return (
-    <main className="payment-shell">
-      <section className="stripe-card">
-        <p className="stripe-badge">Stripe Hosted Checkout (Simulation)</p>
-        <h1>Secure payment</h1>
-        <p className="subtitle">Order ID: {orderId || '-'}</p>
+    <main className="sv-store">
+      <AppNavbar user={user} isAdmin={isAdmin} onLogout={onLogout} />
 
-        <div className="stripe-amount-row">
-          <span>Total amount due</span>
-          <strong>{formattedAmount}</strong>
+      <section>
+        <div className="sv-payment-center">
+          <section className="stripe-card">
+            <p className="stripe-badge">Stripe-betalning (simulering)</p>
+            <h1>Säker betalning</h1>
+            <p className="subtitle">Ordernummer: {orderId || '-'}</p>
+
+            <div className="stripe-amount-row">
+              <span>Att betala</span>
+              <strong>{formattedAmount}</strong>
+            </div>
+
+            <div className="fake-card-line">4242 4242 4242 4242</div>
+
+            {error && <p className="feedback error">{error}</p>}
+
+            <button
+              type="button"
+              className="submit-btn"
+              onClick={() => void handlePay()}
+              disabled={isPaying}
+            >
+              {isPaying ? 'Bearbetar betalning...' : 'Betala med Stripe'}
+            </button>
+
+            <button type="button" className="ghost-btn" onClick={() => void handleCancel()}>
+              Avbryt betalning
+            </button>
+
+            <p className="subtitle">
+              <Link to="/checkout">Tillbaka till kassan</Link>
+            </p>
+          </section>
         </div>
-
-        <div className="fake-card-line">4242 4242 4242 4242</div>
-
-        {error && <p className="feedback error">{error}</p>}
-
-        <button
-          type="button"
-          className="submit-btn"
-          onClick={() => void handlePay()}
-          disabled={isPaying}
-        >
-          {isPaying ? 'Processing payment...' : 'Pay with Stripe'}
-        </button>
-
-        <button type="button" className="ghost-btn" onClick={() => void handleCancel()}>
-          Cancel payment
-        </button>
-
-        <p className="subtitle">
-          Return to <Link to="/checkout">checkout</Link>
-        </p>
       </section>
+
+      <SiteFooter />
     </main>
   )
 }

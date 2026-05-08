@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import AppNavbar from '../components/AppNavbar'
 import SiteFooter from '../components/SiteFooter'
 import { getCart, removeCartItem, updateCartItem } from '../services/cartApi'
@@ -28,7 +28,7 @@ function CartPage({ user, isAdmin, onLogout }: CartPageProps) {
       const response = await getCart()
       setCart(response)
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to load cart.'
+      const message = err instanceof Error ? err.message : 'Kunde inte ladda varukorgen.'
       setError(message)
     } finally {
       setIsLoading(false)
@@ -63,9 +63,9 @@ function CartPage({ user, isAdmin, onLogout }: CartPageProps) {
     try {
       await updateCartItem(item.id, { quantity: nextQuantity })
       await loadCart()
-      setSuccess('Cart item quantity updated.')
+      setSuccess('Antal uppdaterat.')
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Could not update quantity.'
+      const message = err instanceof Error ? err.message : 'Kunde inte uppdatera antal.'
       setError(message)
     } finally {
       setActiveItemId('')
@@ -80,9 +80,9 @@ function CartPage({ user, isAdmin, onLogout }: CartPageProps) {
     try {
       await removeCartItem(itemId)
       await loadCart()
-      setSuccess('Item removed from cart.')
+      setSuccess('Produkt borttagen.')
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Could not remove item.'
+      const message = err instanceof Error ? err.message : 'Kunde inte ta bort produkt.'
       setError(message)
     } finally {
       setActiveItemId('')
@@ -94,18 +94,35 @@ function CartPage({ user, isAdmin, onLogout }: CartPageProps) {
       <AppNavbar user={user} isAdmin={isAdmin} onLogout={onLogout} />
 
       <section className="cart-page">
-        <h1>Your Cart</h1>
-        <p className="subtitle">Review, edit, and checkout your cart.</p>
+        <h2 className="sv-section-title">Din varukorg</h2>
+        <p className="sv-section-subtitle">Granska och slutför din beställning.</p>
 
         {error && <p className="feedback error">{error}</p>}
         {success && <p className="feedback success">{success}</p>}
 
         {isLoading ? (
-          <p>Loading cart...</p>
+          <p>Laddar varukorg...</p>
         ) : !cart || cart.items.length === 0 ? (
-          <div className="hero-panel">
-            <h2>Cart is empty</h2>
-            <p>Add products from the dashboard to get started.</p>
+          <div className="sv-empty-state">
+            <svg
+              className="sv-empty-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <circle cx="9" cy="21" r="1" />
+              <circle cx="20" cy="21" r="1" />
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+            </svg>
+            <h2>Varukorgen är tom</h2>
+            <p>Bläddra i butiken för att börja handla — Pokémon-kort, spel och refurbished konsoler väntar.</p>
+            <div className="sv-empty-actions">
+              <Link className="sv-btn-primary" to="/dashboard">Till butiken</Link>
+            </div>
           </div>
         ) : (
           <>
@@ -113,12 +130,12 @@ function CartPage({ user, isAdmin, onLogout }: CartPageProps) {
               <table className="cart-table">
                 <thead>
                   <tr>
-                    <th>Product</th>
+                    <th>Produkt</th>
                     <th>SKU</th>
-                    <th>Quantity</th>
-                    <th>Unit Price</th>
-                    <th>Total</th>
-                    <th>Actions</th>
+                    <th>Antal</th>
+                    <th>Styckpris</th>
+                    <th>Totalt</th>
+                    <th>Åtgärder</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -154,7 +171,7 @@ function CartPage({ user, isAdmin, onLogout }: CartPageProps) {
                           onClick={() => void removeItem(item.id)}
                           disabled={activeItemId === item.id}
                         >
-                          Remove
+                          Ta bort
                         </button>
                       </td>
                     </tr>
@@ -165,14 +182,14 @@ function CartPage({ user, isAdmin, onLogout }: CartPageProps) {
 
             <div className="cart-summary">
               <p>
-                <strong>Subtotal:</strong> {formattedSubtotal}
+                <strong>Delsumma:</strong> {formattedSubtotal}
               </p>
               <button
                 type="button"
                 className="submit-btn"
                 onClick={() => navigate('/checkout')}
               >
-                Proceed to checkout
+                Gå till kassan
               </button>
             </div>
           </>

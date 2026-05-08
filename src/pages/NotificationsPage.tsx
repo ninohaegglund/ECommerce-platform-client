@@ -26,16 +26,16 @@ function NotificationsPage({ user, isAdmin, onLogout }: NotificationsPageProps) 
       <section className="notification-page">
         <div className="section-heading">
           <div>
-            <p className="eyebrow">Notifications</p>
-            <h1>Notification Center</h1>
-            <p className="subtitle">Recent order and payment updates for your account.</p>
+            <p className="eyebrow">Aviseringar</p>
+            <h1>Aviseringscenter</h1>
+            <p className="subtitle">Senaste uppdateringar om dina ordrar och betalningar.</p>
           </div>
           <div className="header-actions">
             <button type="button" className="ghost-btn" onClick={() => void refreshNotifications()}>
-              Refresh
+              Uppdatera
             </button>
             <button type="button" className="ghost-btn" onClick={markAllNotificationsAsRead}>
-              Mark all read
+              Markera alla som lästa
             </button>
           </div>
         </div>
@@ -43,11 +43,24 @@ function NotificationsPage({ user, isAdmin, onLogout }: NotificationsPageProps) 
         {error && <p className="feedback error">{error}</p>}
 
         {isLoading ? (
-          <p>Loading notifications...</p>
+          <p>Laddar aviseringar...</p>
         ) : notifications.length === 0 ? (
-          <div className="hero-panel">
-            <h2>No notifications yet</h2>
-            <p>Order confirmations and payment alerts will appear here.</p>
+          <div className="sv-empty-state">
+            <svg
+              className="sv-empty-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>
+            <h2>Inga aviseringar än</h2>
+            <p>Orderbekräftelser och betalningsaviseringar visas här så snart de kommer in.</p>
           </div>
         ) : (
           <div className="notification-list">
@@ -63,16 +76,16 @@ function NotificationsPage({ user, isAdmin, onLogout }: NotificationsPageProps) 
                       {new Date(notification.createdAtUtc).toLocaleString('sv-SE')}
                     </p>
                   </div>
-                  {!notification.isRead && <span className="notification-pill">New</span>}
+                  {!notification.isRead && <span className="notification-pill">Ny</span>}
                 </div>
-                <p>{notification.message || 'You have a new notification.'}</p>
+                <p>{notification.message || 'Du har en ny avisering.'}</p>
                 {!notification.isRead && (
                   <button
                     type="button"
                     className="ghost-btn"
                     onClick={() => markNotificationAsRead(notification.id)}
                   >
-                    Mark as read
+                    Markera som läst
                   </button>
                 )}
               </article>

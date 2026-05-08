@@ -4,43 +4,58 @@ import type { Product } from '../data/products'
 type ProductCardProps = {
   product: Product
   isAdding: boolean
+  added: boolean
   onAddToCart: (product: Product) => Promise<void>
   imageUrl?: string
 }
 
-function getProductProfile(product: Product) {
-  const searchable = `${product.name} ${product.shortDescription}`.toLowerCase()
-
-  if (searchable.includes('pokemon') || searchable.includes('card')) {
-    return {
-      label: 'Card game',
-      tone: 'cards',
-      detail: 'Collector pick',
-    }
-  }
-
-  if (
-    searchable.includes('console') ||
-    searchable.includes('game boy') ||
-    searchable.includes('nintendo') ||
-    searchable.includes('playstation') ||
-    searchable.includes('sega')
-  ) {
-    return {
-      label: 'Retro console',
-      tone: 'console',
-      detail: 'Hardware tested',
-    }
-  }
-
-  return {
-    label: 'Accessory',
-    tone: 'drop',
-    detail: 'Fast moving',
-  }
+type ProductProfile = {
+  label: string
+  tone: string
+  color: string
+  refurbished: boolean
 }
 
-function getProductImagePath(product: Product, tone: string) {
+export function getProductProfile(product: Product): ProductProfile {
+  const s = `${product.name} ${product.shortDescription}`.toLowerCase()
+
+  const refurbished =
+    s.includes('refurbished') ||
+    s.includes('renoverad') ||
+    s.includes('refurb')
+
+  if (s.includes('pokemon') || s.includes('pokémon')) {
+    return { label: 'Pokémon-kort', tone: 'cards', color: 'var(--red)', refurbished }
+  }
+  if (
+    s.includes('spel') ||
+    s.includes('game') ||
+    s.includes('zelda') ||
+    s.includes('mario') ||
+    s.includes('sonic') ||
+    s.includes('snes') ||
+    s.includes('nes ') ||
+    s.includes('mega drive') ||
+    s.includes('game boy')
+  ) {
+    return { label: 'Spel', tone: 'cards', color: 'var(--blue)', refurbished }
+  }
+  if (
+    s.includes('konsol') ||
+    s.includes('console') ||
+    s.includes('nintendo') ||
+    s.includes('playstation') ||
+    s.includes('xbox') ||
+    s.includes('sega') ||
+    s.includes('n64') ||
+    s.includes('switch')
+  ) {
+    return { label: refurbished ? 'Refurbished' : 'Konsoler', tone: 'console', color: refurbished ? 'var(--mint)' : 'var(--ink-2)', refurbished }
+  }
+  return { label: 'Spel & Konsoler', tone: 'drop', color: 'var(--ink-2)', refurbished }
+}
+
+export function getProductImagePath(product: Product, tone: string) {
   const cards = [
     '/shop-icons/pokemon-surging-sparks-booster-box.webp',
     '/shop-icons/pokemon-151-japansk-booster-box.webp',
@@ -61,58 +76,102 @@ function getProductImagePath(product: Product, tone: string) {
   return source[seed % source.length]
 }
 
-function ProductCard({ product, isAdding, onAddToCart, imageUrl }: ProductCardProps) {
+function ProductCard({ product, isAdding, added, onAddToCart, imageUrl }: ProductCardProps) {
   const profile = getProductProfile(product)
   const fallbackImagePath = getProductImagePath(product, profile.tone)
   const resolvedImagePath = imageUrl?.trim() ? imageUrl : fallbackImagePath
 
+  const formattedPrice = new Intl.NumberFormat('sv-SE', {
+    style: 'currency',
+    currency: product.currency,
+    maximumFractionDigits: 0,
+  }).format(product.price)
+
   return (
-    <article className={`product-card product-card-${profile.tone}`}>
-      <div className="product-thumbnail" aria-hidden="true">
+    <article className="sv-product-card">
+      <div className="sv-product-image">
         <img
           src={resolvedImagePath}
-          alt={`${product.name} product`}
-          onError={(event) => {
-            if (event.currentTarget.src !== fallbackImagePath) {
-              event.currentTarget.src = fallbackImagePath
+          alt={product.name}
+          onError={(e) => {
+            if (e.currentTarget.src !== fallbackImagePath) {
+              e.currentTarget.src = fallbackImagePath
             }
           }}
         />
-        <span>{profile.label}</span>
-      </div>
-
-      <div className="product-card-content">
-        <div className="product-card-topline">
-          <p className="chip">{profile.detail}</p>
+        <div className="sv-product-badges">
+          <span
+            className="sv-product-cat-chip"
+            style={{ color: profile.color, borderColor: profile.color }}
+          >
+            {profile.label.toUpperCase()}
+          </span>
+          {profile.refurbished && (
+            <span
+              className="sv-product-badge-chip"
+              style={{ background: 'var(--mint)' }}
+            >
+              REFURBISHED
+            </span>
+          )}
         </div>
-
-        <h3>{product.name}</h3>
-        <p className="subtitle">{product.shortDescription || 'Fresh in stock.'}</p>
+        <button type="button" className="sv-product-heart" aria-label="Lägg till i önskelista">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-2)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M12 20s-7-4.3-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.7-7 10-7 10Z"/>
+          </svg>
+        </button>
+        <div className="sv-product-sku">› {product.id.slice(0, 12).toUpperCase()}</div>
       </div>
 
-      <div className="product-card-footer">
-        <p className="price">
-          {new Intl.NumberFormat('sv-SE', {
-            style: 'currency',
-            currency: product.currency,
-            maximumFractionDigits: 2,
-          }).format(product.price)}
-        </p>
+      <div className="sv-product-body">
+        <h3 className="sv-product-name">{product.name}</h3>
+        <p className="sv-product-desc">{product.shortDescription || 'Ny i lager.'}</p>
 
-        <div className="product-card-actions">
+        <div className="sv-product-divider">
+          <div className="sv-product-price-row">
+            <span className="sv-product-price mono">{formattedPrice}</span>
+            <span
+              className="sv-stock-label"
+              style={{ color: 'var(--mint)' }}
+            >
+              <span className="sv-stock-dot" />
+              I lager
+            </span>
+          </div>
+
           <button
             type="button"
-            className="buy-btn"
+            className={`sv-add-btn${added ? ' sv-add-btn--added' : ''}`}
             onClick={() => void onAddToCart(product)}
             disabled={isAdding}
           >
-            {isAdding ? 'Adding...' : 'Add'}
+            {added ? (
+              <>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6l-8-3Z"/><path d="m9 12 2 2 4-4"/>
+                </svg>
+                Tillagd i varukorg
+              </>
+            ) : (
+              <>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M12 5v14M5 12h14"/>
+                </svg>
+                {isAdding ? 'Lägger till…' : 'Lägg i varukorg'}
+              </>
+            )}
           </button>
-          <Link className="product-link" to={`/products/${product.id}`}>
-            Details
-          </Link>
         </div>
       </div>
+
+      <Link
+        className="sv-product-detail-link sr-only"
+        to={`/products/${product.id}`}
+        tabIndex={-1}
+        aria-hidden="true"
+      >
+        Visa detaljer
+      </Link>
     </article>
   )
 }

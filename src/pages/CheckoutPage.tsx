@@ -72,7 +72,7 @@ function CheckoutPage({ user, isAdmin, onLogout }: CheckoutPageProps) {
 
       const orderId = checkoutResult?.orderId ?? checkoutResult?.OrderId ?? checkoutResult?.id
       if (!orderId) {
-        throw new Error('Order was created but no order ID was returned.')
+        throw new Error('Beställningen skapades men inget ordernummer returnerades.')
       }
 
       const amount =
@@ -84,7 +84,7 @@ function CheckoutPage({ user, isAdmin, onLogout }: CheckoutPageProps) {
         const stock = await getInventoryStock(item.productId)
         if (stock.quantityAvailable < item.quantity) {
           throw new Error(
-            `One of your items is out of stock. Only ${stock.quantityAvailable} left for product ${item.productId}.`,
+            `En av produkterna är slut i lager. Endast ${stock.quantityAvailable} kvar av produkt ${item.productId}.`,
           )
         }
       }
@@ -100,7 +100,7 @@ function CheckoutPage({ user, isAdmin, onLogout }: CheckoutPageProps) {
 
         const reservationId = reservation.reservationId ?? reservation.id
         if (!reservationId) {
-          throw new Error('Reservation was created but no reservation ID was returned.')
+          throw new Error('Reservation skapades men inget reservations-ID returnerades.')
         }
 
         reservationIds.push(reservationId)
@@ -115,9 +115,11 @@ function CheckoutPage({ user, isAdmin, onLogout }: CheckoutPageProps) {
     } catch (err) {
       const rawMessage = err instanceof Error ? err.message : ''
       const message =
-        rawMessage.toLowerCase().includes('stock') || rawMessage.toLowerCase().includes('out of stock')
-          ? 'This product is out of stock.'
-          : rawMessage || 'Could not create order before payment. Please try again.'
+        rawMessage.toLowerCase().includes('stock') ||
+        rawMessage.toLowerCase().includes('out of stock') ||
+        rawMessage.toLowerCase().includes('slut i lager')
+          ? 'Produkten är slut i lager.'
+          : rawMessage || 'Kunde inte skapa beställning. Försök igen.'
       setError(message)
     } finally {
       setIsSubmitting(false)
@@ -133,7 +135,7 @@ function CheckoutPage({ user, isAdmin, onLogout }: CheckoutPageProps) {
       <legend>{title}</legend>
       <div className="checkout-grid">
         <label>
-          First Name
+          Förnamn
           <input
             required
             value={values.firstName}
@@ -141,7 +143,7 @@ function CheckoutPage({ user, isAdmin, onLogout }: CheckoutPageProps) {
           />
         </label>
         <label>
-          Last Name
+          Efternamn
           <input
             required
             value={values.lastName}
@@ -149,14 +151,14 @@ function CheckoutPage({ user, isAdmin, onLogout }: CheckoutPageProps) {
           />
         </label>
         <label>
-          Company
+          Företag
           <input
             value={values.company}
             onChange={(e) => handleAddressChange(section, 'company', e.target.value)}
           />
         </label>
         <label>
-          Phone Number
+          Telefonnummer
           <input
             required
             value={values.phoneNumber}
@@ -164,7 +166,7 @@ function CheckoutPage({ user, isAdmin, onLogout }: CheckoutPageProps) {
           />
         </label>
         <label>
-          Street Line 1
+          Gatuadress
           <input
             required
             value={values.streetLine1}
@@ -172,14 +174,14 @@ function CheckoutPage({ user, isAdmin, onLogout }: CheckoutPageProps) {
           />
         </label>
         <label>
-          Street Line 2
+          Gatuadress (rad 2)
           <input
             value={values.streetLine2}
             onChange={(e) => handleAddressChange(section, 'streetLine2', e.target.value)}
           />
         </label>
         <label>
-          City
+          Stad
           <input
             required
             value={values.city}
@@ -187,7 +189,7 @@ function CheckoutPage({ user, isAdmin, onLogout }: CheckoutPageProps) {
           />
         </label>
         <label>
-          Postal Code
+          Postnummer
           <input
             required
             value={values.postalCode}
@@ -203,7 +205,7 @@ function CheckoutPage({ user, isAdmin, onLogout }: CheckoutPageProps) {
           />
         </label>
         <label>
-          Country Code
+          Landskod
           <input
             required
             value={values.countryCode}
@@ -219,13 +221,13 @@ function CheckoutPage({ user, isAdmin, onLogout }: CheckoutPageProps) {
       <AppNavbar user={user} isAdmin={isAdmin} onLogout={onLogout} />
 
       <section className="checkout-page">
-        <h1>Checkout</h1>
-        <p className="subtitle">Enter shipping and billing details before payment.</p>
+        <h2 className="sv-section-title">Kassa</h2>
+        <p className="sv-section-subtitle">Fyll i leverans- och fakturauppgifter innan betalning.</p>
 
         {error && <p className="feedback error">{error}</p>}
 
         <form className="checkout-form" onSubmit={handleSubmit}>
-          {renderAddressFields('shipping', 'Shipping Address', shippingAddress)}
+          {renderAddressFields('shipping', 'Leveransadress', shippingAddress)}
 
           <label className="remember-row">
             <input
@@ -234,15 +236,15 @@ function CheckoutPage({ user, isAdmin, onLogout }: CheckoutPageProps) {
               checked={billingSameAsShipping}
               onChange={(e) => setBillingSameAsShipping(e.target.checked)}
             />
-            Billing address same as shipping
+            Fakturaadress är samma som leveransadress
           </label>
 
           {!billingSameAsShipping &&
-            renderAddressFields('billing', 'Billing Address', billingAddress)}
+            renderAddressFields('billing', 'Fakturaadress', billingAddress)}
 
           {billingSameAsShipping && (
             <div className="checkout-summary">
-              <p className="subtitle">Billing address preview (same as shipping)</p>
+              <p className="subtitle">Fakturaadress (samma som leveransadress)</p>
               <p>{billingPreview.firstName} {billingPreview.lastName}</p>
               <p>{billingPreview.streetLine1}</p>
               <p>{billingPreview.postalCode} {billingPreview.city}</p>
@@ -250,7 +252,7 @@ function CheckoutPage({ user, isAdmin, onLogout }: CheckoutPageProps) {
           )}
 
           <button type="submit" className="submit-btn" disabled={isSubmitting}>
-            {isSubmitting ? 'Creating order...' : 'Proceed to Payment'}
+            {isSubmitting ? 'Skapar beställning...' : 'Gå till betalning'}
           </button>
         </form>
       </section>

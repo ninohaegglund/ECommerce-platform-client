@@ -42,7 +42,7 @@ function OrdersPage({ user, isAdmin, onLogout }: OrdersPageProps) {
       const response = await getOrders(user.id)
       setOrders(response)
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to load orders.'
+      const message = err instanceof Error ? err.message : 'Kunde inte ladda beställningar.'
       setError(message)
     } finally {
       setIsLoading(false)
@@ -84,7 +84,7 @@ function OrdersPage({ user, isAdmin, onLogout }: OrdersPageProps) {
     return code === -1
       ? typeof status === 'string'
         ? status
-        : `Unknown (${String(status)})`
+        : `Okänd (${String(status)})`
       : getOrderStatusLabel(code)
   }
 
@@ -119,7 +119,7 @@ function OrdersPage({ user, isAdmin, onLogout }: OrdersPageProps) {
       const details = await getOrderById(id)
       setSelectedOrder(details)
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to load order details.'
+      const message = err instanceof Error ? err.message : 'Kunde inte ladda orderdetaljer.'
       setError(message)
     } finally {
       setActiveOrderId('')
@@ -140,9 +140,9 @@ function OrdersPage({ user, isAdmin, onLogout }: OrdersPageProps) {
         setSelectedOrder(refreshedDetails)
       }
 
-      setSuccess('Order cancelled successfully.')
+      setSuccess('Beställningen har avbrutits.')
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to cancel order.'
+      const message = err instanceof Error ? err.message : 'Kunde inte avbryta beställning.'
       setError(message)
     } finally {
       setCancelingOrderId('')
@@ -154,32 +154,46 @@ function OrdersPage({ user, isAdmin, onLogout }: OrdersPageProps) {
       <AppNavbar user={user} isAdmin={isAdmin} onLogout={onLogout} />
 
       <section className="orders-page">
-        <h1>Your Orders</h1>
-        <p className="subtitle">Simple order history from OrderService.</p>
+        <h2 className="sv-section-title">Dina beställningar</h2>
+        <p className="sv-section-subtitle">Här hittar du dina senaste beställningar.</p>
 
         {checkoutSuccessMessage && <p className="feedback success">{checkoutSuccessMessage}</p>}
         {success && <p className="feedback success">{success}</p>}
         {error && <p className="feedback error">{error}</p>}
 
         {isLoading ? (
-          <p>Loading orders...</p>
+          <p>Laddar beställningar...</p>
         ) : orders.length === 0 ? (
-          <div className="hero-panel">
-            <h2>No orders yet</h2>
-            <p>Checkout your cart to create your first order.</p>
+          <div className="sv-empty-state">
+            <svg
+              className="sv-empty-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <path d="M16 10a4 4 0 0 1-8 0" />
+            </svg>
+            <h2>Inga beställningar än</h2>
+            <p>Slutför ett köp för att skapa din första beställning.</p>
           </div>
         ) : (
           <div className="orders-list">
             {orders.map((order) => (
               <article key={order.id} className="order-card">
                 <h3>{order.orderNumber || order.id}</h3>
-                <p><strong>Created:</strong> {formatDate(order.createdAtUtc)}</p>
+                <p><strong>Skapad:</strong> {formatDate(order.createdAtUtc)}</p>
                 <p><strong>Status:</strong> {getStatusLabel(order.status)}</p>
-                <p><strong>Payment:</strong> {order.paymentStatus || '-'}</p>
+                <p><strong>Betalning:</strong> {order.paymentStatus || '-'}</p>
                 <p>
-                  <strong>Total:</strong> {formatAmount(order.totalAmount, order.currency)}
+                  <strong>Totalt:</strong> {formatAmount(order.totalAmount, order.currency)}
                 </p>
-                <p><strong>Items:</strong> {getItemCount(order)}</p>
+                <p><strong>Produkter:</strong> {getItemCount(order)}</p>
                 <div className="order-actions">
                   <button
                     type="button"
@@ -187,7 +201,7 @@ function OrdersPage({ user, isAdmin, onLogout }: OrdersPageProps) {
                     onClick={() => void viewOrderDetails(order.id)}
                     disabled={activeOrderId === order.id}
                   >
-                    {activeOrderId === order.id ? 'Loading...' : 'View details'}
+                    {activeOrderId === order.id ? 'Laddar...' : 'Visa detaljer'}
                   </button>
                   {canCancelOrder(order.status) && (
                     <button
@@ -196,7 +210,7 @@ function OrdersPage({ user, isAdmin, onLogout }: OrdersPageProps) {
                       onClick={() => void handleCancelOrder(order.id)}
                       disabled={cancelingOrderId === order.id}
                     >
-                      {cancelingOrderId === order.id ? 'Cancelling...' : 'Cancel order'}
+                      {cancelingOrderId === order.id ? 'Avbryter...' : 'Avbryt beställning'}
                     </button>
                   )}
                 </div>
@@ -207,18 +221,18 @@ function OrdersPage({ user, isAdmin, onLogout }: OrdersPageProps) {
 
         {selectedOrder && (
           <section className="order-details">
-            <h2>Order Details: {selectedOrder.orderNumber || selectedOrder.id}</h2>
+            <h2>Orderdetaljer: {selectedOrder.orderNumber || selectedOrder.id}</h2>
             <p><strong>Status:</strong> {getStatusLabel(selectedOrder.status)}</p>
-            <p><strong>Payment:</strong> {selectedOrder.paymentStatus || '-'}</p>
+            <p><strong>Betalning:</strong> {selectedOrder.paymentStatus || '-'}</p>
             <div className="cart-table-wrap">
               <table className="cart-table">
                 <thead>
                   <tr>
-                    <th>Product</th>
+                    <th>Produkt</th>
                     <th>SKU</th>
-                    <th>Quantity</th>
-                    <th>Unit Price</th>
-                    <th>Total</th>
+                    <th>Antal</th>
+                    <th>Styckpris</th>
+                    <th>Totalt</th>
                   </tr>
                 </thead>
                 <tbody>

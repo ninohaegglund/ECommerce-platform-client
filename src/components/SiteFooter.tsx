@@ -1,78 +1,102 @@
 import { Link } from 'react-router-dom'
 
 function SiteFooter() {
-  const productLinks = [
-    { label: 'Pokemon', to: '/dashboard#pokemon' },
-    { label: 'Magic: The Gathering', to: '/dashboard#magic' },
-    { label: 'One Piece', to: '/dashboard#one-piece' },
-    { label: 'Yu-Gi-Oh!', to: '/dashboard#yu-gi-oh' },
-    { label: 'Lorcana', to: '/dashboard#lorcana' },
-    { label: 'Accessories', to: '/dashboard#accessories' },
-  ]
-
-  const customerLinks = [
-    { label: 'Orders', to: '/orders' },
-    { label: 'Wishlist', to: '/wishlist' },
-    { label: 'Account', to: '/account' },
-    { label: 'Notifications', to: '/notifications' },
+  const columns = [
+    {
+      title: 'Handla',
+      links: [
+        { label: 'Pokémon TCG', to: '/dashboard#pokemon' },
+        { label: 'Magic: The Gathering', to: '/dashboard#magic' },
+        { label: 'One Piece', to: '/dashboard#one-piece' },
+        { label: 'Yu-Gi-Oh!', to: '/dashboard#yu-gi-oh' },
+        { label: 'Lorcana', to: '/dashboard#lorcana' },
+        { label: 'Retro-konsoler', to: '/dashboard#consoles' },
+        { label: 'Tillbehör', to: '/dashboard#accessories' },
+      ],
+    },
+    {
+      title: 'Service',
+      links: [
+        { label: 'Kontakta oss', to: '/about' },
+        { label: 'Frakt & leverans', to: '/about' },
+        { label: 'Retur & byten', to: '/about' },
+        { label: 'Prislöfte', to: '/about' },
+        { label: 'Äkthetsgaranti', to: '/about' },
+        { label: 'Förbokning', to: '/dashboard#preorders' },
+      ],
+    },
+    {
+      title: 'Företag',
+      links: [
+        { label: 'Om Spelvalvet', to: '/about' },
+        { label: 'Topplistan', to: '/dashboard#best-sellers' },
+        { label: 'Recensioner', to: '/dashboard#reviews' },
+        { label: 'Hållbarhet', to: '/about' },
+      ],
+    },
+    {
+      title: 'Konto',
+      links: [
+        { label: 'Logga in', to: '/login' },
+        { label: 'Skapa konto', to: '/register' },
+        { label: 'Mina ordrar', to: '/orders' },
+        { label: 'Mina favoriter', to: '/wishlist' },
+        { label: 'Aviseringar', to: '/notifications' },
+        { label: 'Presentkort', to: '/about' },
+      ],
+    },
   ]
 
   return (
-    <footer className="site-footer">
-      <section className="service-strip" aria-label="Store guarantees">
-        <article>
-          <h2>Free shipping</h2>
-          <p>On purchases over 2999 SEK</p>
-        </article>
-        <article>
-          <h2>Price guarantee</h2>
-          <p>14 day price promise</p>
-        </article>
-        <article>
-          <h2>Secure payments</h2>
-          <p>Card, Swish and Klarna</p>
-        </article>
-        <article>
-          <h2>Open purchase</h2>
-          <p>14 days open purchase</p>
-        </article>
-      </section>
-
-      <div className="footer-main">
-        <section className="footer-brand-block" aria-label="NovaCart TCG">
-          <Link className="footer-brand" to="/dashboard">
-            NovaCart TCG
-          </Link>
-          <p>
-            Your online trading card store for Pokemon, Magic, One Piece, retro
-            consoles and trusted collector accessories.
-          </p>
-          <p className="footer-note">Your passion, our range.</p>
-        </section>
-
-        <nav className="footer-column" aria-label="Products">
-          <h2>Products</h2>
-          {productLinks.map((link) => (
-            <Link key={link.label} to={link.to}>
-              {link.label}
+    <footer className="sv-footer">
+      <div className="sv-footer-inner">
+        <div className="sv-footer-grid">
+          {/* Brand column */}
+          <div>
+            <Link className="sv-footer-brand" to="/dashboard" aria-label="Spelvalvet hem">
+              <div className="sv-footer-logo-mark" aria-hidden="true">
+                <div className="sv-footer-logo-vault">
+                  <div className="sv-footer-logo-dot" />
+                </div>
+              </div>
+              <span className="sv-footer-brand-name">Spelvalvet</span>
             </Link>
-          ))}
-        </nav>
+            <p className="sv-footer-tagline">"Vi öppnar valvet, du fyller hyllan."</p>
+            <p className="sv-footer-legal">
+              Spelvalvet AB · Götgatan 24, 116 21 Stockholm · org.nr 559214-9876.
+              Vi handlar och säljer trading cards, retro-konsoler och tillbehör sedan 2019.
+            </p>
+          </div>
 
-        <nav className="footer-column" aria-label="Customer">
-          <h2>Customer</h2>
-          {customerLinks.map((link) => (
-            <Link key={link.label} to={link.to}>
-              {link.label}
-            </Link>
+          {/* Link columns */}
+          {columns.map((col) => (
+            <nav key={col.title} className="sv-footer-col" aria-label={col.title}>
+              <span className="sv-footer-col-title">{col.title}</span>
+              <ul>
+                {col.links.map((link) => (
+                  <li key={link.label}>
+                    <Link to={link.to}>{link.label}</Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
           ))}
-          <Link to="/about">About us</Link>
-        </nav>
-      </div>
+        </div>
 
-      <div className="footer-bottom">
-        <span>NovaCart TCG 2026</span>
-        <span>Sweden's collector-first store experience</span>
+        <div className="sv-footer-bottom">
+          <div className="sv-footer-copyright">
+            <span>© 2026 Spelvalvet AB</span>
+            <a href="#">Integritetspolicy</a>
+            <a href="#">Användarvillkor</a>
+            <a href="#">Cookies</a>
+          </div>
+          <div className="sv-footer-payments">
+            <span className="sv-pay-label">BETALA TRYGGT</span>
+            {['Klarna', 'Swish', 'Visa', 'MC', 'Trustly'].map((p) => (
+              <span key={p} className="sv-pay-chip">{p}</span>
+            ))}
+          </div>
+        </div>
       </div>
     </footer>
   )
