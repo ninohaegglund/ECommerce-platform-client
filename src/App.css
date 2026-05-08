@@ -435,7 +435,7 @@
   border: none;
   border-radius: 0;
   box-shadow: none;
-  padding: 0 32px 96px;
+  padding: 32px 32px 96px;
   max-width: 1320px;
   width: 100%;
   margin: 0 auto;
@@ -461,7 +461,7 @@
   .store-page > .orders-page,
   .store-page > .checkout-page,
   .store-page > .notification-page {
-    padding: 0 16px 64px;
+    padding: 24px 16px 64px;
   }
 }
 
