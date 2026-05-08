@@ -49,7 +49,7 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsUtilityHidden(window.scrollY > 20)
+      setIsUtilityHidden(window.scrollY > 0)
     }
 
     handleScroll()
