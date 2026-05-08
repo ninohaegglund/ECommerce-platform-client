@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useNotificationCenter } from '../context/notificationCenter'
 import type { AuthUser } from '../types/auth'
@@ -37,6 +37,7 @@ const productDropdownItems = [
 function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isNavOpen, setIsNavOpen] = useState(false)
+  const [isAtTop, setIsAtTop] = useState(true)
   const [isProductsOpen, setIsProductsOpen] = useState(false)
   const [searchFocused, setSearchFocused] = useState(false)
   const [searchValue, setSearchValue] = useState('')
@@ -46,55 +47,68 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
   const productPaths = productDropdownItems.map((item) => item.to)
   const isProductsActive = productPaths.includes(location.pathname)
 
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsAtTop(window.scrollY <= 0)
+    }
+
+    handleScroll()
+    window.addEventListener('scroll', handleScroll, { passive: true })
+
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
   const initials = `${user.firstName[0] ?? ''}${user.lastName[0] ?? ''}`.toUpperCase()
 
   return (
     <header className="sv-header">
       {/* Utility bar */}
-      <div className="sv-utility-bar">
-        <div className="sv-utility-inner">
-          <div className="sv-utility-left">
-            <span className="sv-utility-item">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M3 12V4h8l10 10-8 8L3 12Z"/><circle cx="8" cy="9" r="1.2" fill="var(--amber)"/>
-              </svg>
-              5% medlemsrabatt
-            </span>
-            <span className="sv-utility-item">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M3 7h11v9H3z"/><path d="M14 10h4l3 3v3h-7"/><circle cx="7" cy="18" r="1.5"/><circle cx="17" cy="18" r="1.5"/>
-              </svg>
-              1–4 dagars leverans
-            </span>
-            <span className="sv-utility-item">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6l-8-3Z"/><path d="m9 12 2 2 4-4"/>
-              </svg>
-              14 dagars prislöfte
-            </span>
-            <span className="sv-utility-item">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <circle cx="9" cy="8" r="3.5"/><path d="M2 20a7 7 0 0 1 14 0"/><path d="M16 4a3.5 3.5 0 0 1 0 7"/><path d="M22 20a6 6 0 0 0-5-6"/>
-              </svg>
-              20 000+ nöjda samlare
-            </span>
-          </div>
-          <div className="sv-utility-right">
-            <span className="sv-locale mono">SE · SEK</span>
-            <span className="sv-utility-divider" aria-hidden="true">|</span>
-            <a href="#">Spåra order</a>
-            <a href="#">Hjälp</a>
-            {isGuest ? (
-              <>
-                <Link to="/login">Logga in</Link>
-                <Link to="/register">Skapa konto</Link>
-              </>
-            ) : (
-              <span className="sv-utility-user">Hej, {user.firstName}</span>
-            )}
+      {isAtTop && (
+        <div className="sv-utility-bar">
+          <div className="sv-utility-inner">
+            <div className="sv-utility-left">
+              <span className="sv-utility-item">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M3 12V4h8l10 10-8 8L3 12Z"/><circle cx="8" cy="9" r="1.2" fill="var(--amber)"/>
+                </svg>
+                5% medlemsrabatt
+              </span>
+              <span className="sv-utility-item">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M3 7h11v9H3z"/><path d="M14 10h4l3 3v3h-7"/><circle cx="7" cy="18" r="1.5"/><circle cx="17" cy="18" r="1.5"/>
+                </svg>
+                1–4 dagars leverans
+              </span>
+              <span className="sv-utility-item">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6l-8-3Z"/><path d="m9 12 2 2 4-4"/>
+                </svg>
+                14 dagars prislöfte
+              </span>
+              <span className="sv-utility-item">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <circle cx="9" cy="8" r="3.5"/><path d="M2 20a7 7 0 0 1 14 0"/><path d="M16 4a3.5 3.5 0 0 1 0 7"/><path d="M22 20a6 6 0 0 0-5-6"/>
+                </svg>
+                20 000+ nöjda samlare
+              </span>
+            </div>
+            <div className="sv-utility-right">
+              <span className="sv-locale mono">SE · SEK</span>
+              <span className="sv-utility-divider" aria-hidden="true">|</span>
+              <a href="#">Spåra order</a>
+              <a href="#">Hjälp</a>
+              {isGuest ? (
+                <>
+                  <Link to="/login">Logga in</Link>
+                  <Link to="/register">Skapa konto</Link>
+                </>
+              ) : (
+                <span className="sv-utility-user">Hej, {user.firstName}</span>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Main navbar row */}
       <div className="sv-navbar-main">
