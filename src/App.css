@@ -297,6 +297,127 @@
 
 .store-page {
   min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+
+.store-page > .sv-footer,
+.sv-store > .sv-footer {
+  margin-top: auto;
+}
+
+.sv-empty-state {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 14px;
+  padding: 80px 24px;
+  min-height: 60vh;
+}
+
+.sv-empty-state .sv-empty-icon {
+  width: 72px;
+  height: 72px;
+  opacity: 0.7;
+  color: var(--ink-2);
+}
+
+.sv-empty-state h2 {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--ink);
+}
+
+.sv-empty-state p {
+  max-width: 460px;
+  color: var(--ink-2);
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.sv-empty-state .sv-empty-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.sv-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
+  margin-top: 28px;
+  margin-bottom: 64px;
+}
+
+.sv-info-card {
+  background: rgba(255, 249, 239, 0.94);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sv-info-card h3 {
+  margin: 0 0 4px;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.sv-info-card p {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.sv-info-card a {
+  color: var(--red);
+  font-weight: 600;
+}
+
+.success-check {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: #1f8a3a;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 44px;
+  font-weight: 700;
+  box-shadow: 0 12px 30px rgba(31, 138, 58, 0.35);
+  animation: success-pop 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.4) 1;
+}
+
+@keyframes success-pop {
+  from {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.sv-payment-center {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  min-height: 60vh;
 }
 
 .site-header {
@@ -3081,6 +3202,8 @@
 .sv-store {
   background: var(--bg);
   min-height: 100svh;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Section wrapper */
