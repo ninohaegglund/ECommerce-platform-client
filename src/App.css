@@ -2885,6 +2885,10 @@
   gap: 4px;
 }
 
+.sv-nav-dropdown {
+  position: relative;
+}
+
 .sv-nav-link {
   padding: 14px 16px;
   font-size: 14px;
@@ -2895,6 +2899,21 @@
   position: relative;
   white-space: nowrap;
   transition: color 0.12s;
+}
+
+.sv-nav-link--button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: inherit;
+}
+
+.sv-nav-caret {
+  width: 10px;
+  height: 10px;
 }
 
 .sv-nav-link:hover {
@@ -2926,6 +2945,34 @@
 }
 
 .sv-new-release strong {
+  color: var(--ink);
+}
+
+.sv-nav-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  min-width: 200px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow-md);
+  padding: 6px;
+  display: grid;
+  gap: 2px;
+  z-index: 60;
+}
+
+.sv-nav-dropdown-menu a {
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 13.5px;
+  color: var(--ink-2);
+  text-decoration: none;
+}
+
+.sv-nav-dropdown-menu a:hover {
+  background: var(--bg-2);
   color: var(--ink);
 }
 

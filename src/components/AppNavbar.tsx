@@ -26,15 +26,25 @@ const mainNavItems = [
   { label: 'Support', to: '/support' },
 ]
 
+const productDropdownItems = [
+  { label: 'Alla produkter', to: '/dashboard' },
+  { label: 'Pokémon-kort', to: '/pokemon-kort' },
+  { label: 'Spel', to: '/spel' },
+  { label: 'Konsoler', to: '/konsoler' },
+  { label: 'Refurbished', to: '/refurbished' },
+]
+
 function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isNavOpen, setIsNavOpen] = useState(false)
-  const [activeCategory, setActiveCategory] = useState('Pokémon')
+  const [isProductsOpen, setIsProductsOpen] = useState(false)
   const [searchFocused, setSearchFocused] = useState(false)
   const [searchValue, setSearchValue] = useState('')
   const { unreadCount } = useNotificationCenter()
   const location = useLocation()
   const isGuest = user.id === 'guest'
+  const productPaths = productDropdownItems.map((item) => item.to)
+  const isProductsActive = productPaths.includes(location.pathname)
 
   const initials = `${user.firstName[0] ?? ''}${user.lastName[0] ?? ''}`.toUpperCase()
 
@@ -207,6 +217,40 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
           <nav aria-label="Primär navigation">
             {mainNavItems.map((item) => {
               const isActive = location.pathname === item.to
+
+              if (item.label === 'Produkter') {
+                return (
+                  <div key={item.label} className="sv-nav-dropdown" onMouseLeave={() => setIsProductsOpen(false)}>
+                    <button
+                      type="button"
+                      className={`sv-nav-link sv-nav-link--button${isProductsActive ? ' sv-nav-link--active' : ''}`}
+                      onClick={() => setIsProductsOpen((v) => !v)}
+                      aria-expanded={isProductsOpen}
+                      aria-haspopup="menu"
+                    >
+                      Produkter
+                      <svg className="sv-nav-caret" viewBox="0 0 12 8" aria-hidden="true">
+                        <path d="M1 1.5L6 6.5L11 1.5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </button>
+                    {isProductsOpen && (
+                      <div className="sv-nav-dropdown-menu" role="menu">
+                        {productDropdownItems.map((dropdownItem) => (
+                          <Link
+                            key={dropdownItem.label}
+                            to={dropdownItem.to}
+                            role="menuitem"
+                            onClick={() => setIsProductsOpen(false)}
+                          >
+                            {dropdownItem.label}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              }
+
               return (
                 <Link
                   key={item.label}
@@ -231,29 +275,6 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
               <path d="m9 6 6 6-6 6"/>
             </svg>
           </div>
-        </div>
-      </div>
-
-      {/* Category pills row */}
-      <div className="sv-category-bar">
-        <div className="sv-category-inner">
-          <span className="sv-browse-label mono">BLÄDDRA →</span>
-          {CATEGORIES.map((cat) => {
-            const isActive = activeCategory === cat.name
-            return (
-              <button
-                key={cat.name}
-                type="button"
-                className={`sv-pill${isActive ? ' sv-pill--active' : ''}`}
-                style={isActive ? { borderColor: cat.color } : undefined}
-                onClick={() => setActiveCategory(cat.name)}
-              >
-                <span className="sv-pill-dot" style={{ background: cat.color }} aria-hidden="true" />
-                {cat.name}
-                <span className="sv-pill-count mono">{cat.count}</span>
-              </button>
-            )
-          })}
         </div>
       </div>
 
