@@ -17,7 +17,7 @@ function SimplePage({ user, title, description, isAdmin, onLogout, children }: S
     <main className="sv-store">
       <AppNavbar user={user} isAdmin={isAdmin} onLogout={onLogout} />
 
-      <section>
+      <section className="sv-simple-section">
         <div className="sv-product-section">
           <h2 className="sv-section-title">{title}</h2>
           <p className="sv-section-subtitle">{description}</p>

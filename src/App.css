@@ -420,6 +420,11 @@
   min-height: 60vh;
 }
 
+/* Give SimplePage's heading breathing room from the sticky navbar. */
+.sv-simple-section {
+  padding-top: 32px;
+}
+
 /* Page-level sections: were originally card-styled chrome inside a wider layout.
    Now they ARE the page section, so strip the card chrome and align with sv-product-section. */
 .store-page > .cart-page,
