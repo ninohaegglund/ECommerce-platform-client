@@ -2532,6 +2532,18 @@
   background: var(--ink);
   color: #f5e9d0;
   border-bottom: 1px solid #000;
+  max-height: 80px;
+  overflow: hidden;
+  transition: max-height 0.35s ease, opacity 0.35s ease, transform 0.35s ease;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.sv-utility-bar--hidden {
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-8px);
+  pointer-events: none;
 }
 
 .sv-utility-inner {
