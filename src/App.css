@@ -299,6 +299,8 @@
   min-height: 100svh;
   display: flex;
   flex-direction: column;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .store-page > .sv-footer,
@@ -418,6 +420,46 @@
   justify-content: center;
   padding: 48px 24px;
   min-height: 60vh;
+}
+
+/* Page-level sections: were originally card-styled chrome inside a wider layout.
+   Now they ARE the page section, so strip the card chrome and align with sv-product-section. */
+.store-page > .cart-page,
+.store-page > .orders-page,
+.store-page > .checkout-page,
+.store-page > .notification-page {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 24px 32px 96px;
+  max-width: 1320px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+}
+
+.store-page > .cart-page .sv-section-title,
+.store-page > .orders-page .sv-section-title,
+.store-page > .checkout-page .sv-section-title {
+  margin: 0;
+}
+
+.store-page > .cart-page .sv-section-subtitle,
+.store-page > .orders-page .sv-section-subtitle,
+.store-page > .checkout-page .sv-section-subtitle {
+  margin: 8px 0 24px;
+}
+
+@media (max-width: 720px) {
+  .store-page > .cart-page,
+  .store-page > .orders-page,
+  .store-page > .checkout-page,
+  .store-page > .notification-page {
+    padding: 16px 16px 64px;
+  }
 }
 
 .site-header {
