@@ -47,6 +47,10 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
   const productPaths = productDropdownItems.map((item) => item.to)
   const isProductsActive = productPaths.includes(location.pathname)
 
+  const handleLogoClick = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
   useEffect(() => {
     const handleScroll = () => {
       setIsAtTop(window.scrollY <= 0)
@@ -114,7 +118,7 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
       <div className="sv-navbar-main">
         <div className="sv-navbar-inner">
           {/* Logo */}
-          <Link className="sv-logo" to="/dashboard" aria-label="Spelvalvet hem">
+          <Link className="sv-logo" to="/dashboard" aria-label="Spelvalvet hem" onClick={handleLogoClick}>
             <div className="sv-logo-mark" aria-hidden="true">
               <div className="sv-logo-vault">
                 <div className="sv-logo-dot" />
