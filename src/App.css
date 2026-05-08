@@ -2534,7 +2534,6 @@
   border-bottom: 1px solid #000;
   max-height: 80px;
   overflow: hidden;
-  transition: max-height 0.35s ease, opacity 0.35s ease, transform 0.35s ease;
   opacity: 1;
   transform: translateY(0);
 }
