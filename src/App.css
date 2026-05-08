@@ -299,8 +299,6 @@
   min-height: 100svh;
   display: flex;
   flex-direction: column;
-  margin-left: auto;
-  margin-right: auto;
 }
 
 .store-page > .sv-footer,
@@ -432,7 +430,7 @@
   border: none;
   border-radius: 0;
   box-shadow: none;
-  padding: 24px 32px 96px;
+  padding: 0 32px 96px;
   max-width: 1320px;
   width: 100%;
   margin: 0 auto;
@@ -458,7 +456,7 @@
   .store-page > .orders-page,
   .store-page > .checkout-page,
   .store-page > .notification-page {
-    padding: 16px 16px 64px;
+    padding: 0 16px 64px;
   }
 }
 
@@ -1908,7 +1906,7 @@
 
 /* TCG-inspired storefront overrides */
 .store-page {
-  width: min(1320px, calc(100% - 24px));
+  width: 100%;
 }
 
 .site-header {
