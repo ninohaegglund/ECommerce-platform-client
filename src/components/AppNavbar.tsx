@@ -276,7 +276,6 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
                   className={`sv-nav-link${isActive ? ' sv-nav-link--active' : ''}`}
                 >
                   {item.label}
-                  {item.badge && <span className="sv-nav-dot" aria-hidden="true" />}
                 </Link>
               )
             })}
