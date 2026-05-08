@@ -438,12 +438,12 @@ function DashboardPage({ user, isAdmin, token: _token, expiresAt: _expiresAt, on
                 Nya och begagnade produkter från hela sortimentet. Allt skickas inom 24 timmar.
               </p>
             </div>
-            <a className="sv-section-link" href="#best-sellers">
+            <Link className="sv-section-link" to="/produkter">
               Se hela sortimentet
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M7 17 17 7"/><path d="M8 7h9v9"/>
               </svg>
-            </a>
+            </Link>
           </div>
 
           {(productsError || cartError) && (

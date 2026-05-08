@@ -4,6 +4,7 @@ import './App.css'
 import { NotificationCenterProvider } from './context/notificationCenter'
 import AuthPage from './pages/AuthPage'
 import AdminPage from './pages/AdminPage'
+import AllProductsPage from './pages/AllProductsPage'
 import CategoryPage from './pages/CategoryPage'
 import CartPage from './pages/CartPage'
 import CheckoutPage from './pages/CheckoutPage'
@@ -142,32 +143,24 @@ function App() {
       <Route
         path="/login"
         element={
-          canAccessStore ? (
-            <Navigate to="/dashboard" replace />
-          ) : (
-            <AuthPage
-              mode="login"
-              endpoint={loginEndpoint}
-              isLoading={isLoading}
-              onSubmit={handleSubmit}
-              onContinueAsGuest={handleContinueAsGuest}
-            />
-          )
+          <AuthPage
+            mode="login"
+            endpoint={loginEndpoint}
+            isLoading={isLoading}
+            onSubmit={handleSubmit}
+            onContinueAsGuest={handleContinueAsGuest}
+          />
         }
       />
       <Route
         path="/register"
         element={
-          canAccessStore ? (
-            <Navigate to="/dashboard" replace />
-          ) : (
-            <AuthPage
-              mode="register"
-              endpoint={registerEndpoint}
-              isLoading={isLoading}
-              onSubmit={handleSubmit}
-            />
-          )
+          <AuthPage
+            mode="register"
+            endpoint={registerEndpoint}
+            isLoading={isLoading}
+            onSubmit={handleSubmit}
+          />
         }
       />
       <Route
@@ -181,6 +174,16 @@ function App() {
               expiresAt={authExpiresAt}
               onLogout={handleLogout}
             />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+      <Route
+        path="/produkter"
+        element={
+          canAccessStore && activeUser ? (
+            <AllProductsPage user={activeUser} isAdmin={isAdmin} onLogout={handleLogout} />
           ) : (
             <Navigate to="/login" replace />
           )

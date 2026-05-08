@@ -34,6 +34,7 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
   const [searchValue, setSearchValue] = useState('')
   const { unreadCount } = useNotificationCenter()
   const location = useLocation()
+  const isGuest = user.id === 'guest'
 
   const initials = `${user.firstName[0] ?? ''}${user.lastName[0] ?? ''}`.toUpperCase()
 
@@ -73,7 +74,14 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
             <span className="sv-utility-divider" aria-hidden="true">|</span>
             <a href="#">Spåra order</a>
             <a href="#">Hjälp</a>
-            <a href="#" onClick={() => setIsMenuOpen(true)}>Logga in</a>
+            {isGuest ? (
+              <>
+                <Link to="/login">Logga in</Link>
+                <Link to="/register">Skapa konto</Link>
+              </>
+            ) : (
+              <span className="sv-utility-user">Hej, {user.firstName}</span>
+            )}
           </div>
         </div>
       </div>
@@ -156,37 +164,39 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
               <span>Varukorg</span>
             </Link>
 
-            <div className="sv-profile-menu">
-              <button
-                type="button"
-                className="sv-avatar"
-                onClick={() => setIsMenuOpen((v) => !v)}
-                aria-expanded={isMenuOpen}
-                aria-haspopup="menu"
-                aria-label="Kontomeny"
-              >
-                {initials || 'U'}
-              </button>
-              {isMenuOpen && (
-                <div className="sv-profile-dropdown" role="menu">
-                  <p className="sv-profile-name">{user.firstName} {user.lastName}</p>
-                  <p className="sv-profile-email">{user.email}</p>
-                  <Link to="/orders" role="menuitem" onClick={() => setIsMenuOpen(false)}>Mina ordrar</Link>
-                  <Link to="/wishlist" role="menuitem" onClick={() => setIsMenuOpen(false)}>Önskelista</Link>
-                  <Link to="/account" role="menuitem" onClick={() => setIsMenuOpen(false)}>Kontoinställningar</Link>
-                  {isAdmin && (
-                    <Link to="/admin" role="menuitem" onClick={() => setIsMenuOpen(false)}>Adminpanel</Link>
-                  )}
-                  <button
-                    type="button"
-                    className="sv-dropdown-logout"
-                    onClick={() => { setIsMenuOpen(false); onLogout() }}
-                  >
-                    Logga ut
-                  </button>
-                </div>
-              )}
-            </div>
+            {!isGuest && (
+              <div className="sv-profile-menu">
+                <button
+                  type="button"
+                  className="sv-avatar"
+                  onClick={() => setIsMenuOpen((v) => !v)}
+                  aria-expanded={isMenuOpen}
+                  aria-haspopup="menu"
+                  aria-label="Kontomeny"
+                >
+                  {initials || 'U'}
+                </button>
+                {isMenuOpen && (
+                  <div className="sv-profile-dropdown" role="menu">
+                    <p className="sv-profile-name">{user.firstName} {user.lastName}</p>
+                    <p className="sv-profile-email">{user.email}</p>
+                    <Link to="/orders" role="menuitem" onClick={() => setIsMenuOpen(false)}>Mina ordrar</Link>
+                    <Link to="/wishlist" role="menuitem" onClick={() => setIsMenuOpen(false)}>Önskelista</Link>
+                    <Link to="/account" role="menuitem" onClick={() => setIsMenuOpen(false)}>Kontoinställningar</Link>
+                    {isAdmin && (
+                      <Link to="/admin" role="menuitem" onClick={() => setIsMenuOpen(false)}>Adminpanel</Link>
+                    )}
+                    <button
+                      type="button"
+                      className="sv-dropdown-logout"
+                      onClick={() => { setIsMenuOpen(false); onLogout() }}
+                    >
+                      Logga ut
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
