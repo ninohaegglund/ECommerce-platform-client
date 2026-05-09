@@ -2,14 +2,44 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import AppNavbar from '../components/AppNavbar'
 import SiteFooter from '../components/SiteFooter'
+import { getProductImagePath, getProductProfile } from '../components/ProductCard'
 import { getCart, removeCartItem, updateCartItem } from '../services/cartApi'
+import { getProductImages } from '../services/productImagesApi'
 import type { AuthUser } from '../types/auth'
 import type { Cart, CartItem } from '../types/cart'
+import type { ProductImage } from '../types/product-image'
+import type { Product } from '../data/products'
 
 type CartPageProps = {
   user: AuthUser
   isAdmin: boolean
   onLogout: () => void
+}
+
+const getProductImageCandidates = (images: ProductImage[]) =>
+  images
+    .filter((img) => img.imageUrl.trim().length > 0)
+    .sort((a, b) => {
+      if (a.isPrimary !== b.isPrimary) {
+        return a.isPrimary ? -1 : 1
+      }
+      return a.sortOrder - b.sortOrder
+    })
+    .map((img) => img.imageUrl.trim())
+
+const resolveWorkingImageUrl = async (candidates: string[]) => {
+  for (const candidate of candidates) {
+    const ok = await new Promise<boolean>((resolve) => {
+      const img = new Image()
+      img.onload = () => resolve(true)
+      img.onerror = () => resolve(false)
+      img.src = candidate
+    })
+    if (ok) {
+      return candidate
+    }
+  }
+  return ''
 }
 
 function CartPage({ user, isAdmin, onLogout }: CartPageProps) {
@@ -19,6 +49,7 @@ function CartPage({ user, isAdmin, onLogout }: CartPageProps) {
   const [activeItemId, setActiveItemId] = useState('')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [productImageUrls, setProductImageUrls] = useState<Record<string, string>>({})
 
   const loadCart = useCallback(async () => {
     setIsLoading(true)
@@ -39,6 +70,47 @@ function CartPage({ user, isAdmin, onLogout }: CartPageProps) {
     void loadCart()
   }, [loadCart])
 
+  useEffect(() => {
+    const productIds = cart?.items.map((item) => item.productId) ?? []
+    const pendingIds = productIds.filter((id) => !productImageUrls[id])
+    if (pendingIds.length === 0) {
+      return
+    }
+
+    let cancelled = false
+
+    const loadImages = async () => {
+      const entries = await Promise.all(
+        pendingIds.map(async (productId) => {
+          try {
+            const images = await getProductImages(productId)
+            const url = await resolveWorkingImageUrl(getProductImageCandidates(images))
+            return url ? [productId, url] : null
+          } catch {
+            return null
+          }
+        }),
+      )
+
+      if (cancelled) {
+        return
+      }
+
+      const resolved = Object.fromEntries(
+        entries.filter((entry): entry is [string, string] => entry !== null),
+      )
+      if (Object.keys(resolved).length > 0) {
+        setProductImageUrls((prev) => ({ ...prev, ...resolved }))
+      }
+    }
+
+    void loadImages()
+
+    return () => {
+      cancelled = true
+    }
+  }, [cart, productImageUrls])
+
   const formattedSubtotal = useMemo(() => {
     if (!cart) {
       return '-'
@@ -50,6 +122,18 @@ function CartPage({ user, isAdmin, onLogout }: CartPageProps) {
       maximumFractionDigits: 2,
     }).format(cart.subtotalAmount)
   }, [cart])
+
+  const getFallbackImageUrl = (item: CartItem) => {
+    const product: Product = {
+      id: item.productId,
+      name: item.productName || 'Produkt',
+      shortDescription: '',
+      price: item.unitPrice ?? 0,
+      currency: cart?.currency || 'SEK',
+    }
+    const profile = getProductProfile(product)
+    return getProductImagePath(product, profile.tone)
+  }
 
   const changeQuantity = async (item: CartItem, nextQuantity: number) => {
     if (nextQuantity < 1) {
@@ -131,7 +215,6 @@ function CartPage({ user, isAdmin, onLogout }: CartPageProps) {
                 <thead>
                   <tr>
                     <th>Produkt</th>
-                    <th>SKU</th>
                     <th>Antal</th>
                     <th>Styckpris</th>
                     <th>Totalt</th>
@@ -141,8 +224,19 @@ function CartPage({ user, isAdmin, onLogout }: CartPageProps) {
                 <tbody>
                   {cart.items.map((item) => (
                     <tr key={item.id}>
-                      <td>{item.productName}</td>
-                      <td>{item.sku}</td>
+                      <td className="cart-product-cell">
+                        <img
+                          src={productImageUrls[item.productId] ?? getFallbackImageUrl(item)}
+                          alt={item.productName}
+                          onError={(e) => {
+                            const fallback = getFallbackImageUrl(item)
+                            if (e.currentTarget.src !== fallback) {
+                              e.currentTarget.src = fallback
+                            }
+                          }}
+                        />
+                        <span>{item.productName}</span>
+                      </td>
                       <td>
                         <div className="qty-controls">
                           <button
