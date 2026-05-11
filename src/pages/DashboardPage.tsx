@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type PointerEvent } from 'react'
 import { Link } from 'react-router-dom'
 import AppNavbar from '../components/AppNavbar'
 import ProductCard from '../components/ProductCard'
@@ -151,6 +151,7 @@ const BESTSELLER_CATS = [
 const BESTSELLER_CHANGES = ['+412 sålda', '+298 sålda', '+241 sålda', '+187 sålda']
 const VISIBLE_REVIEW_COUNT = 3
 const REVIEW_AUTOPLAY_MS = 4200
+const REVIEW_DRAG_THRESHOLD_PX = 56
 
 function getProductImageCandidates(images: ProductImage[]) {
   return images
@@ -202,6 +203,10 @@ function DashboardPage({ user, isAdmin, onLogout }: DashboardPageProps) {
   const [cartError, setCartError] = useState('')
   const [activeReviewIndex, setActiveReviewIndex] = useState(0)
   const [isReviewCarouselPaused, setIsReviewCarouselPaused] = useState(false)
+  const [isReviewDragging, setIsReviewDragging] = useState(false)
+  const reviewDragStartX = useRef(0)
+  const reviewDragDeltaX = useRef(0)
+  const reviewDragPointerId = useRef<number | null>(null)
   const reviewCount = REVIEW_DATA.length
 
   useEffect(() => {
@@ -290,6 +295,47 @@ function DashboardPage({ user, isAdmin, onLogout }: DashboardPageProps) {
   }
   const goToNextReview = () => {
     setActiveReviewIndex((index) => (index + 1) % reviewCount)
+  }
+  const handleReviewDragStart = (event: PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === 'mouse' && event.button !== 0) return
+
+    reviewDragStartX.current = event.clientX
+    reviewDragDeltaX.current = 0
+    reviewDragPointerId.current = event.pointerId
+    setIsReviewCarouselPaused(true)
+    setIsReviewDragging(true)
+    event.currentTarget.setPointerCapture(event.pointerId)
+  }
+  const handleReviewDragMove = (event: PointerEvent<HTMLDivElement>) => {
+    if (reviewDragPointerId.current !== event.pointerId) return
+
+    reviewDragDeltaX.current = event.clientX - reviewDragStartX.current
+  }
+  const finishReviewDrag = (event: PointerEvent<HTMLDivElement>) => {
+    if (reviewDragPointerId.current !== event.pointerId) return
+
+    const dragDistance = reviewDragDeltaX.current
+    reviewDragPointerId.current = null
+    reviewDragStartX.current = 0
+    reviewDragDeltaX.current = 0
+    setIsReviewDragging(false)
+    setIsReviewCarouselPaused(
+      event.currentTarget.matches(':hover') ||
+        event.currentTarget.contains(document.activeElement),
+    )
+
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId)
+    }
+
+    if (Math.abs(dragDistance) < REVIEW_DRAG_THRESHOLD_PX) return
+
+    if (dragDistance < 0) {
+      goToNextReview()
+      return
+    }
+
+    goToPreviousReview()
   }
 
   return (
@@ -607,7 +653,7 @@ function DashboardPage({ user, isAdmin, onLogout }: DashboardPageProps) {
           </div>
 
           <div
-            className={`sv-reviews-carousel${isReviewCarouselPaused ? ' sv-reviews-carousel--paused' : ''}`}
+            className={`sv-reviews-carousel${isReviewCarouselPaused ? ' sv-reviews-carousel--paused' : ''}${isReviewDragging ? ' sv-reviews-carousel--dragging' : ''}`}
             aria-label="Kundrecensioner"
             aria-roledescription="carousel"
             onBlur={() => setIsReviewCarouselPaused(false)}
@@ -626,7 +672,13 @@ function DashboardPage({ user, isAdmin, onLogout }: DashboardPageProps) {
               </svg>
             </button>
 
-            <div className="sv-reviews-viewport">
+            <div
+              className="sv-reviews-viewport"
+              onPointerCancel={finishReviewDrag}
+              onPointerDown={handleReviewDragStart}
+              onPointerMove={handleReviewDragMove}
+              onPointerUp={finishReviewDrag}
+            >
               <div className="sv-reviews-track">
                 {visibleReviewIndexes.map((reviewIndex, slotIndex) => {
                   const review = REVIEW_DATA[reviewIndex]

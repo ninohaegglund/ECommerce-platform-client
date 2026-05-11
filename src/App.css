@@ -4256,6 +4256,12 @@
   grid-column: 2;
   border-radius: 8px;
   box-shadow: 0 18px 46px rgba(23, 24, 29, 0.08);
+  cursor: grab;
+  touch-action: pan-y;
+}
+
+.sv-reviews-carousel--dragging .sv-reviews-viewport {
+  cursor: grabbing;
 }
 
 .sv-reviews-track {
@@ -4280,6 +4286,10 @@
   position: relative;
   overflow: hidden;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.sv-reviews-carousel--dragging .sv-review-card {
+  user-select: none;
 }
 
 .sv-review-card::after {
