@@ -627,7 +627,7 @@ function DashboardPage({ user, isAdmin, onLogout }: DashboardPageProps) {
             </button>
 
             <div className="sv-reviews-viewport">
-              <div key={activeReviewIndex} className="sv-reviews-track">
+              <div className="sv-reviews-track">
                 {visibleReviewIndexes.map((reviewIndex, slotIndex) => {
                   const review = REVIEW_DATA[reviewIndex]
 

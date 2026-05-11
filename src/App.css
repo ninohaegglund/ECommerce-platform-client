@@ -4262,7 +4262,6 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
-  animation: sv-review-window-in 0.42s ease both;
 }
 
 .sv-review-card {
@@ -4292,29 +4291,10 @@
   opacity: 0.9;
 }
 
-.sv-review-card--active .sv-review-badge,
-.sv-review-card--active .sv-review-stars,
-.sv-review-card--active .sv-review-quote,
-.sv-review-card--active .sv-review-footer {
-  animation: sv-review-rise 0.48s ease both;
-}
-
 .sv-review-card--active {
   border-color: rgba(23, 24, 29, 0.22);
   box-shadow: var(--shadow-md);
   transform: translateY(-2px);
-}
-
-.sv-review-card--active .sv-review-stars {
-  animation-delay: 0.04s;
-}
-
-.sv-review-card--active .sv-review-quote {
-  animation-delay: 0.08s;
-}
-
-.sv-review-card--active .sv-review-footer {
-  animation-delay: 0.12s;
 }
 
 .sv-review-nav-btn {
@@ -4423,7 +4403,6 @@
   height: 100%;
   transform-origin: left;
   background: linear-gradient(90deg, var(--red), var(--amber), var(--mint));
-  transition: transform 0.5s cubic-bezier(0.22, 0.74, 0.16, 1);
 }
 
 .sv-reviews-carousel--paused .sv-review-progress span {
@@ -4499,42 +4478,11 @@
   color: var(--ink-3);
 }
 
-@keyframes sv-review-rise {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes sv-review-window-in {
-  from {
-    opacity: 0;
-    transform: translateX(14px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .sv-reviews-track,
   .sv-review-progress span,
   .sv-review-nav-btn,
   .sv-review-dot {
     transition: none;
-  }
-
-  .sv-review-card--active .sv-review-badge,
-  .sv-review-card--active .sv-review-stars,
-  .sv-review-card--active .sv-review-quote,
-  .sv-review-card--active .sv-review-footer,
-  .sv-reviews-track {
-    animation: none;
   }
 }
 
