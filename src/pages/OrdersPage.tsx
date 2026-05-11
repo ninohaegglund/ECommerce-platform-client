@@ -1,16 +1,22 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import AppNavbar from '../components/AppNavbar'
 import SiteFooter from '../components/SiteFooter'
+import { getProductImagePath, getProductProfile } from '../components/ProductCard'
 import { getOrderById, getOrders, updateOrderStatus } from '../services/cartApi'
+import { getProductImages } from '../services/productImagesApi'
 import type { AuthUser } from '../types/auth'
+import type { ProductImage } from '../types/product-image'
 import {
   getOrderStatusLabel,
   OrderStatusCode,
   parseOrderStatusCode,
   type OrderDetails,
+  type OrderAddress,
+  type OrderItem,
   type OrderSummary,
 } from '../types/order'
+import type { Product } from '../data/products'
 
 type OrdersPageProps = {
   user: AuthUser
@@ -20,6 +26,32 @@ type OrdersPageProps = {
 
 type CheckoutSuccessState = {
   checkoutSuccess?: string
+}
+
+const getProductImageCandidates = (images: ProductImage[]) =>
+  images
+    .filter((img) => img.imageUrl.trim().length > 0)
+    .sort((a, b) => {
+      if (a.isPrimary !== b.isPrimary) {
+        return a.isPrimary ? -1 : 1
+      }
+      return a.sortOrder - b.sortOrder
+    })
+    .map((img) => img.imageUrl.trim())
+
+const resolveWorkingImageUrl = async (candidates: string[]) => {
+  for (const candidate of candidates) {
+    const ok = await new Promise<boolean>((resolve) => {
+      const img = new Image()
+      img.onload = () => resolve(true)
+      img.onerror = () => resolve(false)
+      img.src = candidate
+    })
+    if (ok) {
+      return candidate
+    }
+  }
+  return ''
 }
 
 function OrdersPage({ user, isAdmin, onLogout }: OrdersPageProps) {
@@ -33,6 +65,8 @@ function OrdersPage({ user, isAdmin, onLogout }: OrdersPageProps) {
   const [cancelingOrderId, setCancelingOrderId] = useState('')
   const [success, setSuccess] = useState('')
   const [error, setError] = useState('')
+  const [productImageUrls, setProductImageUrls] = useState<Record<string, string>>({})
+  const modalRef = useRef<HTMLDivElement | null>(null)
 
   const loadOrders = useCallback(async () => {
     setIsLoading(true)
@@ -52,6 +86,58 @@ function OrdersPage({ user, isAdmin, onLogout }: OrdersPageProps) {
   useEffect(() => {
     void loadOrders()
   }, [loadOrders])
+
+  useEffect(() => {
+    if (selectedOrder) {
+      modalRef.current?.focus()
+    }
+  }, [selectedOrder])
+
+  useEffect(() => {
+    const productIds = new Set<string>()
+    for (const order of orders) {
+      order.items?.forEach((item) => productIds.add(item.productId))
+    }
+    selectedOrder?.items?.forEach((item) => productIds.add(item.productId))
+
+    const pendingIds = [...productIds].filter((id) => !productImageUrls[id])
+    if (pendingIds.length === 0) {
+      return
+    }
+
+    let cancelled = false
+
+    const loadImages = async () => {
+      const entries = await Promise.all(
+        pendingIds.map(async (productId) => {
+          try {
+            const images = await getProductImages(productId)
+            const url = await resolveWorkingImageUrl(getProductImageCandidates(images))
+            return url ? [productId, url] : null
+          } catch {
+            return null
+          }
+        }),
+      )
+
+      if (cancelled) {
+        return
+      }
+
+      const resolved = Object.fromEntries(
+        entries.filter((entry): entry is [string, string] => entry !== null),
+      )
+      if (Object.keys(resolved).length > 0) {
+        setProductImageUrls((prev) => ({ ...prev, ...resolved }))
+      }
+    }
+
+    void loadImages()
+
+    return () => {
+      cancelled = true
+    }
+  }, [orders, selectedOrder, productImageUrls])
 
   const checkoutSuccessMessage = useMemo(
     () => state?.checkoutSuccess ?? '',
@@ -108,6 +194,81 @@ function OrdersPage({ user, isAdmin, onLogout }: OrdersPageProps) {
     }
 
     return 0
+  }
+
+  const getOrderItemPreview = (order: OrderSummary): OrderItem[] => {
+    if (!order.items || order.items.length === 0) {
+      return []
+    }
+
+    return order.items.slice(0, 1)
+  }
+
+  const getFallbackImageUrl = (item: OrderItem, currency: string) => {
+    const product: Product = {
+      id: item.productId,
+      name: item.productName || 'Produkt',
+      shortDescription: '',
+      price: item.unitPrice ?? 0,
+      currency,
+    }
+    const profile = getProductProfile(product)
+    return getProductImagePath(product, profile.tone)
+  }
+
+  const formatPaymentStatus = (status: number | string | null | undefined) => {
+    if (typeof status === 'string') {
+      return status
+    }
+
+    const code = typeof status === 'number' ? status : NaN
+    if (!Number.isFinite(code)) {
+      return '-'
+    }
+
+    const labels: Record<number, string> = {
+      0: 'Ej betald',
+      1: 'Betald',
+      2: 'Misslyckad',
+      3: 'Aterbetald',
+    }
+
+    return labels[code] ?? `Kod ${code}`
+  }
+
+  const formatAddressLines = (address?: OrderAddress) => {
+    if (!address) {
+      return ['-']
+    }
+
+    const lines = [
+      `${address.firstName} ${address.lastName}`.trim(),
+      address.company || '',
+      address.streetLine1,
+      address.streetLine2 || '',
+      `${address.postalCode} ${address.city}`.trim(),
+      address.region || '',
+      address.countryCode || '',
+      address.phoneNumber ? `Tel: ${address.phoneNumber}` : '',
+    ]
+
+    return lines.filter((line) => line.trim().length > 0)
+  }
+
+  const handleCloseDetails = () => {
+    setSelectedOrder(null)
+  }
+
+  const handleBackdropClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (event.target === event.currentTarget) {
+      handleCloseDetails()
+    }
+  }
+
+  const handleModalKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Escape') {
+      handleCloseDetails()
+    }
   }
 
   const viewOrderDetails = async (id: string) => {
@@ -186,14 +347,39 @@ function OrdersPage({ user, isAdmin, onLogout }: OrdersPageProps) {
           <div className="orders-list">
             {orders.map((order) => (
               <article key={order.id} className="order-card">
-                <h3>{order.orderNumber || order.id}</h3>
+                <h3>Ordernummer: {order.orderNumber || order.id}</h3>
                 <p><strong>Skapad:</strong> {formatDate(order.createdAtUtc)}</p>
-                <p><strong>Status:</strong> {getStatusLabel(order.status)}</p>
-                <p><strong>Betalning:</strong> {order.paymentStatus || '-'}</p>
                 <p>
                   <strong>Totalt:</strong> {formatAmount(order.totalAmount, order.currency)}
                 </p>
                 <p><strong>Produkter:</strong> {getItemCount(order)}</p>
+                {getOrderItemPreview(order).length > 0 && (
+                  <div className="order-items-preview">
+                    {getOrderItemPreview(order).map((item) => {
+                      const imageUrl =
+                        productImageUrls[item.productId] ??
+                        getFallbackImageUrl(item, order.currency)
+                      return (
+                        <div key={item.id} className="order-item-preview">
+                          <img
+                            src={imageUrl}
+                            alt={item.productName}
+                            onError={(e) => {
+                              const fallback = getFallbackImageUrl(item, order.currency)
+                              if (e.currentTarget.src !== fallback) {
+                                e.currentTarget.src = fallback
+                              }
+                            }}
+                          />
+                          <div>
+                            <p className="order-item-name">{item.productName}</p>
+                            <p className="order-item-meta">Antal: {item.quantity}</p>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
                 <div className="order-actions">
                   <button
                     type="button"
@@ -220,35 +406,137 @@ function OrdersPage({ user, isAdmin, onLogout }: OrdersPageProps) {
         )}
 
         {selectedOrder && (
-          <section className="order-details">
-            <h2>Orderdetaljer: {selectedOrder.orderNumber || selectedOrder.id}</h2>
-            <p><strong>Status:</strong> {getStatusLabel(selectedOrder.status)}</p>
-            <p><strong>Betalning:</strong> {selectedOrder.paymentStatus || '-'}</p>
-            <div className="cart-table-wrap">
-              <table className="cart-table">
-                <thead>
-                  <tr>
-                    <th>Produkt</th>
-                    <th>SKU</th>
-                    <th>Antal</th>
-                    <th>Styckpris</th>
-                    <th>Totalt</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {selectedOrder.items?.map((item) => (
-                    <tr key={item.id}>
-                      <td>{item.productName}</td>
-                      <td>{item.sku}</td>
-                      <td>{item.quantity}</td>
-                      <td>{item.unitPrice.toFixed(2)}</td>
-                      <td>{item.totalPrice.toFixed(2)}</td>
-                    </tr>
+          <div
+            className="order-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="order-details-title"
+            onClick={handleBackdropClick}
+            onKeyDown={handleModalKeyDown}
+            tabIndex={-1}
+            ref={modalRef}
+          >
+            <div className="order-modal-card">
+              <header className="order-modal-header">
+                <div>
+                  <p className="order-modal-eyebrow">Orderdetaljer</p>
+                  <h2 id="order-details-title">
+                    Ordernummer: {selectedOrder.orderNumber || selectedOrder.id}
+                  </h2>
+                  <p className="order-modal-meta">
+                    <span>Status: {getStatusLabel(selectedOrder.status)}</span>
+                    <span>Betalning: {formatPaymentStatus(selectedOrder.paymentStatus)}</span>
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="order-modal-close"
+                  onClick={handleCloseDetails}
+                  aria-label="Stäng orderdetaljer"
+                >
+                  ×
+                </button>
+              </header>
+
+              <div className="order-details-grid">
+                <section className="order-details-card">
+                  <h3>Orderinfo</h3>
+                  <p><strong>Orderdatum:</strong> {formatDate(selectedOrder.createdAtUtc)}</p>
+                  <p>
+                    <strong>Uppdaterad:</strong>{' '}
+                    {selectedOrder.updatedAtUtc ? formatDate(selectedOrder.updatedAtUtc) : '-'}
+                  </p>
+                  <p><strong>Orderstatus:</strong> {getStatusLabel(selectedOrder.status)}</p>
+                  <p>
+                    <strong>Betalningsstatus:</strong>{' '}
+                    {formatPaymentStatus(selectedOrder.paymentStatus)}
+                  </p>
+                </section>
+                <section className="order-details-card">
+                  <h3>Betalning</h3>
+                  <p><strong>Betalningsmetod:</strong> {selectedOrder.paymentProvider || '-'}</p>
+                  <p>
+                    <strong>Transaktion:</strong> {selectedOrder.paymentTransactionId || '-'}
+                  </p>
+                  <p>
+                    <strong>Delsumma:</strong>{' '}
+                    {formatAmount(selectedOrder.subtotalAmount ?? 0, selectedOrder.currency)}
+                  </p>
+                  <p>
+                    <strong>Frakt:</strong>{' '}
+                    {formatAmount(selectedOrder.shippingAmount ?? 0, selectedOrder.currency)}
+                  </p>
+                  <p>
+                    <strong>Moms:</strong>{' '}
+                    {formatAmount(selectedOrder.taxAmount ?? 0, selectedOrder.currency)}
+                  </p>
+                  <p>
+                    <strong>Rabatt:</strong>{' '}
+                    {formatAmount(selectedOrder.discountAmount ?? 0, selectedOrder.currency)}
+                  </p>
+                  <p>
+                    <strong>Totalsumma:</strong>{' '}
+                    {formatAmount(selectedOrder.totalAmount, selectedOrder.currency)}
+                  </p>
+                </section>
+                <section className="order-details-card">
+                  <h3>Leveransadress</h3>
+                  {formatAddressLines(selectedOrder.shippingAddress).map((line) => (
+                    <p key={`ship-${line}`}>{line}</p>
                   ))}
-                </tbody>
-              </table>
+                </section>
+                <section className="order-details-card">
+                  <h3>Fakturaadress</h3>
+                  {formatAddressLines(selectedOrder.billingAddress).map((line) => (
+                    <p key={`bill-${line}`}>{line}</p>
+                  ))}
+                </section>
+              </div>
+
+              <div className="cart-table-wrap">
+                <table className="cart-table order-details-table">
+                  <thead>
+                    <tr>
+                      <th>Produkt</th>
+                      <th>Antal</th>
+                      <th>Styckpris</th>
+                      <th>Totalt</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedOrder.items?.map((item) => {
+                      const imageUrl =
+                        productImageUrls[item.productId] ??
+                        getFallbackImageUrl(item, selectedOrder.currency)
+                      return (
+                        <tr key={item.id}>
+                          <td className="order-details-product">
+                            <img
+                              src={imageUrl}
+                              alt={item.productName}
+                              onError={(e) => {
+                                const fallback = getFallbackImageUrl(item, selectedOrder.currency)
+                                if (e.currentTarget.src !== fallback) {
+                                  e.currentTarget.src = fallback
+                                }
+                              }}
+                            />
+                            <div>
+                              <p className="order-item-name">{item.productName}</p>
+                              <p className="order-item-meta">ID: {item.productId}</p>
+                            </div>
+                          </td>
+                          <td>{item.quantity}</td>
+                          <td>{formatAmount(item.unitPrice, selectedOrder.currency)}</td>
+                          <td>{formatAmount(item.totalPrice, selectedOrder.currency)}</td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </section>
+          </div>
         )}
       </section>
 

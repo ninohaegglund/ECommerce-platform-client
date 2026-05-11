@@ -1,11 +1,26 @@
 export type OrderItem = {
   id: string
+  orderId?: string
   productId: string
   productName: string
   sku: string
   quantity: number
   unitPrice: number
+  discountAmount?: number
   totalPrice: number
+}
+
+export type OrderAddress = {
+  firstName: string
+  lastName: string
+  company?: string
+  streetLine1: string
+  streetLine2?: string
+  city: string
+  postalCode: string
+  region?: string
+  countryCode?: string
+  phoneNumber?: string
 }
 
 export const OrderStatusCode = {
@@ -84,10 +99,19 @@ export type OrderSummary = {
   id: string
   orderNumber: string
   createdAtUtc: string
+  updatedAtUtc?: string
   status: number | string
-  paymentStatus: string
+  paymentStatus: number | string
+  paymentTransactionId?: string
+  paymentProvider?: string
+  subtotalAmount?: number
+  shippingAmount?: number
+  taxAmount?: number
+  discountAmount?: number
   totalAmount: number
   currency: string
+  shippingAddress?: OrderAddress
+  billingAddress?: OrderAddress
   itemCount?: number
   items?: OrderItem[]
 }
