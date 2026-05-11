@@ -9,6 +9,7 @@ import CategoryPage from './pages/CategoryPage'
 import CartPage from './pages/CartPage'
 import CheckoutPage from './pages/CheckoutPage'
 import DashboardPage from './pages/DashboardPage'
+import JobsPage from './pages/JobsPage'
 import MockStripeCheckoutPage from './pages/MockStripeCheckoutPage'
 import NotificationsPage from './pages/NotificationsPage'
 import OrderSuccessPage from './pages/OrderSuccessPage'
@@ -376,6 +377,16 @@ function App() {
           ) : (
             <Navigate to="/login" replace />
           )
+        }
+      />
+      <Route
+        path="/jobba-hos-oss"
+        element={
+          <JobsPage
+            user={activeUser ?? GUEST_USER}
+            isAdmin={isAdmin}
+            onLogout={handleLogout}
+          />
         }
       />
       <Route

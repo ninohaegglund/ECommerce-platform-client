@@ -31,6 +31,7 @@ function SiteFooter() {
         { label: 'Om Spelvalvet', to: '/about' },
         { label: 'Topplistan', to: '/dashboard#best-sellers' },
         { label: 'Recensioner', to: '/dashboard#reviews' },
+        { label: 'Jobba hos oss', to: '/jobba-hos-oss' },
         { label: 'Hållbarhet', to: '/about' },
       ],
     },

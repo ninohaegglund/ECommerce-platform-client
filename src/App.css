@@ -425,6 +425,104 @@
   padding-top: 32px;
 }
 
+.sv-jobs-page {
+  background: #fff;
+}
+
+.sv-jobs-section {
+  width: min(100%, 736px);
+  margin: 0 auto;
+  padding: 54px 32px 92px;
+  color: var(--ink);
+}
+
+.sv-jobs-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 42px;
+  color: #2f3138;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.sv-jobs-logo-mark {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  background: var(--red);
+  display: grid;
+  place-items: center;
+  box-shadow: 0 8px 18px rgba(217, 74, 52, 0.18);
+}
+
+.sv-jobs-logo-vault {
+  width: 18px;
+  height: 22px;
+  border: 2px solid #fff;
+  border-radius: 2px 2px 6px 6px;
+  position: relative;
+}
+
+.sv-jobs-logo-vault::before {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--amber);
+  transform: translateX(-50%);
+}
+
+.sv-jobs-section h1 {
+  margin: 0 0 26px;
+  color: #2f3138;
+  font-size: clamp(56px, 8vw, 78px);
+  line-height: 0.98;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.sv-jobs-copy,
+.sv-jobs-block {
+  display: grid;
+  gap: 14px;
+}
+
+.sv-jobs-copy p,
+.sv-jobs-block p {
+  margin: 0;
+  color: #111827;
+  font-size: 15.5px;
+  line-height: 1.55;
+}
+
+.sv-jobs-divider {
+  height: 1px;
+  background: rgba(23, 24, 29, 0.32);
+  margin: 18px 0 40px;
+}
+
+.sv-jobs-block h2 {
+  margin: 0 0 6px;
+  color: #202229;
+  font-size: 32px;
+  line-height: 1.15;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.sv-jobs-block a {
+  color: var(--ink);
+  font-weight: 800;
+  text-decoration-color: rgba(217, 74, 52, 0.38);
+  text-underline-offset: 3px;
+}
+
 /* Page-level sections: were originally card-styled chrome inside a wider layout.
    Now they ARE the page section, so strip the card chrome and align with sv-product-section. */
 .store-page > .cart-page,
@@ -4766,6 +4864,7 @@
   .sv-category-section,
   .sv-product-section,
   .sv-reviews-section { padding-left: 20px; padding-right: 20px; }
+  .sv-jobs-section { padding: 40px 20px 64px; }
   .sv-bestsellers-inner { padding: 48px 20px; }
   .sv-hero-h1 { font-size: 40px; }
   .sv-section-title { font-size: 28px; }
@@ -4780,4 +4879,7 @@
   .sv-review-card { padding: 50px 20px 22px; }
   .sv-review-badge { left: 20px; }
   .sv-review-quote { font-size: 15.5px; }
+  .sv-jobs-brand { font-size: 24px; margin-bottom: 32px; }
+  .sv-jobs-section h1 { font-size: 44px; }
+  .sv-jobs-block h2 { font-size: 27px; }
 }
