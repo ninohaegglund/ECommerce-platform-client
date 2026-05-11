@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState, type FocusEvent } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useNotificationCenter } from '../context/notificationCenter'
 import type { AuthUser } from '../types/auth'
@@ -27,7 +27,7 @@ const mainNavItems = [
 ]
 
 const productDropdownItems = [
-  { label: 'Alla produkter', to: '/dashboard' },
+  { label: 'Alla produkter', to: '/produkter' },
   { label: 'Pokémon-kort', to: '/pokemon-kort' },
   { label: 'Spel', to: '/spel' },
   { label: 'Konsoler', to: '/konsoler' },
@@ -41,14 +41,26 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
   const [isProductsOpen, setIsProductsOpen] = useState(false)
   const [searchFocused, setSearchFocused] = useState(false)
   const [searchValue, setSearchValue] = useState('')
+  const productsDropdownRef = useRef<HTMLDivElement>(null)
   const { unreadCount } = useNotificationCenter()
   const location = useLocation()
   const isGuest = user.id === 'guest'
-  const productPaths = productDropdownItems.map((item) => item.to)
+  const productPaths = ['/dashboard', ...productDropdownItems.map((item) => item.to)]
   const isProductsActive = productPaths.includes(location.pathname)
 
   const handleLogoClick = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const openProductsMenu = () => setIsProductsOpen(true)
+  const closeProductsMenu = () => setIsProductsOpen(false)
+
+  const handleProductsBlur = (event: FocusEvent<HTMLDivElement>) => {
+    const nextFocusedElement = event.relatedTarget as Node | null
+
+    if (!nextFocusedElement || !event.currentTarget.contains(nextFocusedElement)) {
+      closeProductsMenu()
+    }
   }
 
   useEffect(() => {
@@ -61,6 +73,33 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
 
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  useEffect(() => {
+    if (!isProductsOpen) return
+
+    const handlePointerDown = (event: MouseEvent) => {
+      const target = event.target as Node | null
+
+      if (target && productsDropdownRef.current?.contains(target)) return
+
+      closeProductsMenu()
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+
+      closeProductsMenu()
+      productsDropdownRef.current?.querySelector('button')?.focus()
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown)
+    document.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isProductsOpen])
 
   const initials = `${user.firstName[0] ?? ''}${user.lastName[0] ?? ''}`.toUpperCase()
 
@@ -238,13 +277,22 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
 
               if (item.label === 'Produkter') {
                 return (
-                  <div key={item.label} className="sv-nav-dropdown" onMouseLeave={() => setIsProductsOpen(false)}>
+                  <div
+                    key={item.label}
+                    ref={productsDropdownRef}
+                    className="sv-nav-dropdown"
+                    onBlur={handleProductsBlur}
+                    onMouseEnter={openProductsMenu}
+                    onMouseLeave={closeProductsMenu}
+                  >
                     <button
                       type="button"
                       className={`sv-nav-link sv-nav-link--button${isProductsActive ? ' sv-nav-link--active' : ''}`}
                       onClick={() => setIsProductsOpen((v) => !v)}
+                      onFocus={openProductsMenu}
                       aria-expanded={isProductsOpen}
                       aria-haspopup="menu"
+                      aria-controls="products-menu"
                     >
                       Produkter
                       <svg className="sv-nav-caret" viewBox="0 0 12 8" aria-hidden="true">
@@ -252,7 +300,7 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
                       </svg>
                     </button>
                     {isProductsOpen && (
-                      <div className="sv-nav-dropdown-menu" role="menu">
+                      <div id="products-menu" className="sv-nav-dropdown-menu" role="menu">
                         {productDropdownItems.map((dropdownItem) => (
                           <Link
                             key={dropdownItem.label}
