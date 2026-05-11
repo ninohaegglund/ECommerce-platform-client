@@ -4239,6 +4239,7 @@
   padding: 96px 32px;
   max-width: 1320px;
   margin: 0 auto;
+  position: relative;
 }
 
 .sv-reviews-carousel {
@@ -4246,31 +4247,67 @@
   grid-template-columns: 44px minmax(0, 1fr) 44px;
   align-items: center;
   gap: 14px;
+  max-width: 980px;
+  margin: 14px auto 0;
 }
 
 .sv-reviews-viewport {
   overflow: hidden;
   grid-column: 2;
+  border-radius: 8px;
+  box-shadow: 0 18px 46px rgba(23, 24, 29, 0.08);
 }
 
 .sv-reviews-track {
   display: flex;
-  transition: transform 0.38s ease;
+  transition: transform 0.5s cubic-bezier(0.22, 0.74, 0.16, 1);
   will-change: transform;
 }
 
 .sv-review-card {
   flex: 0 0 100%;
+  min-height: 286px;
   margin: 0;
-  background: #fff;
+  background:
+    linear-gradient(135deg, rgba(255, 249, 239, 0.78), rgba(255, 255, 255, 0.96)),
+    #fff;
   border-radius: 8px;
-  padding: 28px 28px 24px;
+  padding: 54px 36px 30px;
   border: 1px solid var(--line);
   box-shadow: var(--shadow-sm);
   display: flex;
   flex-direction: column;
   gap: 18px;
   position: relative;
+  overflow: hidden;
+}
+
+.sv-review-card::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--red), var(--amber), var(--mint), var(--blue));
+  opacity: 0.9;
+}
+
+.sv-review-card--active .sv-review-badge,
+.sv-review-card--active .sv-review-stars,
+.sv-review-card--active .sv-review-quote,
+.sv-review-card--active .sv-review-footer {
+  animation: sv-review-rise 0.48s ease both;
+}
+
+.sv-review-card--active .sv-review-stars {
+  animation-delay: 0.04s;
+}
+
+.sv-review-card--active .sv-review-quote {
+  animation-delay: 0.08s;
+}
+
+.sv-review-card--active .sv-review-footer {
+  animation-delay: 0.12s;
 }
 
 .sv-review-nav-btn {
@@ -4283,14 +4320,24 @@
   display: grid;
   place-items: center;
   cursor: pointer;
-  transition: background 0.16s ease, border-color 0.16s ease, transform 0.16s ease;
+  box-shadow: var(--shadow-sm);
+  transition:
+    background 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    transform 0.16s ease;
 }
 
 .sv-review-nav-btn:hover,
 .sv-review-nav-btn:focus-visible {
   background: var(--bg-2);
   border-color: var(--line-2);
+  box-shadow: var(--shadow-md);
   transform: translateY(-1px);
+}
+
+.sv-review-nav-btn:active {
+  transform: translateY(0) scale(0.98);
 }
 
 .sv-review-nav-btn:focus-visible,
@@ -4320,10 +4367,23 @@
   color: var(--ink-2);
   cursor: pointer;
   font: inherit;
+  box-shadow: var(--shadow-sm);
+  transition:
+    background 0.16s ease,
+    border-color 0.16s ease,
+    color 0.16s ease,
+    transform 0.16s ease;
 }
 
 .sv-review-dot--active {
+  background: var(--ink);
   border-color: var(--ink);
+  color: var(--bg);
+  transform: translateY(-1px);
+}
+
+.sv-review-dot:not(.sv-review-dot--active):hover {
+  background: var(--bg-2);
   color: var(--ink);
 }
 
@@ -4332,15 +4392,41 @@
   color: var(--red);
 }
 
+.sv-review-dot--active .sv-review-dot-label {
+  color: var(--amber);
+}
+
 .sv-review-dot-name {
   font-size: 13px;
   font-weight: 600;
 }
 
+.sv-review-progress {
+  grid-column: 2;
+  height: 3px;
+  background: rgba(23, 24, 29, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 2px;
+}
+
+.sv-review-progress span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-origin: left;
+  background: linear-gradient(90deg, var(--red), var(--amber), var(--mint));
+  transition: transform 0.5s cubic-bezier(0.22, 0.74, 0.16, 1);
+}
+
+.sv-reviews-carousel--paused .sv-review-progress span {
+  filter: saturate(0.8);
+}
+
 .sv-review-badge {
   position: absolute;
-  top: -10px;
-  left: 24px;
+  top: 18px;
+  left: 36px;
   color: #fff;
   padding: 3px 10px;
   border-radius: 4px;
@@ -4364,7 +4450,7 @@
 
 .sv-review-quote {
   margin: 0;
-  font-size: 19px;
+  font-size: 23px;
   line-height: 1.4;
   font-weight: 500;
   letter-spacing: -0.01em;
@@ -4403,6 +4489,33 @@
 .sv-review-role {
   font-size: 12px;
   color: var(--ink-3);
+}
+
+@keyframes sv-review-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sv-reviews-track,
+  .sv-review-progress span,
+  .sv-review-nav-btn,
+  .sv-review-dot {
+    transition: none;
+  }
+
+  .sv-review-card--active .sv-review-badge,
+  .sv-review-card--active .sv-review-stars,
+  .sv-review-card--active .sv-review-quote,
+  .sv-review-card--active .sv-review-footer {
+    animation: none;
+  }
 }
 
 /* ---- Footer ---- */
@@ -4634,6 +4747,9 @@
   .sv-product-grid { grid-template-columns: repeat(2, 1fr); }
   .sv-reviews-carousel { grid-template-columns: 40px minmax(0, 1fr) 40px; gap: 8px; }
   .sv-review-nav-btn { width: 40px; height: 40px; }
+  .sv-review-card { min-height: 310px; padding: 52px 24px 26px; }
+  .sv-review-badge { left: 24px; }
+  .sv-review-quote { font-size: 20px; }
   .sv-review-dot-name { display: none; }
   .sv-footer-grid { grid-template-columns: 1fr; }
   .sv-category-section,
@@ -4648,4 +4764,9 @@
   .sv-product-grid,
   .sv-bestsellers-grid { grid-template-columns: 1fr; }
   .sv-category-grid { grid-template-columns: 1fr; }
+  .sv-reviews-carousel { grid-template-columns: 36px minmax(0, 1fr) 36px; gap: 6px; }
+  .sv-review-nav-btn { width: 36px; height: 36px; }
+  .sv-review-card { padding: 52px 20px 24px; }
+  .sv-review-badge { left: 20px; }
+  .sv-review-quote { font-size: 18px; }
 }

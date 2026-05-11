@@ -566,7 +566,7 @@ function DashboardPage({ user, isAdmin, onLogout }: DashboardPageProps) {
           </div>
 
           <div
-            className="sv-reviews-carousel"
+            className={`sv-reviews-carousel${isReviewCarouselPaused ? ' sv-reviews-carousel--paused' : ''}`}
             aria-label="Kundrecensioner"
             aria-roledescription="carousel"
             onBlur={() => setIsReviewCarouselPaused(false)}
@@ -593,7 +593,7 @@ function DashboardPage({ user, isAdmin, onLogout }: DashboardPageProps) {
                 {REVIEW_DATA.map((review, i) => (
                   <blockquote
                     key={review.name}
-                    className="sv-review-card"
+                    className={`sv-review-card${activeReviewIndex === i ? ' sv-review-card--active' : ''}`}
                     aria-label={`Recension ${i + 1} av ${reviewCount}`}
                     aria-roledescription="slide"
                   >
@@ -648,6 +648,9 @@ function DashboardPage({ user, isAdmin, onLogout }: DashboardPageProps) {
                   <span className="sv-review-dot-name">{review.name}</span>
                 </button>
               ))}
+            </div>
+            <div className="sv-review-progress" aria-hidden="true">
+              <span style={{ transform: `scaleX(${(activeReviewIndex + 1) / reviewCount})` }} />
             </div>
           </div>
         </div>
