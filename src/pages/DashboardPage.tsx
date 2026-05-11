@@ -100,6 +100,38 @@ const REVIEW_DATA = [
     role: 'Retrogaming-spelare',
     color: 'var(--blue)',
   },
+  {
+    rating: 5,
+    quote:
+      'Beställde sleeves, boosters och ett par graded kort. Allt kom väl packat, snyggt sorterat och med tydlig status på varje produkt.',
+    name: 'Maja R.',
+    role: 'TCG-spelare',
+    color: 'var(--amber)',
+  },
+  {
+    rating: 5,
+    quote:
+      'Supporten hjälpte mig välja rätt handkontroll till min N64. Den kom fram snabbt och känslan var precis som jag mindes den.',
+    name: 'Oskar T.',
+    role: 'Konsolnostalgiker',
+    color: 'var(--ink-2)',
+  },
+  {
+    rating: 5,
+    quote:
+      'Jag uppskattar att skicket faktiskt matchar beskrivningen. Inga överraskningar, bara bra produkter och snabb leverans.',
+    name: 'Sara L.',
+    role: 'Samlarförälder',
+    color: 'var(--mint)',
+  },
+  {
+    rating: 5,
+    quote:
+      'Köpte flera retrospel som present. De var rengjorda, testade och såg mycket bättre ut än bilderna. Kommer handla igen.',
+    name: 'Noel A.',
+    role: 'Presentjägare',
+    color: 'var(--red)',
+  },
 ]
 
 const BESTSELLER_IMAGES = [
