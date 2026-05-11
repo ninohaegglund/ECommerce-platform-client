@@ -238,7 +238,7 @@ function DashboardPage({ user, isAdmin, onLogout }: DashboardPageProps) {
     const head = REVIEW_DATA.slice(-reviewVisibleCount)
     const tail = REVIEW_DATA.slice(0, reviewVisibleCount)
     return [...head, ...REVIEW_DATA, ...tail]
-  }, [canLoopReviews, reviewCount, reviewVisibleCount])
+  }, [canLoopReviews, reviewVisibleCount])
   const reviewStep = reviewCardWidth > 0 ? reviewCardWidth + reviewGap : 0
   const reviewTranslateX = reviewStep ? -(reviewTrackIndex * reviewStep) + reviewDragOffset : 0
   const reviewViewportStyle = useMemo(

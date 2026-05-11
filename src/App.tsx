@@ -511,6 +511,16 @@ function App() {
           )
         }
       />
+      <Route
+        path="/:categorySlug"
+        element={
+          canAccessStore && activeUser ? (
+            <CategoryPage user={activeUser} isAdmin={isAdmin} onLogout={handleLogout} />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
       <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </NotificationCenterProvider>

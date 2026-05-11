@@ -3,11 +3,14 @@ import { Link, useParams } from 'react-router-dom'
 import AppNavbar from '../components/AppNavbar'
 import SiteFooter from '../components/SiteFooter'
 import { addCartItem } from '../services/cartApi'
-import { getCatalogProducts } from '../services/catalogApi'
+import { getCatalogProduct, getCatalogProducts } from '../services/catalogApi'
 import { getInventoryStock } from '../services/inventoryApi'
+import { getProductImages } from '../services/productImagesApi'
 import type { Product } from '../data/products'
 import type { AuthUser } from '../types/auth'
 import type { InventoryStock } from '../types/inventory'
+import type { ProductImage } from '../types/product-image'
+import { getProductImagePath, getProductProfile } from '../utils/productCard'
 
 type ProductDetailPageProps = {
   user: AuthUser
@@ -15,11 +18,35 @@ type ProductDetailPageProps = {
   onLogout: () => void
 }
 
+function getProductImageCandidates(images: ProductImage[]) {
+  return images
+    .filter((img) => img.imageUrl.trim().length > 0)
+    .sort((a, b) => {
+      if (a.isPrimary !== b.isPrimary) return a.isPrimary ? -1 : 1
+      return a.sortOrder - b.sortOrder
+    })
+    .map((img) => img.imageUrl.trim())
+}
+
+async function resolveWorkingImageUrl(candidates: string[]) {
+  for (const candidate of candidates) {
+    const ok = await new Promise<boolean>((resolve) => {
+      const img = new Image()
+      img.onload = () => resolve(true)
+      img.onerror = () => resolve(false)
+      img.src = candidate
+    })
+    if (ok) return candidate
+  }
+  return ''
+}
+
 function ProductDetailPage({ user, isAdmin, onLogout }: ProductDetailPageProps) {
   const { productId = '' } = useParams()
 
   const [product, setProduct] = useState<Product | null>(null)
   const [stock, setStock] = useState<InventoryStock | null>(null)
+  const [productImageUrl, setProductImageUrl] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [isAdding, setIsAdding] = useState(false)
   const [error, setError] = useState('')
@@ -29,19 +56,42 @@ function ProductDetailPage({ user, isAdmin, onLogout }: ProductDetailPageProps) 
     const loadProduct = async () => {
       setIsLoading(true)
       setError('')
+      setProduct(null)
+      setStock(null)
+      setProductImageUrl('')
 
       try {
-        const products = await getCatalogProducts()
-        const selectedProduct = products.find((item) => item.id === productId) ?? null
+        let selectedProduct: Product | null = null
+
+        try {
+          selectedProduct = await getCatalogProduct(productId)
+        } catch {
+          const products = await getCatalogProducts()
+          selectedProduct = products.find((item) => item.id === productId) ?? null
+        }
 
         if (!selectedProduct) {
-          throw new Error('Product not found.')
+          throw new Error('Produkten hittades inte.')
         }
 
         setProduct(selectedProduct)
-        setStock(await getInventoryStock(selectedProduct.id))
+        try {
+          setStock(await getInventoryStock(selectedProduct.id))
+        } catch {
+          setStock(null)
+        }
+
+        try {
+          const images = selectedProduct.images?.length
+            ? selectedProduct.images
+            : await getProductImages(selectedProduct.id)
+          const url = await resolveWorkingImageUrl(getProductImageCandidates(images))
+          setProductImageUrl(url)
+        } catch {
+          setProductImageUrl('')
+        }
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Could not load product details.'
+        const message = err instanceof Error ? err.message : 'Kunde inte ladda produktdetaljer.'
         setError(message)
       } finally {
         setIsLoading(false)
@@ -65,7 +115,19 @@ function ProductDetailPage({ user, isAdmin, onLogout }: ProductDetailPageProps) 
     }).format(product.price)
   }, [product])
 
-  const isOutOfStock = (stock?.quantityAvailable ?? 0) <= 0
+  const fallbackImageUrl = useMemo(() => {
+    if (!product) return ''
+    const profile = getProductProfile(product)
+    return getProductImagePath(product, profile.tone)
+  }, [product])
+
+  const productDescription =
+    product?.description.trim() ||
+    product?.shortDescription.trim() ||
+    'Ingen beskrivning tillg\u00e4nglig.'
+
+  const availableQuantity = stock?.quantityAvailable ?? product?.stockQuantity ?? 0
+  const isOutOfStock = availableQuantity <= 0
 
   const handleAddToCart = async () => {
     if (!product) {
@@ -77,8 +139,8 @@ function ProductDetailPage({ user, isAdmin, onLogout }: ProductDetailPageProps) 
     setSuccess('')
 
     try {
-      if ((stock?.quantityAvailable ?? 0) <= 0) {
-        throw new Error('This product is out of stock.')
+      if (availableQuantity <= 0) {
+        throw new Error('Den h\u00e4r produkten \u00e4r slut i lager.')
       }
 
       await addCartItem({
@@ -86,9 +148,9 @@ function ProductDetailPage({ user, isAdmin, onLogout }: ProductDetailPageProps) 
         quantity: 1,
         currency: product.currency,
       })
-      setSuccess(`${product.name} added to cart.`)
+      setSuccess(`${product.name} har lagts i varukorgen.`)
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Could not add item to cart.'
+      const message = err instanceof Error ? err.message : 'Kunde inte l\u00e4gga produkten i varukorgen.'
       setError(message)
     } finally {
       setIsAdding(false)
@@ -102,12 +164,12 @@ function ProductDetailPage({ user, isAdmin, onLogout }: ProductDetailPageProps) 
       <section className="product-detail-page">
         <div className="section-heading">
           <div>
-            <p className="eyebrow">Product details</p>
-            <h1>{product?.name ?? 'Loading product'}</h1>
-            <p className="subtitle">Inventory and reservation state for the selected product.</p>
+            <p className="eyebrow">Produktdetaljer</p>
+            <h1>{product?.name ?? 'Laddar produkt'}</h1>
+            <p className="subtitle">{'Lagerstatus f\u00f6r vald produkt.'}</p>
           </div>
           <Link className="ghost-btn" to="/dashboard">
-            Back to products
+            Tillbaka till produkter
           </Link>
         </div>
 
@@ -115,18 +177,34 @@ function ProductDetailPage({ user, isAdmin, onLogout }: ProductDetailPageProps) 
         {success && <p className="feedback success">{success}</p>}
 
         {isLoading ? (
-          <p>Loading product...</p>
+          <p>Laddar produkt...</p>
         ) : product ? (
           <div className="product-detail-grid">
             <article className="hero-panel">
-              <p className="chip">Catalog Product</p>
+              <div className="product-detail-image">
+                <img
+                  src={productImageUrl || fallbackImageUrl}
+                  alt={product.name}
+                  onError={(event) => {
+                    if (fallbackImageUrl && event.currentTarget.dataset.fallbackApplied !== 'true') {
+                      event.currentTarget.dataset.fallbackApplied = 'true'
+                      event.currentTarget.src = fallbackImageUrl
+                    }
+                  }}
+                />
+              </div>
+              <p className="chip">Katalogprodukt</p>
               <h2>{product.name}</h2>
-              <p>{product.shortDescription || 'No description available.'}</p>
+              <p className="product-detail-description">{productDescription}</p>
               <p className="price">{formattedPrice}</p>
               {isOutOfStock ? (
-                <p className="feedback error">Out of stock. This product cannot be added right now.</p>
+                <p className="feedback error">
+                  {'Slut i lager. Produkten kan inte l\u00e4ggas till just nu.'}
+                </p>
               ) : (
-                <p className="subtitle">{stock?.quantityAvailable ?? 0} available right now.</p>
+                <p className="subtitle">
+                  {availableQuantity} {'tillg\u00e4ngliga just nu.'}
+                </p>
               )}
               <button
                 type="button"
@@ -134,23 +212,19 @@ function ProductDetailPage({ user, isAdmin, onLogout }: ProductDetailPageProps) 
                 onClick={() => void handleAddToCart()}
                 disabled={isAdding || isOutOfStock}
               >
-                {isOutOfStock ? 'Out of stock' : isAdding ? 'Adding...' : 'Add to cart'}
+                {isOutOfStock ? 'Slut i lager' : isAdding ? 'L\u00e4gger till...' : 'L\u00e4gg i varukorgen'}
               </button>
             </article>
 
             <aside className="stock-panel">
-              <h3>Stock overview</h3>
+              <h3>{'Lager\u00f6versikt'}</h3>
               <div className="stock-metrics">
                 <div>
-                  <span>Available</span>
-                  <strong>{stock?.quantityAvailable ?? 0}</strong>
-                </div>
-                <div>
-                  <span>Reserved</span>
-                  <strong>{stock?.quantityReserved ?? 0}</strong>
+                  <span>{'Tillg\u00e4ngliga'}</span>
+                  <strong>{availableQuantity}</strong>
                 </div>
               </div>
-              <p className="subtitle">Product ID: {product.id}</p>
+              <p className="subtitle">Produkt-ID: {product.id}</p>
             </aside>
           </div>
         ) : null}
