@@ -26,13 +26,102 @@ const mainNavItems = [
   { label: 'Support', to: '/support' },
 ]
 
+type ProductDropdownIconName = 'grid' | 'cards' | 'gamepad' | 'console' | 'refresh'
+
 const productDropdownItems = [
-  { label: 'Alla produkter', to: '/produkter' },
-  { label: 'Pokémon-kort', to: '/pokemon-kort' },
-  { label: 'Spel', to: '/spel' },
-  { label: 'Konsoler', to: '/konsoler' },
-  { label: 'Refurbished', to: '/refurbished' },
-]
+  {
+    label: 'Alla produkter',
+    to: '/produkter',
+    meta: 'Senaste nytt och hela lagret',
+    icon: 'grid',
+  },
+  {
+    label: 'Pokémon-kort',
+    to: '/pokemon-kort',
+    meta: 'Singlar, sealed och graded',
+    icon: 'cards',
+  },
+  {
+    label: 'Spel',
+    to: '/spel',
+    meta: 'Retro, Nintendo och Playstation',
+    icon: 'gamepad',
+  },
+  {
+    label: 'Konsoler',
+    to: '/konsoler',
+    meta: 'N64, handheld och tillbehör',
+    icon: 'console',
+  },
+  {
+    label: 'Refurbished',
+    to: '/refurbished',
+    meta: 'Testat, rengjort och klart',
+    icon: 'refresh',
+  },
+] satisfies Array<{
+  label: string
+  to: string
+  meta: string
+  icon: ProductDropdownIconName
+}>
+
+function ProductDropdownIcon({ name }: { name: ProductDropdownIconName }) {
+  const iconProps = {
+    width: 18,
+    height: 18,
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 1.7,
+    strokeLinecap: 'round' as const,
+    strokeLinejoin: 'round' as const,
+    'aria-hidden': true,
+  }
+
+  switch (name) {
+    case 'cards':
+      return (
+        <svg {...iconProps}>
+          <rect x="5" y="3" width="12" height="16" rx="2" />
+          <path d="M8 7h6M8 11h6M9 21h8a2 2 0 0 0 2-2V7" />
+        </svg>
+      )
+    case 'gamepad':
+      return (
+        <svg {...iconProps}>
+          <path d="M7 9h4l2 2h4a4 4 0 0 1 3.7 5.5l-.5 1.2a2 2 0 0 1-3.2.7L15 16H9l-2 2.4a2 2 0 0 1-3.2-.7l-.5-1.2A4 4 0 0 1 7 9Z" />
+          <path d="M8 12v3M6.5 13.5h3M16 13h.01M18 15h.01" />
+        </svg>
+      )
+    case 'console':
+      return (
+        <svg {...iconProps}>
+          <rect x="4" y="5" width="16" height="11" rx="2" />
+          <path d="M8 20h8M10 16v4M14 16v4M8 9h3M15 9h1M18 9h.01" />
+        </svg>
+      )
+    case 'refresh':
+      return (
+        <svg {...iconProps}>
+          <path d="M20 7v5h-5" />
+          <path d="M4 17v-5h5" />
+          <path d="M18 12a6 6 0 0 0-10-4.5L4 12" />
+          <path d="M6 12a6 6 0 0 0 10 4.5L20 12" />
+        </svg>
+      )
+    case 'grid':
+    default:
+      return (
+        <svg {...iconProps}>
+          <rect x="4" y="4" width="6" height="6" rx="1.5" />
+          <rect x="14" y="4" width="6" height="6" rx="1.5" />
+          <rect x="4" y="14" width="6" height="6" rx="1.5" />
+          <rect x="14" y="14" width="6" height="6" rx="1.5" />
+        </svg>
+      )
+  }
+}
 
 function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -52,8 +141,15 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  const openProductsMenu = () => setIsProductsOpen(true)
+  const openProductsMenu = () => {
+    setIsMenuOpen(false)
+    setIsProductsOpen(true)
+  }
   const closeProductsMenu = () => setIsProductsOpen(false)
+  const toggleProductsMenu = () => {
+    setIsMenuOpen(false)
+    setIsProductsOpen((isOpen) => !isOpen)
+  }
 
   const handleProductsBlur = (event: FocusEvent<HTMLDivElement>) => {
     const nextFocusedElement = event.relatedTarget as Node | null
@@ -280,7 +376,7 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
                   <div
                     key={item.label}
                     ref={productsDropdownRef}
-                    className="sv-nav-dropdown"
+                    className={`sv-nav-dropdown${isProductsOpen ? ' sv-nav-dropdown--open' : ''}`}
                     onBlur={handleProductsBlur}
                     onMouseEnter={openProductsMenu}
                     onMouseLeave={closeProductsMenu}
@@ -288,8 +384,7 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
                     <button
                       type="button"
                       className={`sv-nav-link sv-nav-link--button${isProductsActive ? ' sv-nav-link--active' : ''}`}
-                      onClick={() => setIsProductsOpen((v) => !v)}
-                      onFocus={openProductsMenu}
+                      onClick={toggleProductsMenu}
                       aria-expanded={isProductsOpen}
                       aria-haspopup="menu"
                       aria-controls="products-menu"
@@ -299,20 +394,44 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
                         <path d="M1 1.5L6 6.5L11 1.5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                     </button>
-                    {isProductsOpen && (
-                      <div id="products-menu" className="sv-nav-dropdown-menu" role="menu">
-                        {productDropdownItems.map((dropdownItem) => (
-                          <Link
-                            key={dropdownItem.label}
-                            to={dropdownItem.to}
-                            role="menuitem"
-                            onClick={() => setIsProductsOpen(false)}
-                          >
-                            {dropdownItem.label}
-                          </Link>
-                        ))}
+                    <div
+                      id="products-menu"
+                      className={`sv-nav-dropdown-menu${isProductsOpen ? ' is-open' : ''}`}
+                      role="menu"
+                      aria-hidden={!isProductsOpen}
+                    >
+                      <div className="sv-nav-dropdown-header">
+                        <span className="mono">Sortiment</span>
+                        <strong>Utforska butiken</strong>
                       </div>
-                    )}
+                      <div className="sv-nav-dropdown-list">
+                        {productDropdownItems.map((dropdownItem) => {
+                          const isDropdownItemActive = location.pathname === dropdownItem.to
+
+                          return (
+                            <Link
+                              key={dropdownItem.label}
+                              to={dropdownItem.to}
+                              className={`sv-nav-dropdown-item${isDropdownItemActive ? ' sv-nav-dropdown-item--active' : ''}`}
+                              role="menuitem"
+                              tabIndex={isProductsOpen ? 0 : -1}
+                              onClick={() => setIsProductsOpen(false)}
+                            >
+                              <span className="sv-nav-dropdown-icon">
+                                <ProductDropdownIcon name={dropdownItem.icon} />
+                              </span>
+                              <span className="sv-nav-dropdown-copy">
+                                <span className="sv-nav-dropdown-label">{dropdownItem.label}</span>
+                                <span className="sv-nav-dropdown-meta">{dropdownItem.meta}</span>
+                              </span>
+                              <svg className="sv-nav-dropdown-arrow" viewBox="0 0 16 16" aria-hidden="true">
+                                <path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                            </Link>
+                          )
+                        })}
+                      </div>
+                    </div>
                   </div>
                 )
               }
