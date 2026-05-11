@@ -4241,13 +4241,26 @@
   margin: 0 auto;
 }
 
-.sv-reviews-grid {
+.sv-reviews-carousel {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: center;
+  gap: 14px;
+}
+
+.sv-reviews-viewport {
+  overflow: hidden;
+  grid-column: 2;
+}
+
+.sv-reviews-track {
+  display: flex;
+  transition: transform 0.38s ease;
+  will-change: transform;
 }
 
 .sv-review-card {
+  flex: 0 0 100%;
   margin: 0;
   background: #fff;
   border-radius: 8px;
@@ -4258,6 +4271,70 @@
   flex-direction: column;
   gap: 18px;
   position: relative;
+}
+
+.sv-review-nav-btn {
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background 0.16s ease, border-color 0.16s ease, transform 0.16s ease;
+}
+
+.sv-review-nav-btn:hover,
+.sv-review-nav-btn:focus-visible {
+  background: var(--bg-2);
+  border-color: var(--line-2);
+  transform: translateY(-1px);
+}
+
+.sv-review-nav-btn:focus-visible,
+.sv-review-dot:focus-visible {
+  outline: 3px solid rgba(31, 157, 138, 0.24);
+  outline-offset: 2px;
+}
+
+.sv-review-dots {
+  grid-column: 2;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.sv-review-dot {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 7px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink-2);
+  cursor: pointer;
+  font: inherit;
+}
+
+.sv-review-dot--active {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+.sv-review-dot-label {
+  font-size: 11px;
+  color: var(--red);
+}
+
+.sv-review-dot-name {
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .sv-review-badge {
@@ -4544,7 +4621,6 @@
   .sv-hero-showcase { display: none; }
   .sv-category-grid { grid-template-columns: repeat(2, 1fr); }
   .sv-bestsellers-grid { grid-template-columns: repeat(2, 1fr); }
-  .sv-reviews-grid { grid-template-columns: 1fr 1fr; }
   .sv-footer-grid { grid-template-columns: 1fr 1fr; }
 }
 
@@ -4556,7 +4632,9 @@
   .sv-nav-toggle { display: flex; }
   .sv-new-release { display: none; }
   .sv-product-grid { grid-template-columns: repeat(2, 1fr); }
-  .sv-reviews-grid { grid-template-columns: 1fr; }
+  .sv-reviews-carousel { grid-template-columns: 40px minmax(0, 1fr) 40px; gap: 8px; }
+  .sv-review-nav-btn { width: 40px; height: 40px; }
+  .sv-review-dot-name { display: none; }
   .sv-footer-grid { grid-template-columns: 1fr; }
   .sv-category-section,
   .sv-product-section,

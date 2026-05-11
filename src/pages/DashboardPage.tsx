@@ -117,6 +117,7 @@ const BESTSELLER_CATS = [
 ]
 
 const BESTSELLER_CHANGES = ['+412 sålda', '+298 sålda', '+241 sålda', '+187 sålda']
+const REVIEW_AUTOPLAY_MS = 6500
 
 function getProductImageCandidates(images: ProductImage[]) {
   return images
@@ -157,7 +158,7 @@ function ArrowRight({ size = 14 }: { size?: number }) {
   )
 }
 
-function DashboardPage({ user, isAdmin, token: _token, expiresAt: _expiresAt, onLogout }: DashboardPageProps) {
+function DashboardPage({ user, isAdmin, onLogout }: DashboardPageProps) {
   const [products, setProducts] = useState<Product[]>([])
   const [productImageUrls, setProductImageUrls] = useState<Record<string, string>>({})
   const [isLoadingProducts, setIsLoadingProducts] = useState(true)
@@ -166,6 +167,9 @@ function DashboardPage({ user, isAdmin, token: _token, expiresAt: _expiresAt, on
   const [addedSkus, setAddedSkus] = useState<Set<string>>(new Set())
   const [toast, setToast] = useState<string | null>(null)
   const [cartError, setCartError] = useState('')
+  const [activeReviewIndex, setActiveReviewIndex] = useState(0)
+  const [isReviewCarouselPaused, setIsReviewCarouselPaused] = useState(false)
+  const reviewCount = REVIEW_DATA.length
 
   useEffect(() => {
     const load = async () => {
@@ -207,6 +211,16 @@ function DashboardPage({ user, isAdmin, token: _token, expiresAt: _expiresAt, on
     return () => { cancelled = true }
   }, [products])
 
+  useEffect(() => {
+    if (isReviewCarouselPaused || reviewCount <= 1) return
+
+    const intervalId = window.setInterval(() => {
+      setActiveReviewIndex((index) => (index + 1) % reviewCount)
+    }, REVIEW_AUTOPLAY_MS)
+
+    return () => window.clearInterval(intervalId)
+  }, [isReviewCarouselPaused, reviewCount])
+
   const handleAddToCart = async (product: Product) => {
     setAddingProductId(product.id)
     setCartError('')
@@ -230,6 +244,12 @@ function DashboardPage({ user, isAdmin, token: _token, expiresAt: _expiresAt, on
     () => [...products].sort((a, b) => b.price - a.price).slice(0, 4),
     [products],
   )
+  const goToPreviousReview = () => {
+    setActiveReviewIndex((index) => (index - 1 + reviewCount) % reviewCount)
+  }
+  const goToNextReview = () => {
+    setActiveReviewIndex((index) => (index + 1) % reviewCount)
+  }
 
   return (
     <main className="sv-store">
@@ -545,34 +565,93 @@ function DashboardPage({ user, isAdmin, token: _token, expiresAt: _expiresAt, on
             </div>
           </div>
 
-          <div className="sv-reviews-grid">
-            {REVIEW_DATA.map((review, i) => (
-              <blockquote key={i} className="sv-review-card">
-                <div className="sv-review-badge" style={{ background: review.color }}>
-                  VERIFIERAD KÖPARE
-                </div>
-                <div className="sv-review-stars">
-                  {Array.from({ length: review.rating }).map((_, j) => (
-                    <StarIcon key={j} />
-                  ))}
-                  <span className="sv-review-stars-count mono">{review.rating}.0 / 5.0</span>
-                </div>
-                <p className="sv-review-quote">"{review.quote}"</p>
-                <footer className="sv-review-footer">
-                  <div className="sv-review-avatar" style={{ background: review.color }}>
-                    {review.name[0]}
-                  </div>
-                  <div>
-                    <div className="sv-review-name">{review.name}</div>
-                    <div className="sv-review-role">{review.role}</div>
-                  </div>
-                </footer>
-              </blockquote>
-            ))}
+          <div
+            className="sv-reviews-carousel"
+            aria-label="Kundrecensioner"
+            aria-roledescription="carousel"
+            onBlur={() => setIsReviewCarouselPaused(false)}
+            onFocus={() => setIsReviewCarouselPaused(true)}
+            onMouseEnter={() => setIsReviewCarouselPaused(true)}
+            onMouseLeave={() => setIsReviewCarouselPaused(false)}
+          >
+            <button
+              type="button"
+              className="sv-review-nav-btn sv-review-nav-btn--prev"
+              onClick={goToPreviousReview}
+              aria-label="Visa föregående recension"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M19 12H5" /><path d="m11 6-6 6 6 6" />
+              </svg>
+            </button>
+
+            <div className="sv-reviews-viewport">
+              <div
+                className="sv-reviews-track"
+                style={{ transform: `translateX(-${activeReviewIndex * 100}%)` }}
+              >
+                {REVIEW_DATA.map((review, i) => (
+                  <blockquote
+                    key={review.name}
+                    className="sv-review-card"
+                    aria-label={`Recension ${i + 1} av ${reviewCount}`}
+                    aria-roledescription="slide"
+                  >
+                    <div className="sv-review-badge" style={{ background: review.color }}>
+                      VERIFIERAD KÖPARE
+                    </div>
+                    <div className="sv-review-stars">
+                      {Array.from({ length: review.rating }).map((_, j) => (
+                        <StarIcon key={j} />
+                      ))}
+                      <span className="sv-review-stars-count mono">{review.rating}.0 / 5.0</span>
+                    </div>
+                    <p className="sv-review-quote">"{review.quote}"</p>
+                    <footer className="sv-review-footer">
+                      <div className="sv-review-avatar" style={{ background: review.color }}>
+                        {review.name[0]}
+                      </div>
+                      <div>
+                        <div className="sv-review-name">{review.name}</div>
+                        <div className="sv-review-role">{review.role}</div>
+                      </div>
+                    </footer>
+                  </blockquote>
+                ))}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="sv-review-nav-btn sv-review-nav-btn--next"
+              onClick={goToNextReview}
+              aria-label="Visa nästa recension"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M5 12h14" /><path d="m13 6 6 6-6 6" />
+              </svg>
+            </button>
+
+            <div className="sv-review-dots" role="tablist" aria-label="Välj recension">
+              {REVIEW_DATA.map((review, i) => (
+                <button
+                  key={review.name}
+                  type="button"
+                  className={`sv-review-dot${activeReviewIndex === i ? ' sv-review-dot--active' : ''}`}
+                  onClick={() => setActiveReviewIndex(i)}
+                  aria-current={activeReviewIndex === i ? 'true' : undefined}
+                  aria-label={`Visa recension ${i + 1} av ${reviewCount}`}
+                >
+                  <span className="sv-review-dot-label mono">
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  <span className="sv-review-dot-name">{review.name}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </section>
-
       <SiteFooter />
 
       {/* Toast */}
