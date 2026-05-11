@@ -149,7 +149,8 @@ const BESTSELLER_CATS = [
 ]
 
 const BESTSELLER_CHANGES = ['+412 sålda', '+298 sålda', '+241 sålda', '+187 sålda']
-const REVIEW_AUTOPLAY_MS = 6500
+const VISIBLE_REVIEW_COUNT = 3
+const REVIEW_AUTOPLAY_MS = 4200
 
 function getProductImageCandidates(images: ProductImage[]) {
   return images
@@ -275,6 +276,14 @@ function DashboardPage({ user, isAdmin, onLogout }: DashboardPageProps) {
   const bestSellers = useMemo(
     () => [...products].sort((a, b) => b.price - a.price).slice(0, 4),
     [products],
+  )
+  const visibleReviewIndexes = useMemo(
+    () =>
+      Array.from(
+        { length: Math.min(VISIBLE_REVIEW_COUNT, reviewCount) },
+        (_, offset) => (activeReviewIndex + offset) % reviewCount,
+      ),
+    [activeReviewIndex, reviewCount],
   )
   const goToPreviousReview = () => {
     setActiveReviewIndex((index) => (index - 1 + reviewCount) % reviewCount)
@@ -618,38 +627,39 @@ function DashboardPage({ user, isAdmin, onLogout }: DashboardPageProps) {
             </button>
 
             <div className="sv-reviews-viewport">
-              <div
-                className="sv-reviews-track"
-                style={{ transform: `translateX(-${activeReviewIndex * 100}%)` }}
-              >
-                {REVIEW_DATA.map((review, i) => (
-                  <blockquote
-                    key={review.name}
-                    className={`sv-review-card${activeReviewIndex === i ? ' sv-review-card--active' : ''}`}
-                    aria-label={`Recension ${i + 1} av ${reviewCount}`}
-                    aria-roledescription="slide"
-                  >
-                    <div className="sv-review-badge" style={{ background: review.color }}>
-                      VERIFIERAD KÖPARE
-                    </div>
-                    <div className="sv-review-stars">
-                      {Array.from({ length: review.rating }).map((_, j) => (
-                        <StarIcon key={j} />
-                      ))}
-                      <span className="sv-review-stars-count mono">{review.rating}.0 / 5.0</span>
-                    </div>
-                    <p className="sv-review-quote">"{review.quote}"</p>
-                    <footer className="sv-review-footer">
-                      <div className="sv-review-avatar" style={{ background: review.color }}>
-                        {review.name[0]}
+              <div key={activeReviewIndex} className="sv-reviews-track">
+                {visibleReviewIndexes.map((reviewIndex, slotIndex) => {
+                  const review = REVIEW_DATA[reviewIndex]
+
+                  return (
+                    <blockquote
+                      key={`${review.name}-${slotIndex}`}
+                      className={`sv-review-card${slotIndex === 0 ? ' sv-review-card--active' : ''}`}
+                      aria-label={`Recension ${reviewIndex + 1} av ${reviewCount}`}
+                      aria-roledescription="slide"
+                    >
+                      <div className="sv-review-badge" style={{ background: review.color }}>
+                        VERIFIERAD KÖPARE
                       </div>
-                      <div>
-                        <div className="sv-review-name">{review.name}</div>
-                        <div className="sv-review-role">{review.role}</div>
+                      <div className="sv-review-stars">
+                        {Array.from({ length: review.rating }).map((_, j) => (
+                          <StarIcon key={j} />
+                        ))}
+                        <span className="sv-review-stars-count mono">{review.rating}.0 / 5.0</span>
                       </div>
-                    </footer>
-                  </blockquote>
-                ))}
+                      <p className="sv-review-quote">"{review.quote}"</p>
+                      <footer className="sv-review-footer">
+                        <div className="sv-review-avatar" style={{ background: review.color }}>
+                          {review.name[0]}
+                        </div>
+                        <div>
+                          <div className="sv-review-name">{review.name}</div>
+                          <div className="sv-review-role">{review.role}</div>
+                        </div>
+                      </footer>
+                    </blockquote>
+                  )
+                })}
               </div>
             </div>
 
