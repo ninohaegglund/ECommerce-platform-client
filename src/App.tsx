@@ -5,6 +5,7 @@ import { NotificationCenterProvider } from './context/notificationCenter'
 import AuthPage from './pages/AuthPage'
 import AdminPage from './pages/AdminPage'
 import AllProductsPage from './pages/AllProductsPage'
+import AboutPage from './pages/AboutPage'
 import CategoryPage from './pages/CategoryPage'
 import CartPage from './pages/CartPage'
 import CheckoutPage from './pages/CheckoutPage'
@@ -366,13 +367,7 @@ function App() {
         path="/about"
         element={
           canAccessStore && activeUser ? (
-            <SimplePage
-              user={activeUser}
-              isAdmin={isAdmin}
-              onLogout={handleLogout}
-              title="Om Spelvalvet"
-              description="Vi säljer Pokémon-kort, spel, konsoler och refurbished klassiker — nya och gamla. Alla produkter kontrolleras av oss innan de skickas, och vi erbjuder 14 dagars prislöfte och 90 dagars garanti på refurbished konsoler."
-            />
+            <AboutPage user={activeUser} isAdmin={isAdmin} onLogout={handleLogout} />
           ) : (
             <Navigate to="/login" replace />
           )
