@@ -65,16 +65,22 @@ function readCookiePreferences() {
   }
 }
 
+function hasStoredCookiePreferences() {
+  try {
+    return Boolean(localStorage.getItem(COOKIE_PREFERENCES_KEY))
+  } catch {
+    return false
+  }
+}
+
 function SiteFooter() {
-  const [isCookieModalOpen, setIsCookieModalOpen] = useState(false)
+  const [isCookieModalOpen, setIsCookieModalOpen] = useState(
+    () => !hasStoredCookiePreferences(),
+  )
   const [preferences, setPreferences] = useState<CookiePreferences>(() => readCookiePreferences())
-  const [hasSavedPreferences, setHasSavedPreferences] = useState(() => {
-    try {
-      return Boolean(localStorage.getItem(COOKIE_PREFERENCES_KEY))
-    } catch {
-      return false
-    }
-  })
+  const [hasSavedPreferences, setHasSavedPreferences] = useState(() =>
+    hasStoredCookiePreferences(),
+  )
   const cookieDialogRef = useRef<HTMLDivElement>(null)
 
   const columns = [
