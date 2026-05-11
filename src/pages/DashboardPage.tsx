@@ -877,10 +877,6 @@ function DashboardPage({ user, isAdmin, onLogout }: DashboardPageProps) {
                 />
               ))}
             </div>
-
-            <div className="sv-review-progress" aria-hidden="true">
-              <span style={{ transform: `scaleX(${(activeReviewIndex + 1) / reviewCount})` }} />
-            </div>
           </div>
         </div>
       </section>
