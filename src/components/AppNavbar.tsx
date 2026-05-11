@@ -23,7 +23,6 @@ const mainNavItems = [
   { label: 'Konsoler', to: '/konsoler' },
   { label: 'Refurbished', to: '/refurbished' },
   { label: 'Erbjudanden', to: '/erbjudanden' },
-  { label: 'Support', to: '/support' },
 ]
 
 type ProductDropdownIconName = 'grid' | 'cards' | 'gamepad' | 'console' | 'refresh'
