@@ -1,5 +1,6 @@
 import type { Product } from '../data/products'
 import { mapCatalogCategory, type CatalogCategoryResponse } from './categoryApi'
+import { request as apiRequest } from './apiClient'
 import type { ProductImage } from '../types/product-image'
 
 const CATALOG_API_BASE_URL =
@@ -16,6 +17,29 @@ type CatalogProductResponse = {
   currency?: string
   stockQuantity?: number
   images?: ProductImage[]
+}
+
+type CreateCatalogProductImageRequest = {
+  imageUrl: string
+  altText?: string
+  sortOrder: number
+  isPrimary: boolean
+}
+
+export type CreateCatalogProductRequest = {
+  categoryId: string
+  name: string
+  slug: string
+  sku: string
+  shortDescription: string
+  description: string
+  price: number
+  compareAtPrice?: number | null
+  currency: string
+  stockQuantity: number
+  isActive: boolean
+  status: number
+  images: CreateCatalogProductImageRequest[]
 }
 
 function mapCatalogProduct(item: CatalogProductResponse): Product {
@@ -60,4 +84,17 @@ export async function getCatalogProduct(productId: string): Promise<Product> {
   }
 
   return mapCatalogProduct((await response.json()) as CatalogProductResponse)
+}
+
+export async function createCatalogProduct(request: CreateCatalogProductRequest): Promise<Product> {
+  return mapCatalogProduct(
+    await apiRequest<CatalogProductResponse>(
+      '/api/Products',
+      {
+        method: 'POST',
+        body: JSON.stringify(request),
+      },
+      CATALOG_API_BASE_URL,
+    ),
+  )
 }
