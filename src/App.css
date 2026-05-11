@@ -4338,7 +4338,8 @@
 }
 
 .sv-review-nav-btn:focus-visible,
-.sv-review-dot:focus-visible {
+.sv-review-dot:focus-visible,
+.sv-review-dot-simple:focus-visible {
   outline: 3px solid rgba(31, 157, 138, 0.24);
   outline-offset: 2px;
 }
@@ -4396,6 +4397,30 @@
 .sv-review-dot-name {
   font-size: 13px;
   font-weight: 600;
+}
+
+.sv-review-dot-simple {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  border: 1.5px solid var(--line-2);
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  transition:
+    transform 0.16s ease,
+    border-color 0.16s ease,
+    background 0.16s ease;
+}
+
+.sv-review-dot-simple:hover {
+  border-color: var(--ink-2);
+}
+
+.sv-review-dot-simple--active {
+  background: var(--ink);
+  border-color: var(--ink);
+  transform: scale(1.1);
 }
 
 .sv-review-progress {

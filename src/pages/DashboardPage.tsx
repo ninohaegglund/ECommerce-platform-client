@@ -671,7 +671,6 @@ function DashboardPage({ user, isAdmin, onLogout }: DashboardPageProps) {
                 <path d="M19 12H5" /><path d="m11 6-6 6 6 6" />
               </svg>
             </button>
-
             <div
               className="sv-reviews-viewport"
               onPointerCancel={finishReviewDrag}
@@ -725,6 +724,19 @@ function DashboardPage({ user, isAdmin, onLogout }: DashboardPageProps) {
                 <path d="M5 12h14" /><path d="m13 6 6 6-6 6" />
               </svg>
             </button>
+
+            <div className="sv-review-dots" role="tablist" aria-label="Välj recension">
+              {REVIEW_DATA.map((review, i) => (
+                <button
+                  key={review.name}
+                  type="button"
+                  className={`sv-review-dot-simple${activeReviewIndex === i ? ' sv-review-dot-simple--active' : ''}`}
+                  onClick={() => setActiveReviewIndex(i)}
+                  aria-current={activeReviewIndex === i ? 'true' : undefined}
+                  aria-label={`Visa recension ${i + 1} av ${reviewCount}`}
+                />
+              ))}
+            </div>
 
             <div className="sv-review-progress" aria-hidden="true">
               <span style={{ transform: `scaleX(${(activeReviewIndex + 1) / reviewCount})` }} />
