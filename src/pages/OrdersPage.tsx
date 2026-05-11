@@ -498,7 +498,6 @@ function OrdersPage({ user, isAdmin, onLogout }: OrdersPageProps) {
                   <thead>
                     <tr>
                       <th>Produkt</th>
-                      <th>SKU</th>
                       <th>Antal</th>
                       <th>Styckpris</th>
                       <th>Totalt</th>
@@ -527,7 +526,6 @@ function OrdersPage({ user, isAdmin, onLogout }: OrdersPageProps) {
                               <p className="order-item-meta">ID: {item.productId}</p>
                             </div>
                           </td>
-                          <td>{item.sku}</td>
                           <td>{item.quantity}</td>
                           <td>{formatAmount(item.unitPrice, selectedOrder.currency)}</td>
                           <td>{formatAmount(item.totalPrice, selectedOrder.currency)}</td>
