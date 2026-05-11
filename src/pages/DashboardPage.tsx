@@ -726,23 +726,6 @@ function DashboardPage({ user, isAdmin, onLogout }: DashboardPageProps) {
               </svg>
             </button>
 
-            <div className="sv-review-dots" role="tablist" aria-label="Välj recension">
-              {REVIEW_DATA.map((review, i) => (
-                <button
-                  key={review.name}
-                  type="button"
-                  className={`sv-review-dot${activeReviewIndex === i ? ' sv-review-dot--active' : ''}`}
-                  onClick={() => setActiveReviewIndex(i)}
-                  aria-current={activeReviewIndex === i ? 'true' : undefined}
-                  aria-label={`Visa recension ${i + 1} av ${reviewCount}`}
-                >
-                  <span className="sv-review-dot-label mono">
-                    {String(i + 1).padStart(2, '0')}
-                  </span>
-                  <span className="sv-review-dot-name">{review.name}</span>
-                </button>
-              ))}
-            </div>
             <div className="sv-review-progress" aria-hidden="true">
               <span style={{ transform: `scaleX(${(activeReviewIndex + 1) / reviewCount})` }} />
             </div>
