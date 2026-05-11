@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type PointerEvent } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent } from 'react'
 import { Link } from 'react-router-dom'
 import AppNavbar from '../components/AppNavbar'
 import ProductCard from '../components/ProductCard'
@@ -149,9 +149,23 @@ const BESTSELLER_CATS = [
 ]
 
 const BESTSELLER_CHANGES = ['+412 sålda', '+298 sålda', '+241 sålda', '+187 sålda']
-const VISIBLE_REVIEW_COUNT = 3
+const DEFAULT_REVIEW_VISIBLE_COUNT = 3
+const REVIEW_MOBILE_BREAKPOINT_PX = 768
+const REVIEW_GAP_DESKTOP_PX = 16
+const REVIEW_GAP_MOBILE_PX = 12
 const REVIEW_AUTOPLAY_MS = 4200
-const REVIEW_DRAG_THRESHOLD_PX = 56
+const REVIEW_DRAG_THRESHOLD_PX = 40
+const REVIEW_DRAG_MAX_PX = 160
+
+function getReviewLayout() {
+  if (typeof window === 'undefined') {
+    return { visibleCount: DEFAULT_REVIEW_VISIBLE_COUNT, gap: REVIEW_GAP_DESKTOP_PX }
+  }
+  if (window.innerWidth <= REVIEW_MOBILE_BREAKPOINT_PX) {
+    return { visibleCount: 1, gap: REVIEW_GAP_MOBILE_PX }
+  }
+  return { visibleCount: DEFAULT_REVIEW_VISIBLE_COUNT, gap: REVIEW_GAP_DESKTOP_PX }
+}
 
 function getProductImageCandidates(images: ProductImage[]) {
   return images
@@ -201,13 +215,40 @@ function DashboardPage({ user, isAdmin, onLogout }: DashboardPageProps) {
   const [addedSkus, setAddedSkus] = useState<Set<string>>(new Set())
   const [toast, setToast] = useState<string | null>(null)
   const [cartError, setCartError] = useState('')
+  const [reviewLayout, setReviewLayout] = useState(() => getReviewLayout())
   const [activeReviewIndex, setActiveReviewIndex] = useState(0)
   const [isReviewCarouselPaused, setIsReviewCarouselPaused] = useState(false)
   const [isReviewDragging, setIsReviewDragging] = useState(false)
+  const [reviewDragOffset, setReviewDragOffset] = useState(0)
+  const [reviewCardWidth, setReviewCardWidth] = useState(0)
+  const [reviewTrackIndex, setReviewTrackIndex] = useState(() => {
+    const layout = getReviewLayout()
+    return REVIEW_DATA.length > layout.visibleCount ? layout.visibleCount : 0
+  })
+  const [isReviewJumping, setIsReviewJumping] = useState(false)
+  const reviewViewportRef = useRef<HTMLDivElement | null>(null)
   const reviewDragStartX = useRef(0)
   const reviewDragDeltaX = useRef(0)
   const reviewDragPointerId = useRef<number | null>(null)
   const reviewCount = REVIEW_DATA.length
+  const reviewVisibleCount = reviewLayout.visibleCount
+  const reviewGap = reviewLayout.gap
+  const canLoopReviews = reviewCount > reviewVisibleCount
+  const loopedReviews = useMemo(() => {
+    if (!canLoopReviews) return REVIEW_DATA
+    const head = REVIEW_DATA.slice(-reviewVisibleCount)
+    const tail = REVIEW_DATA.slice(0, reviewVisibleCount)
+    return [...head, ...REVIEW_DATA, ...tail]
+  }, [canLoopReviews, reviewCount, reviewVisibleCount])
+  const reviewStep = reviewCardWidth > 0 ? reviewCardWidth + reviewGap : 0
+  const reviewTranslateX = reviewStep ? -(reviewTrackIndex * reviewStep) + reviewDragOffset : 0
+  const reviewViewportStyle = useMemo(
+    () => ({
+      '--review-card-width': reviewCardWidth > 0 ? `${reviewCardWidth}px` : undefined,
+      '--review-gap': `${reviewGap}px`,
+    } as CSSProperties),
+    [reviewCardWidth, reviewGap],
+  )
 
   useEffect(() => {
     const load = async () => {
@@ -250,14 +291,57 @@ function DashboardPage({ user, isAdmin, onLogout }: DashboardPageProps) {
   }, [products])
 
   useEffect(() => {
-    if (isReviewCarouselPaused || reviewCount <= 1) return
+    const updateLayout = () => setReviewLayout(getReviewLayout())
+    updateLayout()
+    window.addEventListener('resize', updateLayout)
+    return () => window.removeEventListener('resize', updateLayout)
+  }, [])
+
+  useLayoutEffect(() => {
+    if (!reviewViewportRef.current) return
+
+    const updateWidth = () => {
+      const viewportWidth = reviewViewportRef.current?.clientWidth ?? 0
+      if (!viewportWidth) return
+      const totalGap = reviewGap * Math.max(0, reviewVisibleCount - 1)
+      const nextWidth = reviewVisibleCount > 0
+        ? (viewportWidth - totalGap) / reviewVisibleCount
+        : 0
+      setReviewCardWidth(nextWidth)
+    }
+
+    updateWidth()
+    const observer = new ResizeObserver(updateWidth)
+    observer.observe(reviewViewportRef.current)
+    return () => observer.disconnect()
+  }, [reviewGap, reviewVisibleCount])
+
+  useEffect(() => {
+    if (reviewCount === 0) return
+
+    const baseIndex = canLoopReviews ? reviewVisibleCount : 0
+    setReviewTrackIndex(baseIndex)
+    setActiveReviewIndex(0)
+    setReviewDragOffset(0)
+  }, [canLoopReviews, reviewCount, reviewVisibleCount])
+
+  useEffect(() => {
+    if (!isReviewJumping) return
+    const frame = window.requestAnimationFrame(() => setIsReviewJumping(false))
+    return () => window.cancelAnimationFrame(frame)
+  }, [isReviewJumping])
+
+  useEffect(() => {
+    if (isReviewCarouselPaused || !canLoopReviews) return
 
     const intervalId = window.setInterval(() => {
+      setReviewDragOffset(0)
+      setReviewTrackIndex((index) => index + 1)
       setActiveReviewIndex((index) => (index + 1) % reviewCount)
     }, REVIEW_AUTOPLAY_MS)
 
     return () => window.clearInterval(intervalId)
-  }, [isReviewCarouselPaused, reviewCount])
+  }, [canLoopReviews, isReviewCarouselPaused, reviewCount])
 
   const handleAddToCart = async (product: Product) => {
     setAddingProductId(product.id)
@@ -282,34 +366,59 @@ function DashboardPage({ user, isAdmin, onLogout }: DashboardPageProps) {
     () => [...products].sort((a, b) => b.price - a.price).slice(0, 4),
     [products],
   )
-  const visibleReviewIndexes = useMemo(
-    () =>
-      Array.from(
-        { length: Math.min(VISIBLE_REVIEW_COUNT, reviewCount) },
-        (_, offset) => (activeReviewIndex + offset) % reviewCount,
-      ),
-    [activeReviewIndex, reviewCount],
-  )
+  const goToReview = (index: number) => {
+    setReviewDragOffset(0)
+    setActiveReviewIndex(index)
+    if (!canLoopReviews) return
+    setReviewTrackIndex(reviewVisibleCount + index)
+  }
   const goToPreviousReview = () => {
+    if (!canLoopReviews) return
+    setReviewDragOffset(0)
+    setReviewTrackIndex((index) => index - 1)
     setActiveReviewIndex((index) => (index - 1 + reviewCount) % reviewCount)
   }
   const goToNextReview = () => {
+    if (!canLoopReviews) return
+    setReviewDragOffset(0)
+    setReviewTrackIndex((index) => index + 1)
     setActiveReviewIndex((index) => (index + 1) % reviewCount)
+  }
+  const handleReviewTrackTransitionEnd = () => {
+    if (!canLoopReviews) return
+
+    if (reviewTrackIndex >= reviewCount + reviewVisibleCount) {
+      setIsReviewJumping(true)
+      setReviewTrackIndex(reviewVisibleCount)
+      return
+    }
+
+    if (reviewTrackIndex < reviewVisibleCount) {
+      setIsReviewJumping(true)
+      setReviewTrackIndex(reviewCount + reviewVisibleCount - 1)
+    }
   }
   const handleReviewDragStart = (event: PointerEvent<HTMLDivElement>) => {
     if (event.pointerType === 'mouse' && event.button !== 0) return
+    if (!canLoopReviews || reviewStep === 0) return
 
     reviewDragStartX.current = event.clientX
     reviewDragDeltaX.current = 0
     reviewDragPointerId.current = event.pointerId
     setIsReviewCarouselPaused(true)
     setIsReviewDragging(true)
+    setReviewDragOffset(0)
     event.currentTarget.setPointerCapture(event.pointerId)
   }
   const handleReviewDragMove = (event: PointerEvent<HTMLDivElement>) => {
     if (reviewDragPointerId.current !== event.pointerId) return
+    if (!canLoopReviews) return
 
-    reviewDragDeltaX.current = event.clientX - reviewDragStartX.current
+    const delta = event.clientX - reviewDragStartX.current
+    reviewDragDeltaX.current = delta
+    const maxOffset = reviewStep ? Math.min(REVIEW_DRAG_MAX_PX, reviewStep) : REVIEW_DRAG_MAX_PX
+    const clamped = Math.max(-maxOffset, Math.min(maxOffset, delta))
+    setReviewDragOffset(clamped)
   }
   const finishReviewDrag = (event: PointerEvent<HTMLDivElement>) => {
     if (reviewDragPointerId.current !== event.pointerId) return
@@ -327,6 +436,8 @@ function DashboardPage({ user, isAdmin, onLogout }: DashboardPageProps) {
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId)
     }
+
+    setReviewDragOffset(0)
 
     if (Math.abs(dragDistance) < REVIEW_DRAG_THRESHOLD_PX) return
 
@@ -653,7 +764,7 @@ function DashboardPage({ user, isAdmin, onLogout }: DashboardPageProps) {
           </div>
 
           <div
-            className={`sv-reviews-carousel${isReviewCarouselPaused ? ' sv-reviews-carousel--paused' : ''}${isReviewDragging ? ' sv-reviews-carousel--dragging' : ''}`}
+            className={`sv-reviews-carousel${isReviewCarouselPaused ? ' sv-reviews-carousel--paused' : ''}${isReviewDragging ? ' sv-reviews-carousel--dragging' : ''}${isReviewJumping ? ' sv-reviews-carousel--jumping' : ''}`}
             aria-label="Kundrecensioner"
             aria-roledescription="carousel"
             onBlur={() => setIsReviewCarouselPaused(false)}
@@ -672,21 +783,34 @@ function DashboardPage({ user, isAdmin, onLogout }: DashboardPageProps) {
               </svg>
             </button>
             <div
+              ref={reviewViewportRef}
               className="sv-reviews-viewport"
+              style={reviewViewportStyle}
               onPointerCancel={finishReviewDrag}
               onPointerDown={handleReviewDragStart}
               onPointerMove={handleReviewDragMove}
               onPointerUp={finishReviewDrag}
             >
-              <div className="sv-reviews-track">
-                {visibleReviewIndexes.map((reviewIndex, slotIndex) => {
-                  const review = REVIEW_DATA[reviewIndex]
+              <div
+                className="sv-reviews-track"
+                style={{ transform: `translateX(${reviewTranslateX}px)` }}
+                onTransitionEnd={handleReviewTrackTransitionEnd}
+              >
+                {loopedReviews.map((review, trackIndex) => {
+                  const normalizedIndex = reviewCount > 0
+                    ? (
+                      canLoopReviews
+                        ? ((trackIndex - reviewVisibleCount) % reviewCount + reviewCount) % reviewCount
+                        : trackIndex % reviewCount
+                    )
+                    : 0
+                  const isActive = trackIndex === reviewTrackIndex
 
                   return (
                     <blockquote
-                      key={`${review.name}-${slotIndex}`}
-                      className={`sv-review-card${slotIndex === 0 ? ' sv-review-card--active' : ''}`}
-                      aria-label={`Recension ${reviewIndex + 1} av ${reviewCount}`}
+                      key={`${review.name}-${trackIndex}`}
+                      className={`sv-review-card${isActive ? ' sv-review-card--active' : ''}`}
+                      aria-label={`Recension ${normalizedIndex + 1} av ${reviewCount}`}
                       aria-roledescription="slide"
                     >
                       <div className="sv-review-badge" style={{ background: review.color }}>
@@ -731,7 +855,7 @@ function DashboardPage({ user, isAdmin, onLogout }: DashboardPageProps) {
                   key={review.name}
                   type="button"
                   className={`sv-review-dot-simple${activeReviewIndex === i ? ' sv-review-dot-simple--active' : ''}`}
-                  onClick={() => setActiveReviewIndex(i)}
+                  onClick={() => goToReview(i)}
                   aria-current={activeReviewIndex === i ? 'true' : undefined}
                   aria-label={`Visa recension ${i + 1} av ${reviewCount}`}
                 />
