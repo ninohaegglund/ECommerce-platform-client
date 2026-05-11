@@ -4603,9 +4603,7 @@
 .sv-reviews-viewport {
   overflow: hidden;
   grid-column: 2;
-  border-radius: 8px;
-  box-shadow: 0 18px 46px rgba(23, 24, 29, 0.08);
-  background: var(--bg-2);
+  background: transparent;
   cursor: grab;
   touch-action: pan-y;
 }
@@ -4616,8 +4614,8 @@
 
 .sv-reviews-track {
   display: flex;
-  gap: var(--review-gap, 0px);
-  background: var(--bg-2);
+  gap: var(--review-gap, 16px);
+  background: transparent;
   transition: transform 0.25s ease;
   will-change: transform;
 }
@@ -4628,7 +4626,7 @@
 }
 
 .sv-review-card {
-  flex: 0 0 var(--review-card-width, calc(100% / 3));
+  flex: 0 0 var(--review-card-width, calc((100% - 32px) / 3));
   min-height: 360px;
   margin: 0;
   background:
@@ -5345,7 +5343,7 @@
   .sv-new-release { display: none; }
   .sv-product-grid { grid-template-columns: repeat(2, 1fr); }
   .sv-reviews-carousel { grid-template-columns: 40px minmax(0, 1fr) 40px; gap: 8px; }
-  .sv-reviews-track { gap: var(--review-gap, 0px); }
+  .sv-reviews-track { gap: var(--review-gap, 12px); }
   .sv-review-nav-btn { width: 40px; height: 40px; }
   .sv-review-card { flex-basis: 100%; min-height: 0; padding: 50px 24px 24px; }
   .sv-review-badge { left: 24px; }
