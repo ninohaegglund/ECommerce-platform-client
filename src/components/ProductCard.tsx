@@ -16,7 +16,7 @@ type ProductProfile = {
   refurbished: boolean
 }
 
-export function getProductProfile(product: Product): ProductProfile {
+function getProductProfile(product: Product): ProductProfile {
   const s = `${product.name} ${product.shortDescription}`.toLowerCase()
 
   const refurbished =
@@ -55,7 +55,7 @@ export function getProductProfile(product: Product): ProductProfile {
   return { label: 'Spel & Konsoler', tone: 'drop', color: 'var(--ink-2)', refurbished }
 }
 
-export function getProductImagePath(product: Product, tone: string) {
+function getProductImagePath(product: Product, tone: string) {
   const cards = [
     '/shop-icons/pokemon-surging-sparks-booster-box.webp',
     '/shop-icons/pokemon-151-japansk-booster-box.webp',
@@ -165,10 +165,9 @@ function ProductCard({ product, isAdding, added, onAddToCart, imageUrl }: Produc
       </div>
 
       <Link
-        className="sv-product-detail-link sr-only"
+        className="sv-product-detail-link"
         to={`/products/${product.id}`}
-        tabIndex={-1}
-        aria-hidden="true"
+        aria-label={`Visa detaljer: ${product.name}`}
       >
         Visa detaljer
       </Link>

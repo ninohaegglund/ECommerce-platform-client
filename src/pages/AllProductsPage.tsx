@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import AppNavbar from '../components/AppNavbar'
-import ProductCard, { getProductImagePath, getProductProfile } from '../components/ProductCard'
+import ProductCard from '../components/ProductCard'
 import SiteFooter from '../components/SiteFooter'
 import type { Product } from '../data/products'
 import { addCartItem } from '../services/cartApi'
@@ -8,6 +8,7 @@ import { getCatalogProducts } from '../services/catalogApi'
 import { getProductImages } from '../services/productImagesApi'
 import type { AuthUser } from '../types/auth'
 import type { ProductImage } from '../types/product-image'
+import { getProductImagePath, getProductProfile } from '../utils/productCard'
 
 type AllProductsPageProps = {
   user: AuthUser
