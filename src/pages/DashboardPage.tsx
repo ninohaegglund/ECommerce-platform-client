@@ -155,7 +155,6 @@ const REVIEW_GAP_DESKTOP_PX = 16
 const REVIEW_GAP_MOBILE_PX = 12
 const REVIEW_AUTOPLAY_MS = 4200
 const REVIEW_DRAG_THRESHOLD_PX = 40
-const REVIEW_DRAG_MAX_PX = 160
 
 function getReviewLayout() {
   if (typeof window === 'undefined') {
@@ -366,6 +365,24 @@ function DashboardPage({ user, isAdmin, onLogout }: DashboardPageProps) {
     () => [...products].sort((a, b) => b.price - a.price).slice(0, 4),
     [products],
   )
+  const advanceReviewBy = (steps: number, options?: { wrapNow?: boolean; keepOffset?: boolean }) => {
+    if (!canLoopReviews || steps === 0) return
+    const { wrapNow = false, keepOffset = false } = options ?? {}
+
+    if (!keepOffset) setReviewDragOffset(0)
+
+    setReviewTrackIndex((index) => {
+      let next = index + steps
+      if (wrapNow) {
+        const min = reviewVisibleCount
+        const max = reviewCount + reviewVisibleCount - 1
+        while (next > max) next -= reviewCount
+        while (next < min) next += reviewCount
+      }
+      return next
+    })
+    setActiveReviewIndex((index) => (index + steps + reviewCount) % reviewCount)
+  }
   const goToReview = (index: number) => {
     setReviewDragOffset(0)
     setActiveReviewIndex(index)
@@ -373,16 +390,10 @@ function DashboardPage({ user, isAdmin, onLogout }: DashboardPageProps) {
     setReviewTrackIndex(reviewVisibleCount + index)
   }
   const goToPreviousReview = () => {
-    if (!canLoopReviews) return
-    setReviewDragOffset(0)
-    setReviewTrackIndex((index) => index - 1)
-    setActiveReviewIndex((index) => (index - 1 + reviewCount) % reviewCount)
+    advanceReviewBy(-1)
   }
   const goToNextReview = () => {
-    if (!canLoopReviews) return
-    setReviewDragOffset(0)
-    setReviewTrackIndex((index) => index + 1)
-    setActiveReviewIndex((index) => (index + 1) % reviewCount)
+    advanceReviewBy(1)
   }
   const handleReviewTrackTransitionEnd = () => {
     if (!canLoopReviews) return
@@ -412,13 +423,18 @@ function DashboardPage({ user, isAdmin, onLogout }: DashboardPageProps) {
   }
   const handleReviewDragMove = (event: PointerEvent<HTMLDivElement>) => {
     if (reviewDragPointerId.current !== event.pointerId) return
-    if (!canLoopReviews) return
+    if (!canLoopReviews || reviewStep === 0) return
 
-    const delta = event.clientX - reviewDragStartX.current
+    let delta = event.clientX - reviewDragStartX.current
+    const stepShift = Math.trunc(delta / reviewStep)
+    if (stepShift !== 0) {
+      advanceReviewBy(-stepShift, { wrapNow: true, keepOffset: true })
+      reviewDragStartX.current += stepShift * reviewStep
+      delta -= stepShift * reviewStep
+    }
+
     reviewDragDeltaX.current = delta
-    const maxOffset = reviewStep ? Math.min(REVIEW_DRAG_MAX_PX, reviewStep) : REVIEW_DRAG_MAX_PX
-    const clamped = Math.max(-maxOffset, Math.min(maxOffset, delta))
-    setReviewDragOffset(clamped)
+    setReviewDragOffset(delta)
   }
   const finishReviewDrag = (event: PointerEvent<HTMLDivElement>) => {
     if (reviewDragPointerId.current !== event.pointerId) return
@@ -442,11 +458,11 @@ function DashboardPage({ user, isAdmin, onLogout }: DashboardPageProps) {
     if (Math.abs(dragDistance) < REVIEW_DRAG_THRESHOLD_PX) return
 
     if (dragDistance < 0) {
-      goToNextReview()
+      advanceReviewBy(1)
       return
     }
 
-    goToPreviousReview()
+    advanceReviewBy(-1)
   }
 
   return (
