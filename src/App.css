@@ -4754,13 +4754,29 @@
   color: #807456;
 }
 
-.sv-footer-copyright a {
+.sv-footer-copyright a,
+.sv-footer-link {
   color: #807456;
   text-decoration: none;
 }
 
-.sv-footer-copyright a:hover {
+.sv-footer-link {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.sv-footer-copyright a:hover,
+.sv-footer-link:hover {
   color: #d8c89f;
+}
+
+.sv-footer-link:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 4px;
+  border-radius: 4px;
 }
 
 .sv-footer-payments {
@@ -4784,6 +4800,228 @@
   font-size: 11px;
   font-weight: 600;
   color: #d8c89f;
+}
+
+/* ---- Cookie preferences ---- */
+
+.sv-cookie-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(12, 13, 17, 0.62);
+  color: var(--ink);
+}
+
+.sv-cookie-dialog {
+  width: min(720px, 100%);
+  max-height: calc(100svh - 48px);
+  overflow: auto;
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  background: var(--bg);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+  padding: 28px;
+  outline: none;
+}
+
+.sv-cookie-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 14px;
+}
+
+.sv-cookie-kicker {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--red);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.sv-cookie-header h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 28px;
+  line-height: 1.1;
+  letter-spacing: 0;
+}
+
+.sv-cookie-close {
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.sv-cookie-close:hover,
+.sv-cookie-close:focus-visible {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.sv-cookie-intro,
+.sv-cookie-status {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.sv-cookie-status {
+  margin-top: 12px;
+  color: var(--mint);
+  font-weight: 700;
+}
+
+.sv-cookie-options {
+  display: grid;
+  gap: 12px;
+  margin: 24px 0;
+}
+
+.sv-cookie-option {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.sv-cookie-option.required {
+  cursor: default;
+}
+
+.sv-cookie-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sv-cookie-option-copy {
+  display: grid;
+  gap: 6px;
+}
+
+.sv-cookie-option-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.sv-cookie-option-title span {
+  border-radius: 4px;
+  background: var(--bg-3);
+  color: var(--ink-2);
+  padding: 3px 7px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.sv-cookie-option-description {
+  color: var(--ink-2);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.sv-cookie-toggle {
+  width: 48px;
+  height: 28px;
+  border: 1px solid var(--line-2);
+  border-radius: 999px;
+  background: var(--bg-2);
+  padding: 3px;
+  transition: background-color 0.16s, border-color 0.16s;
+}
+
+.sv-cookie-toggle span {
+  display: block;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(23, 24, 29, 0.18);
+  transition: transform 0.16s;
+}
+
+.sv-cookie-option input:checked ~ .sv-cookie-toggle {
+  border-color: var(--mint);
+  background: var(--mint);
+}
+
+.sv-cookie-option input:checked ~ .sv-cookie-toggle span {
+  transform: translateX(20px);
+}
+
+.sv-cookie-option input:focus-visible ~ .sv-cookie-toggle {
+  outline: 3px solid rgba(31, 157, 138, 0.24);
+  outline-offset: 3px;
+}
+
+.sv-cookie-option input:disabled ~ .sv-cookie-toggle {
+  border-color: var(--amber);
+  background: var(--amber);
+}
+
+.sv-cookie-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.sv-cookie-primary,
+.sv-cookie-secondary {
+  min-height: 42px;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.sv-cookie-primary {
+  border: 1px solid var(--red);
+  background: var(--red);
+  color: #fff;
+}
+
+.sv-cookie-secondary {
+  border: 1px solid var(--line-2);
+  background: #fff;
+  color: var(--ink);
+}
+
+.sv-cookie-primary:hover,
+.sv-cookie-primary:focus-visible {
+  background: #b83d2b;
+  border-color: #b83d2b;
+}
+
+.sv-cookie-secondary:hover,
+.sv-cookie-secondary:focus-visible {
+  border-color: var(--ink);
 }
 
 /* ---- Toast ---- */
@@ -4861,6 +5099,13 @@
   .sv-review-quote { font-size: 16px; }
   .sv-review-dot-name { display: none; }
   .sv-footer-grid { grid-template-columns: 1fr; }
+  .sv-footer-bottom { align-items: flex-start; flex-direction: column; gap: 22px; }
+  .sv-footer-copyright { flex-wrap: wrap; gap: 12px 18px; }
+  .sv-cookie-dialog { padding: 22px; }
+  .sv-cookie-header h2 { font-size: 24px; }
+  .sv-cookie-actions { flex-direction: column; }
+  .sv-cookie-primary,
+  .sv-cookie-secondary { width: 100%; }
   .sv-category-section,
   .sv-product-section,
   .sv-reviews-section { padding-left: 20px; padding-right: 20px; }
@@ -4879,6 +5124,10 @@
   .sv-review-card { padding: 50px 20px 22px; }
   .sv-review-badge { left: 20px; }
   .sv-review-quote { font-size: 15.5px; }
+  .sv-cookie-backdrop { padding: 14px; }
+  .sv-cookie-dialog { max-height: calc(100svh - 28px); padding: 18px; }
+  .sv-cookie-option { grid-template-columns: 1fr; }
+  .sv-cookie-toggle { justify-self: start; }
   .sv-jobs-brand { font-size: 24px; margin-bottom: 32px; }
   .sv-jobs-section h1 { font-size: 44px; }
   .sv-jobs-block h2 { font-size: 27px; }
