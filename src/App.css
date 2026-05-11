@@ -4556,7 +4556,7 @@
   grid-column: 2;
   border-radius: 8px;
   box-shadow: 0 18px 46px rgba(23, 24, 29, 0.08);
-  background: var(--bg);
+  background: transparent;
   cursor: grab;
   touch-action: pan-y;
 }
@@ -4568,7 +4568,7 @@
 .sv-reviews-track {
   display: flex;
   gap: var(--review-gap, 16px);
-  background: var(--bg);
+  background: transparent;
   transition: transform 0.25s ease;
   will-change: transform;
 }
