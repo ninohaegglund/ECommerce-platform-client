@@ -14,13 +14,14 @@ function AboutPage({ user, isAdmin, onLogout }: AboutPageProps) {
       isAdmin={isAdmin}
       onLogout={onLogout}
       title="Om Spelvalvet"
-      description="Spelvalvet drivs av Sara Lind och Jonas Berg, två livslånga samlare som ville skapa en trygg plats för Pokémon-kort och retrospel. Vi började som en liten byteskväll 2018 och växte till en butik med fokus på äkthet, kvalitet och community."
+      description="Spelvalvet är skapat av Max, Elias och Nino, tre livslånga samlare som ville skapa en trygg plats för Pokémon-kort och retrospel. Vi började som en liten byteskväll 2018 och växte till en butik med fokus på äkthet, kvalitet och community."
     >
       <div className="sv-info-grid">
         <div className="sv-info-card">
           <h3>Ägarna</h3>
-          <p>Sara Lind ansvarar för TCG-inköp, gradering och spelcommunity.</p>
-          <p>Jonas Berg leder verkstaden och refurb-processen för konsoler.</p>
+          <p>Max leder inköp och kurering av TCG-sortimentet.</p>
+          <p>Elias ansvarar för community, events och lanseringar.</p>
+          <p>Nino leder verkstaden och refurb-processen för konsoler.</p>
         </div>
         <div className="sv-info-card">
           <h3>Så startade vi</h3>
