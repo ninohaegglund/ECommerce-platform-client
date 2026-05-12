@@ -9,6 +9,7 @@ import type {
   CreatePaymentRequest,
   CreatePaymentResponse,
   ProcessPaymentRequest,
+  StripePaymentIntentResponse,
 } from '../types/payment'
 import type { OrderDetails, OrderSummary } from '../types/order'
 import { request } from './apiClient.ts'
@@ -119,6 +120,18 @@ export async function processPayment(
     {
       method: 'POST',
       body: JSON.stringify(payload),
+    },
+    PAYMENT_API_BASE_URL,
+  )
+}
+
+export async function createStripePaymentIntent(
+  paymentId: string,
+): Promise<StripePaymentIntentResponse> {
+  return request<StripePaymentIntentResponse>(
+    `/api/payments/${paymentId}/stripe/payment-intent`,
+    {
+      method: 'POST',
     },
     PAYMENT_API_BASE_URL,
   )

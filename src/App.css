@@ -1743,6 +1743,29 @@
   padding: 10px 12px;
 }
 
+.stripe-form {
+  display: grid;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.stripe-element {
+  border-radius: 8px;
+  border: 1px solid rgba(23, 24, 29, 0.12);
+  background: var(--color-paper-strong);
+  padding: 12px;
+}
+
+.stripe-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.stripe-actions .submit-btn,
+.stripe-actions .ghost-btn {
+  width: 100%;
+}
+
 .success-info {
   margin: 12px 0;
   border: 1px solid rgba(23, 24, 29, 0.12);

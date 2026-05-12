@@ -14,3 +14,10 @@ export type ProcessPaymentRequest = {
   isSuccessful: boolean
   paymentTransactionId: string
 }
+
+export type StripePaymentIntentResponse = {
+  paymentId: string
+  paymentIntentId: string
+  clientSecret: string
+  status: number
+}

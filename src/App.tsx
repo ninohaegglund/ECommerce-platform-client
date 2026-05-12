@@ -10,7 +10,7 @@ import CartPage from './pages/CartPage'
 import CheckoutPage from './pages/CheckoutPage'
 import DashboardPage from './pages/DashboardPage'
 import JobsPage from './pages/JobsPage'
-import MockStripeCheckoutPage from './pages/MockStripeCheckoutPage'
+import StripeCheckoutPage from './pages/StripeCheckoutPage'
 import NotificationsPage from './pages/NotificationsPage'
 import OrderSuccessPage from './pages/OrderSuccessPage'
 import OrdersPage from './pages/OrdersPage'
@@ -221,10 +221,24 @@ function App() {
         }
       />
       <Route
+        path="/checkout/payment"
+        element={
+          canAccessStore && activeUser ? (
+            <StripeCheckoutPage
+              user={activeUser}
+              isAdmin={isAdmin}
+              onLogout={handleLogout}
+            />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+      <Route
         path="/checkout/payment-simulation"
         element={
           canAccessStore && activeUser ? (
-            <MockStripeCheckoutPage
+            <StripeCheckoutPage
               user={activeUser}
               isAdmin={isAdmin}
               onLogout={handleLogout}
