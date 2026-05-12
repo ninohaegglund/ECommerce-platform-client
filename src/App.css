@@ -4660,7 +4660,6 @@
 .sv-review-card--active {
   border-color: rgba(23, 24, 29, 0.22);
   box-shadow: 0 2px 0 rgba(23, 24, 29, 0.06), 0 12px 22px -16px rgba(23, 24, 29, 0.2);
-  transform: translateY(-2px);
 }
 
 .sv-review-nav-btn {
