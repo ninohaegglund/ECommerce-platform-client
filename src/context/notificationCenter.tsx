@@ -63,8 +63,8 @@ export function NotificationCenterProvider({ userId, children }: NotificationCen
               ? crypto.randomUUID()
               : `welcome-${Date.now()}`,
           userId,
-          title: 'Welcome to NovaCart',
-          message: 'Your account is ready. Start exploring products and place your first order.',
+          title: 'Välkommen till NovaCart',
+          message: 'Ditt konto är klart. Börja utforska produkter och lägg din första beställning.',
           createdAtUtc: new Date().toISOString(),
           isRead: false,
         }

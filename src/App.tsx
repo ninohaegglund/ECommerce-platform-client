@@ -10,7 +10,8 @@ import CategoryPage from './pages/CategoryPage'
 import CartPage from './pages/CartPage'
 import CheckoutPage from './pages/CheckoutPage'
 import DashboardPage from './pages/DashboardPage'
-import MockStripeCheckoutPage from './pages/MockStripeCheckoutPage'
+import JobsPage from './pages/JobsPage'
+import StripeCheckoutPage from './pages/StripeCheckoutPage'
 import NotificationsPage from './pages/NotificationsPage'
 import OrderSuccessPage from './pages/OrderSuccessPage'
 import OrdersPage from './pages/OrdersPage'
@@ -221,10 +222,24 @@ function App() {
         }
       />
       <Route
+        path="/checkout/payment"
+        element={
+          canAccessStore && activeUser ? (
+            <StripeCheckoutPage
+              user={activeUser}
+              isAdmin={isAdmin}
+              onLogout={handleLogout}
+            />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+      <Route
         path="/checkout/payment-simulation"
         element={
           canAccessStore && activeUser ? (
-            <MockStripeCheckoutPage
+            <StripeCheckoutPage
               user={activeUser}
               isAdmin={isAdmin}
               onLogout={handleLogout}
@@ -374,6 +389,16 @@ function App() {
         }
       />
       <Route
+        path="/jobba-hos-oss"
+        element={
+          <JobsPage
+            user={activeUser ?? GUEST_USER}
+            isAdmin={isAdmin}
+            onLogout={handleLogout}
+          />
+        }
+      />
+      <Route
         path="/pokemon-kort"
         element={
           canAccessStore && activeUser ? (
@@ -490,6 +515,16 @@ function App() {
                 </div>
               </div>
             </SimplePage>
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+      <Route
+        path="/:categorySlug"
+        element={
+          canAccessStore && activeUser ? (
+            <CategoryPage user={activeUser} isAdmin={isAdmin} onLogout={handleLogout} />
           ) : (
             <Navigate to="/login" replace />
           )

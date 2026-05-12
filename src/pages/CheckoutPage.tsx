@@ -107,7 +107,7 @@ function CheckoutPage({ user, isAdmin, onLogout }: CheckoutPageProps) {
       }
 
       navigate(
-        `/checkout/payment-simulation?orderId=${encodeURIComponent(orderId)}&amount=${encodeURIComponent(String(amount))}&reservationIds=${encodeURIComponent(reservationIds.join(','))}`,
+        `/checkout/payment?orderId=${encodeURIComponent(orderId)}&amount=${encodeURIComponent(String(amount))}&reservationIds=${encodeURIComponent(reservationIds.join(','))}`,
         {
           replace: true,
         },

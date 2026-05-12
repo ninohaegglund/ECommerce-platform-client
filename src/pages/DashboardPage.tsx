@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent } from 'react'
 import { Link } from 'react-router-dom'
 import AppNavbar from '../components/AppNavbar'
 import ProductCard from '../components/ProductCard'
@@ -100,6 +100,38 @@ const REVIEW_DATA = [
     role: 'Retrogaming-spelare',
     color: 'var(--blue)',
   },
+  {
+    rating: 5,
+    quote:
+      'Beställde sleeves, boosters och ett par graded kort. Allt kom väl packat, snyggt sorterat och med tydlig status på varje produkt.',
+    name: 'Maja R.',
+    role: 'TCG-spelare',
+    color: 'var(--amber)',
+  },
+  {
+    rating: 5,
+    quote:
+      'Supporten hjälpte mig välja rätt handkontroll till min N64. Den kom fram snabbt och känslan var precis som jag mindes den.',
+    name: 'Oskar T.',
+    role: 'Konsolnostalgiker',
+    color: 'var(--ink-2)',
+  },
+  {
+    rating: 5,
+    quote:
+      'Jag uppskattar att skicket faktiskt matchar beskrivningen. Inga överraskningar, bara bra produkter och snabb leverans.',
+    name: 'Sara L.',
+    role: 'Samlarförälder',
+    color: 'var(--mint)',
+  },
+  {
+    rating: 5,
+    quote:
+      'Köpte flera retrospel som present. De var rengjorda, testade och såg mycket bättre ut än bilderna. Kommer handla igen.',
+    name: 'Noel A.',
+    role: 'Presentjägare',
+    color: 'var(--red)',
+  },
 ]
 
 const BESTSELLER_IMAGES = [
@@ -117,6 +149,22 @@ const BESTSELLER_CATS = [
 ]
 
 const BESTSELLER_CHANGES = ['+412 sålda', '+298 sålda', '+241 sålda', '+187 sålda']
+const DEFAULT_REVIEW_VISIBLE_COUNT = 3
+const REVIEW_MOBILE_BREAKPOINT_PX = 768
+const REVIEW_GAP_DESKTOP_PX = 16
+const REVIEW_GAP_MOBILE_PX = 12
+const REVIEW_AUTOPLAY_MS = 4200
+const REVIEW_DRAG_THRESHOLD_PX = 40
+
+function getReviewLayout() {
+  if (typeof window === 'undefined') {
+    return { visibleCount: DEFAULT_REVIEW_VISIBLE_COUNT, gap: REVIEW_GAP_DESKTOP_PX }
+  }
+  if (window.innerWidth <= REVIEW_MOBILE_BREAKPOINT_PX) {
+    return { visibleCount: 1, gap: REVIEW_GAP_MOBILE_PX }
+  }
+  return { visibleCount: DEFAULT_REVIEW_VISIBLE_COUNT, gap: REVIEW_GAP_DESKTOP_PX }
+}
 
 function getProductImageCandidates(images: ProductImage[]) {
   return images
@@ -157,7 +205,7 @@ function ArrowRight({ size = 14 }: { size?: number }) {
   )
 }
 
-function DashboardPage({ user, isAdmin, token: _token, expiresAt: _expiresAt, onLogout }: DashboardPageProps) {
+function DashboardPage({ user, isAdmin, onLogout }: DashboardPageProps) {
   const [products, setProducts] = useState<Product[]>([])
   const [productImageUrls, setProductImageUrls] = useState<Record<string, string>>({})
   const [isLoadingProducts, setIsLoadingProducts] = useState(true)
@@ -166,6 +214,40 @@ function DashboardPage({ user, isAdmin, token: _token, expiresAt: _expiresAt, on
   const [addedSkus, setAddedSkus] = useState<Set<string>>(new Set())
   const [toast, setToast] = useState<string | null>(null)
   const [cartError, setCartError] = useState('')
+  const [reviewLayout, setReviewLayout] = useState(() => getReviewLayout())
+  const [activeReviewIndex, setActiveReviewIndex] = useState(0)
+  const [isReviewCarouselPaused, setIsReviewCarouselPaused] = useState(false)
+  const [isReviewDragging, setIsReviewDragging] = useState(false)
+  const [reviewDragOffset, setReviewDragOffset] = useState(0)
+  const [reviewCardWidth, setReviewCardWidth] = useState(0)
+  const [reviewTrackIndex, setReviewTrackIndex] = useState(() => {
+    const layout = getReviewLayout()
+    return REVIEW_DATA.length > layout.visibleCount ? layout.visibleCount : 0
+  })
+  const [isReviewJumping, setIsReviewJumping] = useState(false)
+  const reviewViewportRef = useRef<HTMLDivElement | null>(null)
+  const reviewDragStartX = useRef(0)
+  const reviewDragDeltaX = useRef(0)
+  const reviewDragPointerId = useRef<number | null>(null)
+  const reviewCount = REVIEW_DATA.length
+  const reviewVisibleCount = reviewLayout.visibleCount
+  const reviewGap = reviewLayout.gap
+  const canLoopReviews = reviewCount > reviewVisibleCount
+  const loopedReviews = useMemo(() => {
+    if (!canLoopReviews) return REVIEW_DATA
+    const head = REVIEW_DATA.slice(-reviewVisibleCount)
+    const tail = REVIEW_DATA.slice(0, reviewVisibleCount)
+    return [...head, ...REVIEW_DATA, ...tail]
+  }, [canLoopReviews, reviewVisibleCount])
+  const reviewStep = reviewCardWidth > 0 ? reviewCardWidth + reviewGap : 0
+  const reviewTranslateX = reviewStep ? -(reviewTrackIndex * reviewStep) + reviewDragOffset : 0
+  const reviewViewportStyle = useMemo(
+    () => ({
+      '--review-card-width': reviewCardWidth > 0 ? `${reviewCardWidth}px` : undefined,
+      '--review-gap': `${reviewGap}px`,
+    } as CSSProperties),
+    [reviewCardWidth, reviewGap],
+  )
 
   useEffect(() => {
     const load = async () => {
@@ -207,6 +289,59 @@ function DashboardPage({ user, isAdmin, token: _token, expiresAt: _expiresAt, on
     return () => { cancelled = true }
   }, [products])
 
+  useEffect(() => {
+    const updateLayout = () => setReviewLayout(getReviewLayout())
+    updateLayout()
+    window.addEventListener('resize', updateLayout)
+    return () => window.removeEventListener('resize', updateLayout)
+  }, [])
+
+  useLayoutEffect(() => {
+    if (!reviewViewportRef.current) return
+
+    const updateWidth = () => {
+      const viewportWidth = reviewViewportRef.current?.clientWidth ?? 0
+      if (!viewportWidth) return
+      const totalGap = reviewGap * Math.max(0, reviewVisibleCount - 1)
+      const nextWidth = reviewVisibleCount > 0
+        ? (viewportWidth - totalGap) / reviewVisibleCount
+        : 0
+      setReviewCardWidth(nextWidth)
+    }
+
+    updateWidth()
+    const observer = new ResizeObserver(updateWidth)
+    observer.observe(reviewViewportRef.current)
+    return () => observer.disconnect()
+  }, [reviewGap, reviewVisibleCount])
+
+  useEffect(() => {
+    if (reviewCount === 0) return
+
+    const baseIndex = canLoopReviews ? reviewVisibleCount : 0
+    setReviewTrackIndex(baseIndex)
+    setActiveReviewIndex(0)
+    setReviewDragOffset(0)
+  }, [canLoopReviews, reviewCount, reviewVisibleCount])
+
+  useEffect(() => {
+    if (!isReviewJumping) return
+    const frame = window.requestAnimationFrame(() => setIsReviewJumping(false))
+    return () => window.cancelAnimationFrame(frame)
+  }, [isReviewJumping])
+
+  useEffect(() => {
+    if (isReviewCarouselPaused || !canLoopReviews) return
+
+    const intervalId = window.setInterval(() => {
+      setReviewDragOffset(0)
+      setReviewTrackIndex((index) => index + 1)
+      setActiveReviewIndex((index) => (index + 1) % reviewCount)
+    }, REVIEW_AUTOPLAY_MS)
+
+    return () => window.clearInterval(intervalId)
+  }, [canLoopReviews, isReviewCarouselPaused, reviewCount])
+
   const handleAddToCart = async (product: Product) => {
     setAddingProductId(product.id)
     setCartError('')
@@ -230,6 +365,105 @@ function DashboardPage({ user, isAdmin, token: _token, expiresAt: _expiresAt, on
     () => [...products].sort((a, b) => b.price - a.price).slice(0, 4),
     [products],
   )
+  const advanceReviewBy = (steps: number, options?: { wrapNow?: boolean; keepOffset?: boolean }) => {
+    if (!canLoopReviews || steps === 0) return
+    const { wrapNow = false, keepOffset = false } = options ?? {}
+
+    if (!keepOffset) setReviewDragOffset(0)
+
+    setReviewTrackIndex((index) => {
+      let next = index + steps
+      if (wrapNow) {
+        const min = reviewVisibleCount
+        const max = reviewCount + reviewVisibleCount - 1
+        while (next > max) next -= reviewCount
+        while (next < min) next += reviewCount
+      }
+      return next
+    })
+    setActiveReviewIndex((index) => (index + steps + reviewCount) % reviewCount)
+  }
+  const goToReview = (index: number) => {
+    setReviewDragOffset(0)
+    setActiveReviewIndex(index)
+    if (!canLoopReviews) return
+    setReviewTrackIndex(reviewVisibleCount + index)
+  }
+  const goToPreviousReview = () => {
+    advanceReviewBy(-1)
+  }
+  const goToNextReview = () => {
+    advanceReviewBy(1)
+  }
+  const handleReviewTrackTransitionEnd = () => {
+    if (!canLoopReviews) return
+
+    if (reviewTrackIndex >= reviewCount + reviewVisibleCount) {
+      setIsReviewJumping(true)
+      setReviewTrackIndex(reviewVisibleCount)
+      return
+    }
+
+    if (reviewTrackIndex < reviewVisibleCount) {
+      setIsReviewJumping(true)
+      setReviewTrackIndex(reviewCount + reviewVisibleCount - 1)
+    }
+  }
+  const handleReviewDragStart = (event: PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === 'mouse' && event.button !== 0) return
+    if (!canLoopReviews || reviewStep === 0) return
+
+    reviewDragStartX.current = event.clientX
+    reviewDragDeltaX.current = 0
+    reviewDragPointerId.current = event.pointerId
+    setIsReviewCarouselPaused(true)
+    setIsReviewDragging(true)
+    setReviewDragOffset(0)
+    event.currentTarget.setPointerCapture(event.pointerId)
+  }
+  const handleReviewDragMove = (event: PointerEvent<HTMLDivElement>) => {
+    if (reviewDragPointerId.current !== event.pointerId) return
+    if (!canLoopReviews || reviewStep === 0) return
+
+    let delta = event.clientX - reviewDragStartX.current
+    const stepShift = Math.trunc(delta / reviewStep)
+    if (stepShift !== 0) {
+      advanceReviewBy(-stepShift, { wrapNow: true, keepOffset: true })
+      reviewDragStartX.current += stepShift * reviewStep
+      delta -= stepShift * reviewStep
+    }
+
+    reviewDragDeltaX.current = delta
+    setReviewDragOffset(delta)
+  }
+  const finishReviewDrag = (event: PointerEvent<HTMLDivElement>) => {
+    if (reviewDragPointerId.current !== event.pointerId) return
+
+    const dragDistance = reviewDragDeltaX.current
+    reviewDragPointerId.current = null
+    reviewDragStartX.current = 0
+    reviewDragDeltaX.current = 0
+    setIsReviewDragging(false)
+    setIsReviewCarouselPaused(
+      event.currentTarget.matches(':hover') ||
+        event.currentTarget.contains(document.activeElement),
+    )
+
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId)
+    }
+
+    setReviewDragOffset(0)
+
+    if (Math.abs(dragDistance) < REVIEW_DRAG_THRESHOLD_PX) return
+
+    if (dragDistance < 0) {
+      advanceReviewBy(1)
+      return
+    }
+
+    advanceReviewBy(-1)
+  }
 
   return (
     <main className="sv-store">
@@ -545,34 +779,107 @@ function DashboardPage({ user, isAdmin, token: _token, expiresAt: _expiresAt, on
             </div>
           </div>
 
-          <div className="sv-reviews-grid">
-            {REVIEW_DATA.map((review, i) => (
-              <blockquote key={i} className="sv-review-card">
-                <div className="sv-review-badge" style={{ background: review.color }}>
-                  VERIFIERAD KÖPARE
-                </div>
-                <div className="sv-review-stars">
-                  {Array.from({ length: review.rating }).map((_, j) => (
-                    <StarIcon key={j} />
-                  ))}
-                  <span className="sv-review-stars-count mono">{review.rating}.0 / 5.0</span>
-                </div>
-                <p className="sv-review-quote">"{review.quote}"</p>
-                <footer className="sv-review-footer">
-                  <div className="sv-review-avatar" style={{ background: review.color }}>
-                    {review.name[0]}
-                  </div>
-                  <div>
-                    <div className="sv-review-name">{review.name}</div>
-                    <div className="sv-review-role">{review.role}</div>
-                  </div>
-                </footer>
-              </blockquote>
-            ))}
+          <div
+            className={`sv-reviews-carousel${isReviewCarouselPaused ? ' sv-reviews-carousel--paused' : ''}${isReviewDragging ? ' sv-reviews-carousel--dragging' : ''}${isReviewJumping ? ' sv-reviews-carousel--jumping' : ''}`}
+            aria-label="Kundrecensioner"
+            aria-roledescription="carousel"
+            onBlur={() => setIsReviewCarouselPaused(false)}
+            onFocus={() => setIsReviewCarouselPaused(true)}
+            onMouseEnter={() => setIsReviewCarouselPaused(true)}
+            onMouseLeave={() => setIsReviewCarouselPaused(false)}
+          >
+            <button
+              type="button"
+              className="sv-review-nav-btn sv-review-nav-btn--prev"
+              onClick={goToPreviousReview}
+              aria-label="Visa föregående recension"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M19 12H5" /><path d="m11 6-6 6 6 6" />
+              </svg>
+            </button>
+            <div
+              ref={reviewViewportRef}
+              className="sv-reviews-viewport"
+              style={reviewViewportStyle}
+              onPointerCancel={finishReviewDrag}
+              onPointerDown={handleReviewDragStart}
+              onPointerMove={handleReviewDragMove}
+              onPointerUp={finishReviewDrag}
+            >
+              <div
+                className="sv-reviews-track"
+                style={{ transform: `translateX(${reviewTranslateX}px)` }}
+                onTransitionEnd={handleReviewTrackTransitionEnd}
+              >
+                {loopedReviews.map((review, trackIndex) => {
+                  const normalizedIndex = reviewCount > 0
+                    ? (
+                      canLoopReviews
+                        ? ((trackIndex - reviewVisibleCount) % reviewCount + reviewCount) % reviewCount
+                        : trackIndex % reviewCount
+                    )
+                    : 0
+                  const isActive = trackIndex === reviewTrackIndex
+
+                  return (
+                    <blockquote
+                      key={`${review.name}-${trackIndex}`}
+                      className={`sv-review-card${isActive ? ' sv-review-card--active' : ''}`}
+                      aria-label={`Recension ${normalizedIndex + 1} av ${reviewCount}`}
+                      aria-roledescription="slide"
+                    >
+                      <div className="sv-review-badge" style={{ background: review.color }}>
+                        VERIFIERAD KÖPARE
+                      </div>
+                      <div className="sv-review-stars">
+                        {Array.from({ length: review.rating }).map((_, j) => (
+                          <StarIcon key={j} />
+                        ))}
+                        <span className="sv-review-stars-count mono">{review.rating}.0 / 5.0</span>
+                      </div>
+                      <p className="sv-review-quote">"{review.quote}"</p>
+                      <footer className="sv-review-footer">
+                        <div className="sv-review-avatar" style={{ background: review.color }}>
+                          {review.name[0]}
+                        </div>
+                        <div>
+                          <div className="sv-review-name">{review.name}</div>
+                          <div className="sv-review-role">{review.role}</div>
+                        </div>
+                      </footer>
+                    </blockquote>
+                  )
+                })}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="sv-review-nav-btn sv-review-nav-btn--next"
+              onClick={goToNextReview}
+              aria-label="Visa nästa recension"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M5 12h14" /><path d="m13 6 6 6-6 6" />
+              </svg>
+            </button>
+
+            <div className="sv-review-dots" role="tablist" aria-label="Välj recension">
+              {REVIEW_DATA.map((review, i) => (
+                <button
+                  key={review.name}
+                  type="button"
+                  className={`sv-review-dot-simple${activeReviewIndex === i ? ' sv-review-dot-simple--active' : ''}`}
+                  onClick={() => goToReview(i)}
+                  aria-current={activeReviewIndex === i ? 'true' : undefined}
+                  aria-label={`Visa recension ${i + 1} av ${reviewCount}`}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </section>
-
       <SiteFooter />
 
       {/* Toast */}

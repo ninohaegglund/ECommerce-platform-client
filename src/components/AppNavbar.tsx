@@ -1,7 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type FocusEvent } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useNotificationCenter } from '../context/notificationCenter'
+import { getCatalogCategories } from '../services/categoryApi'
 import type { AuthUser } from '../types/auth'
+import type { Category } from '../types/category'
+import { getCategoryPath } from '../utils/category'
 
 type AppNavbarProps = {
   user: AuthUser
@@ -23,32 +26,273 @@ const mainNavItems = [
   { label: 'Konsoler', to: '/konsoler' },
   { label: 'Refurbished', to: '/refurbished' },
   { label: 'Erbjudanden', to: '/erbjudanden' },
-  { label: 'Support', to: '/support' },
 ]
 
+type ProductDropdownIconName = 'grid' | 'cards' | 'gamepad' | 'console' | 'refresh'
+
+type ProductDropdownItem = {
+  label: string
+  to: string
+  meta: string
+  icon: ProductDropdownIconName
+}
+
 const productDropdownItems = [
-  { label: 'Alla produkter', to: '/dashboard' },
-  { label: 'Pokémon-kort', to: '/pokemon-kort' },
-  { label: 'Spel', to: '/spel' },
-  { label: 'Konsoler', to: '/konsoler' },
-  { label: 'Refurbished', to: '/refurbished' },
-]
+  {
+    label: 'Alla produkter',
+    to: '/produkter',
+    meta: 'Senaste nytt och hela lagret',
+    icon: 'grid',
+  },
+  {
+    label: 'Pokémon-kort',
+    to: '/pokemon-kort',
+    meta: 'Singlar, sealed och graded',
+    icon: 'cards',
+  },
+  {
+    label: 'Spel',
+    to: '/spel',
+    meta: 'Retro, Nintendo och Playstation',
+    icon: 'gamepad',
+  },
+  {
+    label: 'Konsoler',
+    to: '/konsoler',
+    meta: 'N64, handheld och tillbehör',
+    icon: 'console',
+  },
+  {
+    label: 'Refurbished',
+    to: '/refurbished',
+    meta: 'Testat, rengjort och klart',
+    icon: 'refresh',
+  },
+] satisfies Array<{
+  label: string
+  to: string
+  meta: string
+  icon: ProductDropdownIconName
+}>
+
+function getCategoryIcon(category: Category): ProductDropdownIconName {
+  const s = `${category.name} ${category.slug}`.toLowerCase()
+
+  if (s.includes('pokemon') || s.includes('pok\u00e9mon') || s.includes('kort')) {
+    return 'cards'
+  }
+  if (s.includes('konsol') || s.includes('console') || s.includes('n64')) {
+    return 'console'
+  }
+  if (s.includes('refurb')) {
+    return 'refresh'
+  }
+  if (s.includes('spel') || s.includes('game')) {
+    return 'gamepad'
+  }
+  return 'grid'
+}
+
+function ProductDropdownIcon({ name }: { name: ProductDropdownIconName }) {
+  const iconProps = {
+    width: 18,
+    height: 18,
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 1.7,
+    strokeLinecap: 'round' as const,
+    strokeLinejoin: 'round' as const,
+    'aria-hidden': true,
+  }
+
+  switch (name) {
+    case 'cards':
+      return (
+        <svg {...iconProps}>
+          <rect x="5" y="3" width="12" height="16" rx="2" />
+          <path d="M8 7h6M8 11h6M9 21h8a2 2 0 0 0 2-2V7" />
+        </svg>
+      )
+    case 'gamepad':
+      return (
+        <svg {...iconProps}>
+          <path d="M7 9h4l2 2h4a4 4 0 0 1 3.7 5.5l-.5 1.2a2 2 0 0 1-3.2.7L15 16H9l-2 2.4a2 2 0 0 1-3.2-.7l-.5-1.2A4 4 0 0 1 7 9Z" />
+          <path d="M8 12v3M6.5 13.5h3M16 13h.01M18 15h.01" />
+        </svg>
+      )
+    case 'console':
+      return (
+        <svg {...iconProps}>
+          <rect x="4" y="5" width="16" height="11" rx="2" />
+          <path d="M8 20h8M10 16v4M14 16v4M8 9h3M15 9h1M18 9h.01" />
+        </svg>
+      )
+    case 'refresh':
+      return (
+        <svg {...iconProps}>
+          <path d="M20 7v5h-5" />
+          <path d="M4 17v-5h5" />
+          <path d="M18 12a6 6 0 0 0-10-4.5L4 12" />
+          <path d="M6 12a6 6 0 0 0 10 4.5L20 12" />
+        </svg>
+      )
+    case 'grid':
+    default:
+      return (
+        <svg {...iconProps}>
+          <rect x="4" y="4" width="6" height="6" rx="1.5" />
+          <rect x="14" y="4" width="6" height="6" rx="1.5" />
+          <rect x="4" y="14" width="6" height="6" rx="1.5" />
+          <rect x="14" y="14" width="6" height="6" rx="1.5" />
+        </svg>
+      )
+  }
+}
 
 function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isNavOpen, setIsNavOpen] = useState(false)
   const [isAtTop, setIsAtTop] = useState(true)
   const [isProductsOpen, setIsProductsOpen] = useState(false)
+  const [openCategoryId, setOpenCategoryId] = useState('')
+  const [categories, setCategories] = useState<Category[]>([])
   const [searchFocused, setSearchFocused] = useState(false)
   const [searchValue, setSearchValue] = useState('')
+  const productsDropdownRef = useRef<HTMLDivElement>(null)
+  const navRef = useRef<HTMLElement>(null)
   const { unreadCount } = useNotificationCenter()
   const location = useLocation()
   const isGuest = user.id === 'guest'
-  const productPaths = productDropdownItems.map((item) => item.to)
+
+  const fallbackCategories = useMemo<Category[]>(
+    () =>
+      CATEGORIES.map((category, index) => {
+        const navItem = mainNavItems[index + 1]
+        const dropdownItem = productDropdownItems[index + 1]
+        const slug = navItem?.to.replace(/^\//, '') ?? category.name.toLowerCase()
+
+        return {
+          id: slug,
+          parentCategoryId: null,
+          childCategoryIds: [],
+          name: category.name,
+          slug,
+          description: dropdownItem?.meta ?? '',
+          productCount: 0,
+          isActive: true,
+        }
+      }),
+    [],
+  )
+  const navCategories = useMemo(() => {
+    const categorySource = categories.length > 0
+      ? categories.filter((category) => !category.parentCategoryId)
+      : fallbackCategories
+
+    const order = new Map([
+      ['pokemon-kort', 0],
+      ['spel', 1],
+      ['konsoler', 2],
+      ['refurbished', 3],
+    ])
+
+    return [...(categorySource.length > 0 ? categorySource : categories)].sort((a, b) => {
+      const aOrder = order.get(a.slug) ?? Number.MAX_SAFE_INTEGER
+      const bOrder = order.get(b.slug) ?? Number.MAX_SAFE_INTEGER
+      if (aOrder !== bOrder) return aOrder - bOrder
+      return a.name.localeCompare(b.name, 'sv-SE')
+    })
+  }, [categories, fallbackCategories])
+  const dynamicProductDropdownItems = useMemo<ProductDropdownItem[]>(
+    () => [
+      productDropdownItems[0],
+      ...navCategories.map((category) => ({
+        label: category.name,
+        to: getCategoryPath(category),
+        meta: category.description.trim() || 'Visa produkter',
+        icon: getCategoryIcon(category),
+      })),
+    ],
+    [navCategories],
+  )
+  const dynamicMainNavItems = useMemo(
+    () => [
+      mainNavItems[0],
+      ...navCategories.map((category) => ({
+        label: category.name,
+        to: getCategoryPath(category),
+      })),
+      mainNavItems[mainNavItems.length - 1],
+    ],
+    [navCategories],
+  )
+  const childCategoriesByParentId = useMemo(() => {
+    const next = new Map<string, Category[]>()
+
+    categories.forEach((category) => {
+      if (!category.parentCategoryId) return
+      const children = next.get(category.parentCategoryId) ?? []
+      children.push(category)
+      next.set(category.parentCategoryId, children)
+    })
+
+    next.forEach((children) => {
+      children.sort((a, b) => a.name.localeCompare(b.name, 'sv-SE'))
+    })
+
+    return next
+  }, [categories])
+  const allCategoryPaths = useMemo(
+    () => (categories.length > 0 ? categories : navCategories).map((category) => getCategoryPath(category)),
+    [categories, navCategories],
+  )
+  const productPaths = ['/dashboard', '/produkter', ...allCategoryPaths]
   const isProductsActive = productPaths.includes(location.pathname)
 
   const handleLogoClick = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const openProductsMenu = () => {
+    setIsMenuOpen(false)
+    setOpenCategoryId('')
+    setIsProductsOpen(true)
+  }
+  const closeProductsMenu = () => setIsProductsOpen(false)
+  const toggleProductsMenu = () => {
+    setIsMenuOpen(false)
+    setOpenCategoryId('')
+    setIsProductsOpen((isOpen) => !isOpen)
+  }
+  const openCategoryMenu = (categoryId: string) => {
+    setIsMenuOpen(false)
+    setIsProductsOpen(false)
+    setOpenCategoryId(categoryId)
+  }
+  const closeCategoryMenu = () => setOpenCategoryId('')
+  const toggleCategoryMenu = (categoryId: string) => {
+    setIsMenuOpen(false)
+    setIsProductsOpen(false)
+    setOpenCategoryId((currentCategoryId) => (
+      currentCategoryId === categoryId ? '' : categoryId
+    ))
+  }
+
+  const handleProductsBlur = (event: FocusEvent<HTMLDivElement>) => {
+    const nextFocusedElement = event.relatedTarget as Node | null
+
+    if (!nextFocusedElement || !event.currentTarget.contains(nextFocusedElement)) {
+      closeProductsMenu()
+    }
+  }
+
+  const handleCategoryBlur = (event: FocusEvent<HTMLDivElement>) => {
+    const nextFocusedElement = event.relatedTarget as Node | null
+
+    if (!nextFocusedElement || !event.currentTarget.contains(nextFocusedElement)) {
+      closeCategoryMenu()
+    }
   }
 
   useEffect(() => {
@@ -61,6 +305,79 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
 
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  useEffect(() => {
+    let cancelled = false
+
+    const loadCategories = async () => {
+      try {
+        const loadedCategories = await getCatalogCategories()
+        if (!cancelled && loadedCategories.length > 0) {
+          setCategories(loadedCategories)
+        }
+      } catch {
+        if (!cancelled) {
+          setCategories([])
+        }
+      }
+    }
+
+    void loadCategories()
+    return () => { cancelled = true }
+  }, [])
+
+  useEffect(() => {
+    if (!isProductsOpen) return
+
+    const handlePointerDown = (event: MouseEvent) => {
+      const target = event.target as Node | null
+
+      if (target && productsDropdownRef.current?.contains(target)) return
+
+      closeProductsMenu()
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+
+      closeProductsMenu()
+      productsDropdownRef.current?.querySelector('button')?.focus()
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown)
+    document.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isProductsOpen])
+
+  useEffect(() => {
+    if (!openCategoryId) return
+
+    const handlePointerDown = (event: MouseEvent) => {
+      const target = event.target as Node | null
+
+      if (target && navRef.current?.contains(target)) return
+
+      closeCategoryMenu()
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+
+      closeCategoryMenu()
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown)
+    document.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [openCategoryId])
 
   const initials = `${user.firstName[0] ?? ''}${user.lastName[0] ?? ''}`.toUpperCase()
 
@@ -232,40 +549,162 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
       {/* Nav row 1 */}
       <div className="sv-nav-row1">
         <div className="sv-nav-row1-inner">
-          <nav aria-label="Primär navigation">
-            {mainNavItems.map((item) => {
+          <nav ref={navRef} aria-label="Primär navigation">
+            {dynamicMainNavItems.map((item) => {
               const isActive = location.pathname === item.to
+              const navCategory = navCategories.find((category) => getCategoryPath(category) === item.to)
 
               if (item.label === 'Produkter') {
                 return (
-                  <div key={item.label} className="sv-nav-dropdown" onMouseLeave={() => setIsProductsOpen(false)}>
+                  <div
+                    key={item.label}
+                    ref={productsDropdownRef}
+                    className={`sv-nav-dropdown${isProductsOpen ? ' sv-nav-dropdown--open' : ''}`}
+                    onBlur={handleProductsBlur}
+                    onMouseEnter={openProductsMenu}
+                    onMouseLeave={closeProductsMenu}
+                  >
                     <button
                       type="button"
                       className={`sv-nav-link sv-nav-link--button${isProductsActive ? ' sv-nav-link--active' : ''}`}
-                      onClick={() => setIsProductsOpen((v) => !v)}
+                      onClick={toggleProductsMenu}
                       aria-expanded={isProductsOpen}
                       aria-haspopup="menu"
+                      aria-controls="products-menu"
                     >
                       Produkter
                       <svg className="sv-nav-caret" viewBox="0 0 12 8" aria-hidden="true">
                         <path d="M1 1.5L6 6.5L11 1.5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                     </button>
-                    {isProductsOpen && (
-                      <div className="sv-nav-dropdown-menu" role="menu">
-                        {productDropdownItems.map((dropdownItem) => (
-                          <Link
-                            key={dropdownItem.label}
-                            to={dropdownItem.to}
-                            role="menuitem"
-                            onClick={() => setIsProductsOpen(false)}
-                          >
-                            {dropdownItem.label}
-                          </Link>
-                        ))}
+                    <div
+                      id="products-menu"
+                      className={`sv-nav-dropdown-menu${isProductsOpen ? ' is-open' : ''}`}
+                      role="menu"
+                      aria-hidden={!isProductsOpen}
+                    >
+                      <div className="sv-nav-dropdown-header">
+                        <span className="mono">Sortiment</span>
+                        <strong>Utforska butiken</strong>
                       </div>
-                    )}
+                      <div className="sv-nav-dropdown-list">
+                        {dynamicProductDropdownItems.map((dropdownItem) => {
+                          const isDropdownItemActive = location.pathname === dropdownItem.to
+
+                          return (
+                            <Link
+                              key={dropdownItem.label}
+                              to={dropdownItem.to}
+                              className={`sv-nav-dropdown-item${isDropdownItemActive ? ' sv-nav-dropdown-item--active' : ''}`}
+                              role="menuitem"
+                              tabIndex={isProductsOpen ? 0 : -1}
+                              onClick={() => setIsProductsOpen(false)}
+                            >
+                              <span className="sv-nav-dropdown-icon">
+                                <ProductDropdownIcon name={dropdownItem.icon} />
+                              </span>
+                              <span className="sv-nav-dropdown-copy">
+                                <span className="sv-nav-dropdown-label">{dropdownItem.label}</span>
+                                <span className="sv-nav-dropdown-meta">{dropdownItem.meta}</span>
+                              </span>
+                              <svg className="sv-nav-dropdown-arrow" viewBox="0 0 16 16" aria-hidden="true">
+                                <path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                            </Link>
+                          )
+                        })}
+                      </div>
+                    </div>
                   </div>
+                )
+              }
+
+              if (navCategory) {
+                const childCategories = childCategoriesByParentId.get(navCategory.id) ?? []
+                const parentPath = getCategoryPath(navCategory)
+                const isCategoryOpen = openCategoryId === navCategory.id
+                const isCategoryActive =
+                  location.pathname === parentPath ||
+                  childCategories.some((childCategory) => (
+                    location.pathname === getCategoryPath(childCategory)
+                  ))
+
+                if (childCategories.length > 0) {
+                  return (
+                    <div
+                      key={navCategory.id}
+                      className={`sv-nav-category-dropdown${isCategoryOpen ? ' sv-nav-category-dropdown--open' : ''}`}
+                      onBlur={handleCategoryBlur}
+                      onMouseEnter={() => openCategoryMenu(navCategory.id)}
+                      onMouseLeave={closeCategoryMenu}
+                    >
+                      <div className="sv-nav-category-trigger">
+                        <Link
+                          to={parentPath}
+                          className={`sv-nav-link sv-nav-link--category-parent${isCategoryActive ? ' sv-nav-link--active' : ''}`}
+                          onClick={closeCategoryMenu}
+                        >
+                          {navCategory.name}
+                        </Link>
+                        <button
+                          type="button"
+                          className={`sv-nav-submenu-toggle${isCategoryActive ? ' sv-nav-submenu-toggle--active' : ''}`}
+                          onClick={() => toggleCategoryMenu(navCategory.id)}
+                          aria-expanded={isCategoryOpen}
+                          aria-haspopup="menu"
+                          aria-label={`Visa underkategorier f\u00f6r ${navCategory.name}`}
+                        >
+                          <svg className="sv-nav-caret" viewBox="0 0 12 8" aria-hidden="true">
+                            <path d="M1 1.5L6 6.5L11 1.5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </button>
+                      </div>
+                      <div
+                        className={`sv-nav-submenu${isCategoryOpen ? ' is-open' : ''}`}
+                        role="menu"
+                        aria-hidden={!isCategoryOpen}
+                      >
+                        <Link
+                          to={parentPath}
+                          className={`sv-nav-submenu-item${location.pathname === parentPath ? ' sv-nav-submenu-item--active' : ''}`}
+                          role="menuitem"
+                          tabIndex={isCategoryOpen ? 0 : -1}
+                          onClick={closeCategoryMenu}
+                        >
+                          <span>Alla {navCategory.name}</span>
+                          <small>{navCategory.description || 'Visa hela kategorin'}</small>
+                        </Link>
+                        {childCategories.map((childCategory) => {
+                          const childPath = getCategoryPath(childCategory)
+                          const isChildActive = location.pathname === childPath
+
+                          return (
+                            <Link
+                              key={childCategory.id}
+                              to={childPath}
+                              className={`sv-nav-submenu-item${isChildActive ? ' sv-nav-submenu-item--active' : ''}`}
+                              role="menuitem"
+                              tabIndex={isCategoryOpen ? 0 : -1}
+                              onClick={closeCategoryMenu}
+                            >
+                              <span>{childCategory.name}</span>
+                              <small>{childCategory.description || 'Visa produkter'}</small>
+                            </Link>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )
+                }
+
+                return (
+                  <Link
+                    key={navCategory.id}
+                    to={parentPath}
+                    className={`sv-nav-link${isCategoryActive ? ' sv-nav-link--active' : ''}`}
+                  >
+                    {navCategory.name}
+                  </Link>
                 )
               }
 
@@ -297,16 +736,29 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
 
       {/* Mobile drawer */}
       <div id="nav-drawer" className={`sv-nav-drawer${isNavOpen ? ' open' : ''}`} role="dialog" aria-label="Navigation">
-        {[...mainNavItems].map((item) => (
-          <Link key={`mob-${item.label}`} to={item.to} onClick={() => setIsNavOpen(false)}>
-            {item.label}
-          </Link>
-        ))}
-        {CATEGORIES.map((cat) => (
-          <Link key={`mob-cat-${cat.name}`} to={`/dashboard#${cat.name.toLowerCase()}`} onClick={() => setIsNavOpen(false)}>
-            {cat.name}
-          </Link>
-        ))}
+        <Link to="/dashboard" onClick={() => setIsNavOpen(false)}>Produkter</Link>
+        {navCategories.map((category) => {
+          const childCategories = childCategoriesByParentId.get(category.id) ?? []
+
+          return (
+            <div key={`mob-group-${category.id}`} className="sv-nav-drawer-group">
+              <Link to={getCategoryPath(category)} onClick={() => setIsNavOpen(false)}>
+                {category.name}
+              </Link>
+              {childCategories.map((childCategory) => (
+                <Link
+                  key={`mob-child-${childCategory.id}`}
+                  to={getCategoryPath(childCategory)}
+                  className="sv-nav-drawer-child"
+                  onClick={() => setIsNavOpen(false)}
+                >
+                  {childCategory.name}
+                </Link>
+              ))}
+            </div>
+          )
+        })}
+        <Link to="/erbjudanden" onClick={() => setIsNavOpen(false)}>Erbjudanden</Link>
         {isAdmin && (
           <Link to="/admin" onClick={() => setIsNavOpen(false)}>Admin</Link>
         )}

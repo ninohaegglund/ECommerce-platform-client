@@ -1,13 +1,18 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useParams } from 'react-router-dom'
 import AppNavbar from '../components/AppNavbar'
-import ProductCard, { getProductImagePath, getProductProfile } from '../components/ProductCard'
+import ProductCard from '../components/ProductCard'
 import SiteFooter from '../components/SiteFooter'
 import type { Product } from '../data/products'
 import { addCartItem } from '../services/cartApi'
+import { getCatalogCategories } from '../services/categoryApi'
 import { getCatalogProducts } from '../services/catalogApi'
 import { getProductImages } from '../services/productImagesApi'
 import type { AuthUser } from '../types/auth'
+import type { Category } from '../types/category'
 import type { ProductImage } from '../types/product-image'
+import { categoryMatchesSlug } from '../utils/category'
+import { getProductImagePath, getProductProfile } from '../utils/productCard'
 
 type CategoryKey = 'pokemon-kort' | 'spel' | 'konsoler' | 'refurbished'
 
@@ -15,7 +20,8 @@ type CategoryPageProps = {
   user: AuthUser
   isAdmin: boolean
   onLogout: () => void
-  category: CategoryKey
+  category?: string
+  categorySlug?: string
 }
 
 const CAT_META: Record<CategoryKey, { title: string; kicker: string; color: string; desc: string }> = {
@@ -78,10 +84,30 @@ async function resolveWorkingImageUrl(candidates: string[]) {
   return ''
 }
 
-function CategoryPage({ user, isAdmin, onLogout, category }: CategoryPageProps) {
-  const meta = CAT_META[category]
+function getCategoryTreeIds(category: Category, categories: Category[]) {
+  const ids = new Set([category.id])
+  let addedCategory = true
+
+  while (addedCategory) {
+    addedCategory = false
+    categories.forEach((item) => {
+      if (item.parentCategoryId && ids.has(item.parentCategoryId) && !ids.has(item.id)) {
+        ids.add(item.id)
+        addedCategory = true
+      }
+    })
+  }
+
+  return ids
+}
+
+function CategoryPage({ user, isAdmin, onLogout, category, categorySlug }: CategoryPageProps) {
+  const { categorySlug: routeCategorySlug = '' } = useParams()
+  const activeCategorySlug = categorySlug ?? category ?? routeCategorySlug
+  const fallbackMeta = CAT_META[activeCategorySlug as CategoryKey]
 
   const [products, setProducts] = useState<Product[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
   const [productImageUrls, setProductImageUrls] = useState<Record<string, string>>({})
   const [isLoadingProducts, setIsLoadingProducts] = useState(true)
   const [productsError, setProductsError] = useState('')
@@ -95,8 +121,12 @@ function CategoryPage({ user, isAdmin, onLogout, category }: CategoryPageProps) 
       setIsLoadingProducts(true)
       setProductsError('')
       try {
-        const data = await getCatalogProducts()
+        const [data, loadedCategories] = await Promise.all([
+          getCatalogProducts(),
+          getCatalogCategories().catch(() => [] as Category[]),
+        ])
         setProducts(data)
+        setCategories(loadedCategories)
       } catch (err) {
         setProductsError(err instanceof Error ? err.message : 'Kunde inte ladda produkter.')
       } finally {
@@ -105,6 +135,21 @@ function CategoryPage({ user, isAdmin, onLogout, category }: CategoryPageProps) 
     }
     void load()
   }, [])
+
+  const selectedCategory = useMemo(
+    () => categories.find((item) => categoryMatchesSlug(item, activeCategorySlug)) ?? null,
+    [activeCategorySlug, categories],
+  )
+
+  const meta = {
+    title: selectedCategory?.name ?? fallbackMeta?.title ?? 'Kategori',
+    kicker: (selectedCategory?.name ?? fallbackMeta?.kicker ?? 'KATEGORI').toLocaleUpperCase('sv-SE'),
+    color: fallbackMeta?.color ?? 'var(--ink)',
+    desc:
+      selectedCategory?.description.trim() ||
+      fallbackMeta?.desc ||
+      'Produkter i vald kategori.',
+  }
 
   useEffect(() => {
     if (products.length === 0) { setProductImageUrls({}); return }
@@ -131,8 +176,25 @@ function CategoryPage({ user, isAdmin, onLogout, category }: CategoryPageProps) 
   }, [products])
 
   const filteredProducts = useMemo(
-    () => products.filter((p) => matchesCategory(p, category)),
-    [products, category],
+    () => {
+      if (selectedCategory) {
+        const categoryIds = getCategoryTreeIds(selectedCategory, categories)
+
+        return products.filter(
+          (product) =>
+            categoryIds.has(product.categoryId) ||
+            (product.category?.id ? categoryIds.has(product.category.id) : false) ||
+            categoryMatchesSlug(product.category, activeCategorySlug),
+        )
+      }
+
+      if (fallbackMeta) {
+        return products.filter((product) => matchesCategory(product, activeCategorySlug as CategoryKey))
+      }
+
+      return products.filter((product) => categoryMatchesSlug(product.category, activeCategorySlug))
+    },
+    [activeCategorySlug, categories, fallbackMeta, products, selectedCategory],
   )
 
   const handleAddToCart = async (product: Product) => {
