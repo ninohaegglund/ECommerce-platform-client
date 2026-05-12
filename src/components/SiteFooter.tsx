@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { type FormEvent, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 const COOKIE_PREFERENCES_KEY = 'spelvalvetCookiePreferences'
@@ -81,6 +81,8 @@ function SiteFooter() {
   const [hasSavedPreferences, setHasSavedPreferences] = useState(() =>
     hasStoredCookiePreferences(),
   )
+  const [newsletterEmail, setNewsletterEmail] = useState('')
+  const [newsletterMessage, setNewsletterMessage] = useState('')
   const cookieDialogRef = useRef<HTMLDivElement>(null)
 
   const columns = [
@@ -115,17 +117,6 @@ function SiteFooter() {
         { label: 'Recensioner', to: '/dashboard#reviews' },
         { label: 'Jobba hos oss', to: '/jobba-hos-oss' },
         { label: 'Hållbarhet', to: '/about' },
-      ],
-    },
-    {
-      title: 'Konto',
-      links: [
-        { label: 'Logga in', to: '/login' },
-        { label: 'Skapa konto', to: '/register' },
-        { label: 'Mina ordrar', to: '/orders' },
-        { label: 'Mina favoriter', to: '/wishlist' },
-        { label: 'Aviseringar', to: '/notifications' },
-        { label: 'Presentkort', to: '/about' },
       ],
     },
   ]
@@ -208,6 +199,18 @@ function SiteFooter() {
     savePreferences(DEFAULT_COOKIE_PREFERENCES)
   }
 
+  const handleNewsletterSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+
+    if (!newsletterEmail.trim()) {
+      setNewsletterMessage('Fyll i din e-postadress först.')
+      return
+    }
+
+    setNewsletterEmail('')
+    setNewsletterMessage('Tack! Du är uppskriven på nyhetsbrevet.')
+  }
+
   return (
     <footer className="sv-footer">
       <div className="sv-footer-inner">
@@ -242,6 +245,36 @@ function SiteFooter() {
               </ul>
             </nav>
           ))}
+
+          <div className="sv-footer-newsletter">
+            <span className="sv-footer-col-title">Nyhetsbrev</span>
+            <h3>Spelvalvets nyhetsbrev</h3>
+            <p>Få nya släpp, kampanjer och samlartips direkt i inkorgen.</p>
+            <form className="sv-footer-newsletter-form" onSubmit={handleNewsletterSubmit}>
+              <label className="sr-only" htmlFor="footer-newsletter-email">
+                E-postadress
+              </label>
+              <input
+                id="footer-newsletter-email"
+                type="email"
+                placeholder="Email"
+                value={newsletterEmail}
+                onChange={(event) => {
+                  setNewsletterEmail(event.target.value)
+                  setNewsletterMessage('')
+                }}
+                aria-describedby={
+                  newsletterMessage ? 'footer-newsletter-message' : undefined
+                }
+              />
+              <button type="submit">Skriv upp mig!</button>
+            </form>
+            {newsletterMessage && (
+              <p className="sv-footer-newsletter-message" id="footer-newsletter-message" role="status">
+                {newsletterMessage}
+              </p>
+            )}
+          </div>
         </div>
 
         <div className="sv-footer-bottom">
