@@ -4891,7 +4891,7 @@
 
 .sv-footer-grid {
   display: grid;
-  grid-template-columns: 1.4fr 1fr 1fr 1fr 1fr;
+  grid-template-columns: 1.35fr repeat(3, minmax(140px, 1fr)) minmax(320px, 1.25fr);
   gap: 48px;
   margin-bottom: 56px;
 }
@@ -4987,6 +4987,82 @@
 
 .sv-footer-col a:hover {
   color: var(--bg);
+}
+
+.sv-footer-newsletter {
+  min-width: 0;
+  max-width: 390px;
+}
+
+.sv-footer-newsletter h3 {
+  margin: 0 0 10px;
+  color: var(--bg);
+  font-size: 18px;
+  line-height: 1.2;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.sv-footer-newsletter p {
+  margin: 0;
+  color: #a89b76;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.sv-footer-newsletter-form {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  margin-top: 18px;
+}
+
+.sv-footer-newsletter-form input {
+  min-width: 0;
+  flex: 1;
+  height: 44px;
+  border: 1px solid #3a3b43;
+  border-right: 0;
+  border-radius: 6px 0 0 6px;
+  background: rgba(255, 249, 239, 0.04);
+  color: var(--bg);
+  padding: 0 12px;
+  font-size: 13px;
+  outline: none;
+}
+
+.sv-footer-newsletter-form input::placeholder {
+  color: #807456;
+}
+
+.sv-footer-newsletter-form input:focus {
+  border-color: var(--blue);
+  box-shadow: inset 0 0 0 1px var(--blue);
+}
+
+.sv-footer-newsletter-form button {
+  min-height: 44px;
+  border: 0;
+  border-radius: 0 8px 8px 0;
+  background: var(--blue);
+  color: #fff;
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.sv-footer-newsletter-form button:hover,
+.sv-footer-newsletter-form button:focus-visible {
+  background: #4456d2;
+}
+
+.sv-footer-newsletter-message {
+  margin-top: 10px;
+  color: var(--mint);
+  font-size: 12.5px;
+  font-weight: 700;
 }
 
 .sv-footer-bottom {
@@ -5349,6 +5425,7 @@
   .sv-review-quote { font-size: 16px; }
   .sv-review-dot-name { display: none; }
   .sv-footer-grid { grid-template-columns: 1fr; }
+  .sv-footer-newsletter { max-width: none; }
   .sv-footer-bottom { align-items: flex-start; flex-direction: column; gap: 22px; }
   .sv-footer-copyright { flex-wrap: wrap; gap: 12px 18px; }
   .sv-cookie-dialog { padding: 22px; }
@@ -5378,6 +5455,16 @@
   .sv-cookie-dialog { max-height: calc(100svh - 28px); padding: 18px; }
   .sv-cookie-option { grid-template-columns: 1fr; }
   .sv-cookie-toggle { justify-self: start; }
+  .sv-footer-newsletter-form { flex-direction: column; gap: 8px; }
+  .sv-footer-newsletter-form input {
+    width: 100%;
+    border: 1px solid #3a3b43;
+    border-radius: 6px;
+  }
+  .sv-footer-newsletter-form button {
+    width: 100%;
+    border-radius: 8px;
+  }
   .sv-jobs-brand { font-size: 24px; margin-bottom: 32px; }
   .sv-jobs-section h1 { font-size: 44px; }
   .sv-jobs-block h2 { font-size: 27px; }
