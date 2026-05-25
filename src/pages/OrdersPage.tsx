@@ -208,10 +208,13 @@ function OrdersPage({ user, isAdmin, onLogout }: OrdersPageProps) {
   const getFallbackImageUrl = (item: OrderItem, currency: string) => {
     const product: Product = {
       id: item.productId,
+      categoryId: '',
       name: item.productName || 'Produkt',
       shortDescription: '',
+      description: '',
       price: item.unitPrice ?? 0,
       currency,
+      stockQuantity: 0,
     }
     const profile = getProductProfile(product)
     return getProductImagePath(product, profile.tone)

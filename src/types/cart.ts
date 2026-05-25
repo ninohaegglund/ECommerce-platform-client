@@ -50,7 +50,11 @@ export type CheckoutResponse = {
   id?: string
   orderId?: string
   OrderId?: string
+  orderNumber?: string
+  OrderNumber?: string
   totalAmount?: number
   amount?: number
+  currency?: string
+  Currency?: string
   message?: string
 }

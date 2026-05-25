@@ -1,8 +1,12 @@
 export type CreatePaymentRequest = {
   orderId: string
   userId: string
+  orderNumber: string
+  recipientEmail: string
   amount: number
-  paymentProvider: string
+  currency: string
+  method: number
+  provider: string
 }
 
 export type CreatePaymentResponse = {

@@ -36,15 +36,25 @@ function StripeCheckoutPage({ user, isAdmin, onLogout }: StripeCheckoutPageProps
   const [isPreparing, setIsPreparing] = useState(false)
   const [isFinalizing, setIsFinalizing] = useState(false)
   const [error, setError] = useState('')
-  const [orderNumber, setOrderNumber] = useState('')
+  const [loadedOrderNumber, setLoadedOrderNumber] = useState({
+    orderId: '',
+    orderNumber: '',
+  })
 
   const orderId = searchParams.get('orderId') ?? ''
+  const orderNumberFromQuery = searchParams.get('orderNumber') ?? ''
   const paymentIdFromQuery = searchParams.get('paymentId') ?? ''
   const reservationIds = (searchParams.get('reservationIds') ?? '')
     .split(',')
     .map((value) => value.trim())
     .filter(Boolean)
   const amountRaw = searchParams.get('amount') ?? '0'
+  const currency = (searchParams.get('currency') ?? 'SEK').trim().toUpperCase() || 'SEK'
+  const fetchedOrderNumber =
+    loadedOrderNumber.orderId === orderId ? loadedOrderNumber.orderNumber : ''
+  const paymentOrderNumber = orderNumberFromQuery || fetchedOrderNumber || orderId
+  const hasResolvedOrderNumber =
+    Boolean(orderNumberFromQuery) || !orderId || loadedOrderNumber.orderId === orderId
 
   const amount = useMemo(() => {
     const parsed = Number(amountRaw)
@@ -59,10 +69,10 @@ function StripeCheckoutPage({ user, isAdmin, onLogout }: StripeCheckoutPageProps
     () =>
       new Intl.NumberFormat('sv-SE', {
         style: 'currency',
-        currency: 'SEK',
+        currency,
         maximumFractionDigits: 2,
       }).format(amount),
-    [amount],
+    [amount, currency],
   )
 
   const buildOrderSuccessUrl = () => {
@@ -79,25 +89,27 @@ function StripeCheckoutPage({ user, isAdmin, onLogout }: StripeCheckoutPageProps
   }
 
   useEffect(() => {
-    if (!orderId) {
-      setOrderNumber('')
+    if (!orderId || orderNumberFromQuery || loadedOrderNumber.orderId === orderId) {
       return
     }
 
     let isCurrent = true
 
     const loadOrder = async () => {
+      let nextOrderNumber = ''
+
       try {
         const order = await getOrderById(orderId)
-        if (!isCurrent) {
-          return
-        }
-
-        setOrderNumber(order.orderNumber || '')
+        nextOrderNumber = order.orderNumber || ''
       } catch {
-        if (isCurrent) {
-          setOrderNumber('')
-        }
+        nextOrderNumber = ''
+      }
+
+      if (isCurrent) {
+        setLoadedOrderNumber({
+          orderId,
+          orderNumber: nextOrderNumber,
+        })
       }
     }
 
@@ -106,7 +118,7 @@ function StripeCheckoutPage({ user, isAdmin, onLogout }: StripeCheckoutPageProps
     return () => {
       isCurrent = false
     }
-  }, [orderId])
+  }, [loadedOrderNumber.orderId, orderId, orderNumberFromQuery])
 
   const releaseReservations = async () => {
     if (reservationIds.length === 0) {
@@ -191,6 +203,10 @@ function StripeCheckoutPage({ user, isAdmin, onLogout }: StripeCheckoutPageProps
       return
     }
 
+    if (!hasResolvedOrderNumber) {
+      return
+    }
+
     if (clientSecret) {
       return
     }
@@ -208,14 +224,20 @@ function StripeCheckoutPage({ user, isAdmin, onLogout }: StripeCheckoutPageProps
           const payment = await createPayment({
             orderId,
             userId: user.id,
+            orderNumber: paymentOrderNumber,
+            recipientEmail: user.email,
             amount,
-            paymentProvider: 'Stripe',
+            currency,
+            method: 0,
+            provider: 'Stripe',
           })
 
-          paymentIdToUse = payment.id ?? payment.paymentId
-          if (!paymentIdToUse) {
+          const createdPaymentId = payment.id ?? payment.paymentId
+          if (!createdPaymentId) {
             throw new Error('Betalningen skapades men inget betalnings-ID returnerades.')
           }
+
+          paymentIdToUse = createdPaymentId
         }
 
         const intent = await createStripePaymentIntent(paymentIdToUse)
@@ -253,7 +275,18 @@ function StripeCheckoutPage({ user, isAdmin, onLogout }: StripeCheckoutPageProps
     return () => {
       isCurrent = false
     }
-  }, [orderId, amount, user.id, clientSecret, paymentIdFromQuery])
+  }, [
+    orderId,
+    amount,
+    currency,
+    user.id,
+    user.email,
+    clientSecret,
+    paymentIdFromQuery,
+    hasResolvedOrderNumber,
+    paymentOrderNumber,
+    orderNumberFromQuery,
+  ])
 
   return (
     <main className="sv-store">
@@ -264,7 +297,9 @@ function StripeCheckoutPage({ user, isAdmin, onLogout }: StripeCheckoutPageProps
           <section className="stripe-card">
             <p className="stripe-badge">Stripe-betalning</p>
             <h1>Säker betalning</h1>
-            <p className="subtitle">Ordernummer: {orderNumber || '-'}</p>
+            <p className="subtitle">
+              Ordernummer: {paymentOrderNumber || '-'}
+            </p>
             <p className="subtitle">Order-ID: {orderId || '-'}</p>
 
             <div className="stripe-amount-row">
