@@ -7,8 +7,11 @@ import type { Product } from '../data/products'
 import { addCartItem } from '../services/cartApi'
 import { getCatalogProducts } from '../services/catalogApi'
 import { getProductImages } from '../services/productImagesApi'
+import { addWishlistItem, getWishlist, removeWishlistItem } from '../services/wishlistApi'
 import type { AuthUser } from '../types/auth'
 import type { ProductImage } from '../types/product-image'
+import type { Wishlist } from '../types/wishlist'
+import { getStoredAuth } from '../utils/authStorage'
 
 type DashboardPageProps = {
   user: AuthUser
@@ -214,6 +217,10 @@ function DashboardPage({ user, isAdmin, onLogout }: DashboardPageProps) {
   const [addedSkus, setAddedSkus] = useState<Set<string>>(new Set())
   const [toast, setToast] = useState<string | null>(null)
   const [cartError, setCartError] = useState('')
+  const [wishlist, setWishlist] = useState<Wishlist | null>(null)
+  const [wishlistError, setWishlistError] = useState('')
+  const [wishlistUpdatingIds, setWishlistUpdatingIds] = useState<Set<string>>(new Set())
+  const isAuthenticated = user.id !== 'guest' && Boolean(getStoredAuth().token)
   const [reviewLayout, setReviewLayout] = useState(() => getReviewLayout())
   const [activeReviewIndex, setActiveReviewIndex] = useState(0)
   const [isReviewCarouselPaused, setIsReviewCarouselPaused] = useState(false)
@@ -264,6 +271,33 @@ function DashboardPage({ user, isAdmin, onLogout }: DashboardPageProps) {
     }
     void load()
   }, [])
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setWishlist(null)
+      setWishlistError('')
+      return
+    }
+
+    let cancelled = false
+
+    const loadWishlist = async () => {
+      setWishlistError('')
+      try {
+        const data = await getWishlist()
+        if (!cancelled) {
+          setWishlist(data)
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setWishlistError(err instanceof Error ? err.message : 'Kunde inte ladda önskelistan.')
+        }
+      }
+    }
+
+    void loadWishlist()
+    return () => { cancelled = true }
+  }, [isAuthenticated])
 
   useEffect(() => {
     if (products.length === 0) { setProductImageUrls({}); return }
@@ -357,6 +391,47 @@ function DashboardPage({ user, isAdmin, onLogout }: DashboardPageProps) {
       setCartError(err instanceof Error ? err.message : 'Kunde inte lägga till i varukorgen.')
     } finally {
       setAddingProductId('')
+    }
+  }
+
+  const wishlistItemsByProductId = useMemo(
+    () => new Map((wishlist?.items ?? []).map((item) => [item.productId, item] as const)),
+    [wishlist],
+  )
+
+  const handleToggleWishlist = async (product: Product) => {
+    if (!isAuthenticated) {
+      setToast('Logga in för att spara i önskelistan.')
+      setTimeout(() => setToast(null), 1800)
+      return
+    }
+
+    const existingItem = wishlistItemsByProductId.get(product.id)
+    setWishlistError('')
+    setWishlistUpdatingIds((prev) => new Set(prev).add(product.id))
+
+    try {
+      if (existingItem) {
+        await removeWishlistItem(existingItem.id)
+        setWishlist((current) => (current
+          ? { ...current, items: current.items.filter((item) => item.id !== existingItem.id) }
+          : current
+        ))
+        setToast(`${product.name} borttagen`)
+      } else {
+        const updated = await addWishlistItem(product.id)
+        setWishlist(updated)
+        setToast(`${product.name} sparad`)
+      }
+      setTimeout(() => setToast(null), 1800)
+    } catch (err) {
+      setWishlistError(err instanceof Error ? err.message : 'Kunde inte uppdatera önskelistan.')
+    } finally {
+      setWishlistUpdatingIds((prev) => {
+        const next = new Set(prev)
+        next.delete(product.id)
+        return next
+      })
     }
   }
 
@@ -680,10 +755,11 @@ function DashboardPage({ user, isAdmin, onLogout }: DashboardPageProps) {
             </Link>
           </div>
 
-          {(productsError || cartError) && (
+          {(productsError || cartError || wishlistError) && (
             <div className="sv-feedback-bar" aria-live="polite">
               {productsError && <p className="feedback error">{productsError}</p>}
               {cartError && <p className="feedback error">{cartError}</p>}
+              {wishlistError && <p className="feedback error">{wishlistError}</p>}
             </div>
           )}
 
@@ -698,6 +774,9 @@ function DashboardPage({ user, isAdmin, onLogout }: DashboardPageProps) {
                   isAdding={addingProductId === product.id}
                   added={addedSkus.has(product.id)}
                   onAddToCart={handleAddToCart}
+                  isWishlisted={wishlistItemsByProductId.has(product.id)}
+                  isWishlistLoading={wishlistUpdatingIds.has(product.id)}
+                  onToggleWishlist={handleToggleWishlist}
                   imageUrl={productImageUrls[product.id]}
                 />
               ))

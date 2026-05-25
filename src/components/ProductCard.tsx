@@ -6,6 +6,9 @@ type ProductCardProps = {
   isAdding: boolean
   added: boolean
   onAddToCart: (product: Product) => Promise<void>
+  isWishlisted: boolean
+  isWishlistLoading: boolean
+  onToggleWishlist: (product: Product) => void | Promise<void>
   imageUrl?: string
 }
 
@@ -76,10 +79,20 @@ function getProductImagePath(product: Product, tone: string) {
   return source[seed % source.length]
 }
 
-function ProductCard({ product, isAdding, added, onAddToCart, imageUrl }: ProductCardProps) {
+function ProductCard({
+  product,
+  isAdding,
+  added,
+  onAddToCart,
+  isWishlisted,
+  isWishlistLoading,
+  onToggleWishlist,
+  imageUrl,
+}: ProductCardProps) {
   const profile = getProductProfile(product)
   const fallbackImagePath = getProductImagePath(product, profile.tone)
   const resolvedImagePath = imageUrl?.trim() ? imageUrl : fallbackImagePath
+  const wishlistLabel = isWishlisted ? 'Ta bort från önskelista' : 'Lägg till i önskelista'
 
   const formattedPrice = new Intl.NumberFormat('sv-SE', {
     style: 'currency',
@@ -115,8 +128,20 @@ function ProductCard({ product, isAdding, added, onAddToCart, imageUrl }: Produc
             </span>
           )}
         </div>
-        <button type="button" className="sv-product-heart" aria-label="Lägg till i önskelista">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-2)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <button
+          type="button"
+          className={`sv-product-heart${isWishlisted ? ' is-active' : ''}${isWishlistLoading ? ' is-busy' : ''}`}
+          aria-label={wishlistLabel}
+          aria-pressed={isWishlisted}
+          aria-busy={isWishlistLoading}
+          disabled={isWishlistLoading}
+          onClick={(event) => {
+            event.preventDefault()
+            event.stopPropagation()
+            void onToggleWishlist(product)
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M12 20s-7-4.3-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.7-7 10-7 10Z"/>
           </svg>
         </button>

@@ -8,9 +8,12 @@ import { addCartItem } from '../services/cartApi'
 import { getCatalogCategories } from '../services/categoryApi'
 import { getCatalogProducts } from '../services/catalogApi'
 import { getProductImages } from '../services/productImagesApi'
+import { addWishlistItem, getWishlist, removeWishlistItem } from '../services/wishlistApi'
 import type { AuthUser } from '../types/auth'
 import type { Category } from '../types/category'
 import type { ProductImage } from '../types/product-image'
+import type { Wishlist } from '../types/wishlist'
+import { getStoredAuth } from '../utils/authStorage'
 import { categoryMatchesSlug } from '../utils/category'
 import { getProductImagePath, getProductProfile } from '../utils/productCard'
 
@@ -115,6 +118,10 @@ function CategoryPage({ user, isAdmin, onLogout, category, categorySlug }: Categ
   const [addedSkus, setAddedSkus] = useState<Set<string>>(new Set())
   const [toast, setToast] = useState<string | null>(null)
   const [cartError, setCartError] = useState('')
+  const [wishlist, setWishlist] = useState<Wishlist | null>(null)
+  const [wishlistError, setWishlistError] = useState('')
+  const [wishlistUpdatingIds, setWishlistUpdatingIds] = useState<Set<string>>(new Set())
+  const isAuthenticated = user.id !== 'guest' && Boolean(getStoredAuth().token)
 
   useEffect(() => {
     const load = async () => {
@@ -135,6 +142,33 @@ function CategoryPage({ user, isAdmin, onLogout, category, categorySlug }: Categ
     }
     void load()
   }, [])
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setWishlist(null)
+      setWishlistError('')
+      return
+    }
+
+    let cancelled = false
+
+    const loadWishlist = async () => {
+      setWishlistError('')
+      try {
+        const data = await getWishlist()
+        if (!cancelled) {
+          setWishlist(data)
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setWishlistError(err instanceof Error ? err.message : 'Kunde inte ladda önskelistan.')
+        }
+      }
+    }
+
+    void loadWishlist()
+    return () => { cancelled = true }
+  }, [isAuthenticated])
 
   const selectedCategory = useMemo(
     () => categories.find((item) => categoryMatchesSlug(item, activeCategorySlug)) ?? null,
@@ -215,6 +249,47 @@ function CategoryPage({ user, isAdmin, onLogout, category, categorySlug }: Categ
     }
   }
 
+  const wishlistItemsByProductId = useMemo(
+    () => new Map((wishlist?.items ?? []).map((item) => [item.productId, item] as const)),
+    [wishlist],
+  )
+
+  const handleToggleWishlist = async (product: Product) => {
+    if (!isAuthenticated) {
+      setToast('Logga in för att spara i önskelistan.')
+      setTimeout(() => setToast(null), 1800)
+      return
+    }
+
+    const existingItem = wishlistItemsByProductId.get(product.id)
+    setWishlistError('')
+    setWishlistUpdatingIds((prev) => new Set(prev).add(product.id))
+
+    try {
+      if (existingItem) {
+        await removeWishlistItem(existingItem.id)
+        setWishlist((current) => (current
+          ? { ...current, items: current.items.filter((item) => item.id !== existingItem.id) }
+          : current
+        ))
+        setToast(`${product.name} borttagen`)
+      } else {
+        const updated = await addWishlistItem(product.id)
+        setWishlist(updated)
+        setToast(`${product.name} sparad`)
+      }
+      setTimeout(() => setToast(null), 1800)
+    } catch (err) {
+      setWishlistError(err instanceof Error ? err.message : 'Kunde inte uppdatera önskelistan.')
+    } finally {
+      setWishlistUpdatingIds((prev) => {
+        const next = new Set(prev)
+        next.delete(product.id)
+        return next
+      })
+    }
+  }
+
   const fallbackImageUrl = (product: Product) => {
     const profile = getProductProfile(product)
     return getProductImagePath(product, profile.tone)
@@ -236,10 +311,11 @@ function CategoryPage({ user, isAdmin, onLogout, category, categorySlug }: Categ
             </div>
           </div>
 
-          {(productsError || cartError) && (
+          {(productsError || cartError || wishlistError) && (
             <div className="sv-feedback-bar" aria-live="polite">
               {productsError && <p className="feedback error">{productsError}</p>}
               {cartError && <p className="feedback error">{cartError}</p>}
+              {wishlistError && <p className="feedback error">{wishlistError}</p>}
             </div>
           )}
 
@@ -258,6 +334,9 @@ function CategoryPage({ user, isAdmin, onLogout, category, categorySlug }: Categ
                   isAdding={addingProductId === product.id}
                   added={addedSkus.has(product.id)}
                   onAddToCart={handleAddToCart}
+                  isWishlisted={wishlistItemsByProductId.has(product.id)}
+                  isWishlistLoading={wishlistUpdatingIds.has(product.id)}
+                  onToggleWishlist={handleToggleWishlist}
                   imageUrl={productImageUrls[product.id] ?? fallbackImageUrl(product)}
                 />
               ))

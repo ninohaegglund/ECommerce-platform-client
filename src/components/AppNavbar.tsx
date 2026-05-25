@@ -1,9 +1,12 @@
-import { useEffect, useMemo, useRef, useState, type FocusEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type FocusEvent } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useNotificationCenter } from '../context/notificationCenter'
 import { getCatalogCategories } from '../services/categoryApi'
+import { getWishlist } from '../services/wishlistApi'
 import type { AuthUser } from '../types/auth'
 import type { Category } from '../types/category'
+import type { Wishlist } from '../types/wishlist'
+import { getStoredAuth } from '../utils/authStorage'
 import { getCategoryPath } from '../utils/category'
 
 type AppNavbarProps = {
@@ -159,11 +162,19 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
   const [categories, setCategories] = useState<Category[]>([])
   const [searchFocused, setSearchFocused] = useState(false)
   const [searchValue, setSearchValue] = useState('')
+  const [isWishlistOpen, setIsWishlistOpen] = useState(false)
+  const [wishlist, setWishlist] = useState<Wishlist | null>(null)
+  const [wishlistError, setWishlistError] = useState('')
+  const [isWishlistLoading, setIsWishlistLoading] = useState(false)
   const productsDropdownRef = useRef<HTMLDivElement>(null)
   const navRef = useRef<HTMLElement>(null)
+  const wishlistRef = useRef<HTMLDivElement>(null)
   const { unreadCount } = useNotificationCenter()
   const location = useLocation()
   const isGuest = user.id === 'guest'
+  const isAuthenticated = !isGuest && Boolean(getStoredAuth().token)
+  const wishlistItems = wishlist?.items ?? []
+  const wishlistCount = wishlistItems.length
 
   const fallbackCategories = useMemo<Category[]>(
     () =>
@@ -279,6 +290,16 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
     ))
   }
 
+  const closeWishlistMenu = useCallback(() => {
+    setIsWishlistOpen(false)
+    setIsWishlistLoading(false)
+  }, [])
+
+  const toggleWishlistMenu = useCallback(() => {
+    setIsMenuOpen(false)
+    setIsWishlistOpen((isOpen) => !isOpen)
+  }, [])
+
   const handleProductsBlur = (event: FocusEvent<HTMLDivElement>) => {
     const nextFocusedElement = event.relatedTarget as Node | null
 
@@ -325,6 +346,43 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
     void loadCategories()
     return () => { cancelled = true }
   }, [])
+
+  useEffect(() => {
+    if (!isWishlistOpen) {
+      return
+    }
+
+    if (!isAuthenticated) {
+      setWishlist(null)
+      setWishlistError('')
+      setIsWishlistLoading(false)
+      return
+    }
+
+    let cancelled = false
+    setIsWishlistLoading(true)
+    setWishlistError('')
+
+    const loadWishlist = async () => {
+      try {
+        const data = await getWishlist()
+        if (!cancelled) {
+          setWishlist(data)
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setWishlistError(err instanceof Error ? err.message : 'Kunde inte ladda önskelistan.')
+        }
+      } finally {
+        if (!cancelled) {
+          setIsWishlistLoading(false)
+        }
+      }
+    }
+
+    void loadWishlist()
+    return () => { cancelled = true }
+  }, [isAuthenticated, isWishlistOpen])
 
   useEffect(() => {
     if (!isProductsOpen) return
@@ -378,6 +436,32 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
       document.removeEventListener('keydown', handleKeyDown)
     }
   }, [openCategoryId])
+
+  useEffect(() => {
+    if (!isWishlistOpen) return
+
+    const handlePointerDown = (event: MouseEvent) => {
+      const target = event.target as Node | null
+
+      if (target && wishlistRef.current?.contains(target)) return
+
+      closeWishlistMenu()
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+
+      closeWishlistMenu()
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown)
+    document.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [closeWishlistMenu, isWishlistOpen])
 
   const initials = `${user.firstName[0] ?? ''}${user.lastName[0] ?? ''}`.toUpperCase()
 
@@ -483,11 +567,70 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
               <span aria-hidden="true" />
             </button>
 
-            <button type="button" className="sv-icon-btn" aria-label="Önskelista">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M12 20s-7-4.3-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.7-7 10-7 10Z"/>
-              </svg>
-            </button>
+            <div ref={wishlistRef} className="sv-wishlist-menu">
+              <button
+                type="button"
+                className="sv-icon-btn sv-icon-btn--rel"
+                aria-label="Önskelista"
+                aria-expanded={isWishlistOpen}
+                aria-haspopup="menu"
+                aria-controls="wishlist-menu"
+                onClick={toggleWishlistMenu}
+              >
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M12 20s-7-4.3-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.7-7 10-7 10Z"/>
+                </svg>
+                {isAuthenticated && wishlistCount > 0 && (
+                  <span className="sv-badge sv-badge--red mono">{wishlistCount}</span>
+                )}
+              </button>
+              {isWishlistOpen && (
+                <div id="wishlist-menu" className="sv-wishlist-dropdown" role="menu">
+                  <div className="sv-wishlist-header">
+                    <span className="mono">Önskelista</span>
+                    <strong>{isAuthenticated ? `${wishlistCount} sparade` : 'Logga in'}</strong>
+                  </div>
+                  {!isAuthenticated ? (
+                    <div className="sv-wishlist-empty">
+                      <p>Logga in för att se och spara favoriter.</p>
+                      <Link className="sv-wishlist-action" to="/login" onClick={closeWishlistMenu}>Logga in</Link>
+                    </div>
+                  ) : isWishlistLoading ? (
+                    <p className="sv-wishlist-empty">Laddar önskelistan...</p>
+                  ) : wishlistError ? (
+                    <p className="sv-wishlist-error">{wishlistError}</p>
+                  ) : wishlistItems.length === 0 ? (
+                    <p className="sv-wishlist-empty">Inga sparade produkter än.</p>
+                  ) : (
+                    <div className="sv-wishlist-list">
+                      {wishlistItems.slice(0, 5).map((item) => (
+                        <Link
+                          key={item.id}
+                          to={`/products/${item.productId}`}
+                          className="sv-wishlist-item"
+                          onClick={closeWishlistMenu}
+                        >
+                          <div className="sv-wishlist-item-info">
+                            <span className="sv-wishlist-item-name">{item.productName}</span>
+                            <span className="sv-wishlist-item-sku mono">{item.sku || item.productId}</span>
+                          </div>
+                          <span className="sv-wishlist-item-price mono">
+                            {new Intl.NumberFormat('sv-SE', {
+                              style: 'currency',
+                              currency: item.currency || 'SEK',
+                              maximumFractionDigits: 0,
+                            }).format(item.unitPrice)}
+                          </span>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                  <div className="sv-wishlist-footer">
+                    <Link to="/wishlist" onClick={closeWishlistMenu}>Visa önskelista</Link>
+                  </div>
+                </div>
+              )}
+            </div>
 
             <Link
               className="sv-icon-btn sv-icon-btn--rel"
@@ -514,7 +657,10 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
                 <button
                   type="button"
                   className="sv-avatar"
-                  onClick={() => setIsMenuOpen((v) => !v)}
+                  onClick={() => {
+                    closeWishlistMenu()
+                    setIsMenuOpen((v) => !v)
+                  }}
                   aria-expanded={isMenuOpen}
                   aria-haspopup="menu"
                   aria-label="Kontomeny"

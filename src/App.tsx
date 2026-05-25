@@ -16,6 +16,7 @@ import NotificationsPage from './pages/NotificationsPage'
 import OrderSuccessPage from './pages/OrderSuccessPage'
 import OrdersPage from './pages/OrdersPage'
 import ProductDetailPage from './pages/ProductDetailPage'
+import WishlistPage from './pages/WishlistPage'
 import SimplePage from './pages/SimplePage'
 import type {
   AuthUser,
@@ -301,34 +302,7 @@ function App() {
         path="/wishlist"
         element={
           canAccessStore && activeUser ? (
-            <SimplePage
-              user={activeUser}
-              isAdmin={isAdmin}
-              onLogout={handleLogout}
-              title="Önskelista"
-              description="Spara Pokémon-kort, spel och konsoler du vill ha — så hittar du dem snabbt nästa gång du besöker butiken."
-            >
-              <div className="sv-empty-state">
-                <svg
-                  className="sv-empty-icon"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.6"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                </svg>
-                <h2>Du har inga sparade produkter än</h2>
-                <p>Klicka på hjärtat på ett kort eller en produkt för att spara den hit — så hittar du dina favoriter snabbt nästa gång.</p>
-                <div className="sv-empty-actions">
-                  <Link className="sv-btn-primary" to="/dashboard">Bläddra i butiken</Link>
-                  <Link className="sv-btn-ghost" to="/pokemon-kort">Pokémon-kort</Link>
-                </div>
-              </div>
-            </SimplePage>
+            <WishlistPage user={activeUser} isAdmin={isAdmin} onLogout={handleLogout} />
           ) : (
             <Navigate to="/login" replace />
           )
