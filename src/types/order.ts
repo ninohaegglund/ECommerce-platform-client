@@ -34,6 +34,16 @@ export const OrderStatusCode = {
   Refunded: 7,
 } as const
 
+export const PaymentStatusCode = {
+  Unpaid: 0,
+  Paid: 1,
+  Failed: 2,
+  Refunded: 3,
+} as const
+
+export type PaymentStatusCode =
+  (typeof PaymentStatusCode)[keyof typeof PaymentStatusCode]
+
 export function getOrderStatusLabel(status: number): string {
   switch (status) {
     case OrderStatusCode.Pending:
@@ -118,4 +128,11 @@ export type OrderSummary = {
 
 export type OrderDetails = OrderSummary & {
   items: OrderItem[]
+}
+
+export type UpdateOrderPaymentRequest = {
+  paymentStatus: PaymentStatusCode | string
+  paymentTransactionId: string
+  paymentProvider: string
+  status?: number | string
 }

@@ -2,10 +2,11 @@ import { useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import AppNavbar from '../components/AppNavbar'
 import SiteFooter from '../components/SiteFooter'
-import { createPayment, processPayment, updateOrderStatus } from '../services/cartApi'
+import { createPayment, processPayment, updateOrderPayment } from '../services/cartApi'
 import { confirmInventoryReservation, releaseInventoryReservation } from '../services/inventoryApi'
 import { useNotificationCenter } from '../context/notificationCenter'
 import type { AuthUser } from '../types/auth'
+import { OrderStatusCode, PaymentStatusCode } from '../types/order'
 
 type MockStripeCheckoutPageProps = {
   user: AuthUser
@@ -46,6 +47,19 @@ function MockStripeCheckoutPage({ user, isAdmin, onLogout }: MockStripeCheckoutP
       }).format(amount),
     [amount],
   )
+
+  const buildOrderSuccessUrl = () => {
+    const params = new URLSearchParams()
+    if (orderId) {
+      params.set('orderId', orderId)
+    }
+    if (Number.isFinite(amount)) {
+      params.set('amount', String(amount))
+    }
+
+    const query = params.toString()
+    return query ? `/order-success?${query}` : '/order-success'
+  }
 
   const generateTransactionId = () => {
     if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -96,19 +110,26 @@ function MockStripeCheckoutPage({ user, isAdmin, onLogout }: MockStripeCheckoutP
         throw new Error('Betalningen skapades men inget betalnings-ID returnerades.')
       }
 
+      const transactionId = generateTransactionId()
+
       await processPayment(paymentId, {
         isSuccessful: true,
-        paymentTransactionId: generateTransactionId(),
+        paymentTransactionId: transactionId,
       })
 
       for (const reservationId of reservationIds) {
         await confirmInventoryReservation(reservationId)
       }
 
-      await updateOrderStatus(orderId, 2)
+      await updateOrderPayment(orderId, {
+        paymentStatus: PaymentStatusCode.Paid,
+        paymentTransactionId: transactionId,
+        paymentProvider: 'Stripe',
+        status: OrderStatusCode.Paid,
+      })
       await refreshNotifications()
 
-      navigate('/order-success', {
+      navigate(buildOrderSuccessUrl(), {
         replace: true,
         state: {
           orderId,

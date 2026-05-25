@@ -21,3 +21,16 @@ export type StripePaymentIntentResponse = {
   clientSecret: string
   status: number
 }
+
+export type VerifyStripeCheckoutSessionRequest = {
+  sessionId: string
+  orderId?: string
+}
+
+export type VerifyStripeCheckoutSessionResponse = {
+  orderId?: string
+  paymentStatus?: number | string
+  paymentTransactionId?: string
+  paymentProvider?: string
+  orderStatus?: number | string
+}

@@ -10,8 +10,15 @@ import type {
   CreatePaymentResponse,
   ProcessPaymentRequest,
   StripePaymentIntentResponse,
+  VerifyStripeCheckoutSessionRequest,
+  VerifyStripeCheckoutSessionResponse,
 } from '../types/payment'
-import type { OrderDetails, OrderSummary } from '../types/order'
+import {
+  parseOrderStatusCode,
+  type OrderDetails,
+  type OrderSummary,
+  type UpdateOrderPaymentRequest,
+} from '../types/order'
 import { request } from './apiClient.ts'
 
 const ORDER_API_BASE_URL = import.meta.env.VITE_ORDER_API_URL ?? 'https://localhost:7043'
@@ -98,6 +105,44 @@ export async function updateOrderStatus(orderId: string, status: number): Promis
   )
 }
 
+export async function updateOrderPayment(
+  orderId: string,
+  payload: UpdateOrderPaymentRequest,
+): Promise<void> {
+  try {
+    await request<void>(
+      `/api/orders/${orderId}/payment`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify(payload),
+      },
+      ORDER_API_BASE_URL,
+    )
+  } catch (err) {
+    const message = err instanceof Error ? err.message.toLowerCase() : ''
+    const isNotFound = message.includes('404') || message.includes('not found')
+
+    if (!isNotFound || payload.status === undefined) {
+      throw err
+    }
+
+    if (typeof payload.status === 'number') {
+      await updateOrderStatus(orderId, payload.status)
+      return
+    }
+
+    if (typeof payload.status === 'string') {
+      const parsedStatus = parseOrderStatusCode(payload.status)
+      if (parsedStatus !== -1) {
+        await updateOrderStatus(orderId, parsedStatus)
+        return
+      }
+    }
+
+    throw err
+  }
+}
+
 export async function createPayment(
   payload: CreatePaymentRequest,
 ): Promise<CreatePaymentResponse> {
@@ -132,6 +177,19 @@ export async function createStripePaymentIntent(
     `/api/payments/${paymentId}/stripe/payment-intent`,
     {
       method: 'POST',
+    },
+    PAYMENT_API_BASE_URL,
+  )
+}
+
+export async function verifyStripeCheckoutSession(
+  payload: VerifyStripeCheckoutSessionRequest,
+): Promise<VerifyStripeCheckoutSessionResponse> {
+  return request<VerifyStripeCheckoutSessionResponse>(
+    '/api/payments/stripe/checkout/verify',
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
     },
     PAYMENT_API_BASE_URL,
   )

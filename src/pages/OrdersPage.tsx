@@ -10,6 +10,7 @@ import type { ProductImage } from '../types/product-image'
 import {
   getOrderStatusLabel,
   OrderStatusCode,
+  PaymentStatusCode,
   parseOrderStatusCode,
   type OrderDetails,
   type OrderAddress,
@@ -227,10 +228,10 @@ function OrdersPage({ user, isAdmin, onLogout }: OrdersPageProps) {
     }
 
     const labels: Record<number, string> = {
-      0: 'Ej betald',
-      1: 'Betald',
-      2: 'Misslyckad',
-      3: 'Aterbetald',
+      [PaymentStatusCode.Unpaid]: 'Ej betald',
+      [PaymentStatusCode.Paid]: 'Betald',
+      [PaymentStatusCode.Failed]: 'Misslyckad',
+      [PaymentStatusCode.Refunded]: 'Aterbetald',
     }
 
     return labels[code] ?? `Kod ${code}`
@@ -351,6 +352,9 @@ function OrdersPage({ user, isAdmin, onLogout }: OrdersPageProps) {
                 <p><strong>Skapad:</strong> {formatDate(order.createdAtUtc)}</p>
                 <p>
                   <strong>Totalt:</strong> {formatAmount(order.totalAmount, order.currency)}
+                </p>
+                <p>
+                  <strong>Betalning:</strong> {formatPaymentStatus(order.paymentStatus)}
                 </p>
                 <p><strong>Produkter:</strong> {getItemCount(order)}</p>
                 {getOrderItemPreview(order).length > 0 && (

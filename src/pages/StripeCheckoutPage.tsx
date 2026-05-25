@@ -6,8 +6,9 @@ import StripePaymentForm from '../components/StripePaymentForm'
 import {
   createPayment,
   createStripePaymentIntent,
+  getOrderById,
   processPayment,
-  updateOrderStatus,
+  updateOrderPayment,
 } from '../services/cartApi'
 import {
   confirmInventoryReservation,
@@ -15,6 +16,7 @@ import {
 } from '../services/inventoryApi'
 import { useNotificationCenter } from '../context/notificationCenter'
 import type { AuthUser } from '../types/auth'
+import { OrderStatusCode, PaymentStatusCode } from '../types/order'
 
 type StripeCheckoutPageProps = {
   user: AuthUser
@@ -34,6 +36,7 @@ function StripeCheckoutPage({ user, isAdmin, onLogout }: StripeCheckoutPageProps
   const [isPreparing, setIsPreparing] = useState(false)
   const [isFinalizing, setIsFinalizing] = useState(false)
   const [error, setError] = useState('')
+  const [orderNumber, setOrderNumber] = useState('')
 
   const orderId = searchParams.get('orderId') ?? ''
   const paymentIdFromQuery = searchParams.get('paymentId') ?? ''
@@ -61,6 +64,49 @@ function StripeCheckoutPage({ user, isAdmin, onLogout }: StripeCheckoutPageProps
       }).format(amount),
     [amount],
   )
+
+  const buildOrderSuccessUrl = () => {
+    const params = new URLSearchParams()
+    if (orderId) {
+      params.set('orderId', orderId)
+    }
+    if (Number.isFinite(amount)) {
+      params.set('amount', String(amount))
+    }
+
+    const query = params.toString()
+    return query ? `/order-success?${query}` : '/order-success'
+  }
+
+  useEffect(() => {
+    if (!orderId) {
+      setOrderNumber('')
+      return
+    }
+
+    let isCurrent = true
+
+    const loadOrder = async () => {
+      try {
+        const order = await getOrderById(orderId)
+        if (!isCurrent) {
+          return
+        }
+
+        setOrderNumber(order.orderNumber || '')
+      } catch {
+        if (isCurrent) {
+          setOrderNumber('')
+        }
+      }
+    }
+
+    void loadOrder()
+
+    return () => {
+      isCurrent = false
+    }
+  }, [orderId])
 
   const releaseReservations = async () => {
     if (reservationIds.length === 0) {
@@ -102,10 +148,15 @@ function StripeCheckoutPage({ user, isAdmin, onLogout }: StripeCheckoutPageProps
         await confirmInventoryReservation(reservationId)
       }
 
-      await updateOrderStatus(orderId, 2)
+      await updateOrderPayment(orderId, {
+        paymentStatus: PaymentStatusCode.Paid,
+        paymentTransactionId: paymentIntentId,
+        paymentProvider: 'Stripe',
+        status: OrderStatusCode.Paid,
+      })
       await refreshNotifications()
 
-      navigate('/order-success', {
+      navigate(buildOrderSuccessUrl(), {
         replace: true,
         state: {
           orderId,
@@ -213,7 +264,8 @@ function StripeCheckoutPage({ user, isAdmin, onLogout }: StripeCheckoutPageProps
           <section className="stripe-card">
             <p className="stripe-badge">Stripe-betalning</p>
             <h1>Säker betalning</h1>
-            <p className="subtitle">Ordernummer: {orderId || '-'}</p>
+            <p className="subtitle">Ordernummer: {orderNumber || '-'}</p>
+            <p className="subtitle">Order-ID: {orderId || '-'}</p>
 
             <div className="stripe-amount-row">
               <span>Att betala</span>
