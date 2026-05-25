@@ -75,6 +75,10 @@ function CheckoutPage({ user, isAdmin, onLogout }: CheckoutPageProps) {
         throw new Error('Beställningen skapades men inget ordernummer returnerades.')
       }
 
+      const orderNumber =
+        checkoutResult?.orderNumber ?? checkoutResult?.OrderNumber ?? orderId
+      const currency =
+        checkoutResult?.currency ?? checkoutResult?.Currency ?? cartBeforeCheckout.currency ?? 'SEK'
       const amount =
         checkoutResult?.totalAmount ??
         checkoutResult?.amount ??
@@ -106,12 +110,17 @@ function CheckoutPage({ user, isAdmin, onLogout }: CheckoutPageProps) {
         reservationIds.push(reservationId)
       }
 
-      navigate(
-        `/checkout/payment?orderId=${encodeURIComponent(orderId)}&amount=${encodeURIComponent(String(amount))}&reservationIds=${encodeURIComponent(reservationIds.join(','))}`,
-        {
-          replace: true,
-        },
-      )
+      const paymentParams = new URLSearchParams({
+        orderId,
+        orderNumber,
+        amount: String(amount),
+        currency,
+        reservationIds: reservationIds.join(','),
+      })
+
+      navigate(`/checkout/payment?${paymentParams.toString()}`, {
+        replace: true,
+      })
     } catch (err) {
       const rawMessage = err instanceof Error ? err.message : ''
       const message =

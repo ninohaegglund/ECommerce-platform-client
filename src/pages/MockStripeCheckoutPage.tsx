@@ -1,8 +1,8 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import AppNavbar from '../components/AppNavbar'
 import SiteFooter from '../components/SiteFooter'
-import { createPayment, processPayment, updateOrderPayment } from '../services/cartApi'
+import { createPayment, getOrderById, processPayment, updateOrderPayment } from '../services/cartApi'
 import { confirmInventoryReservation, releaseInventoryReservation } from '../services/inventoryApi'
 import { useNotificationCenter } from '../context/notificationCenter'
 import type { AuthUser } from '../types/auth'
@@ -23,11 +23,14 @@ function MockStripeCheckoutPage({ user, isAdmin, onLogout }: MockStripeCheckoutP
   const [error, setError] = useState('')
 
   const orderId = searchParams.get('orderId') ?? ''
+  const orderNumberFromQuery = searchParams.get('orderNumber') ?? ''
   const reservationIds = (searchParams.get('reservationIds') ?? '')
     .split(',')
     .map((value) => value.trim())
     .filter(Boolean)
   const amountRaw = searchParams.get('amount') ?? '0'
+  const currency = (searchParams.get('currency') ?? 'SEK').trim().toUpperCase() || 'SEK'
+  const [orderNumber, setOrderNumber] = useState(orderNumberFromQuery)
 
   const amount = useMemo(() => {
     const parsed = Number(amountRaw)
@@ -42,11 +45,38 @@ function MockStripeCheckoutPage({ user, isAdmin, onLogout }: MockStripeCheckoutP
     () =>
       new Intl.NumberFormat('sv-SE', {
         style: 'currency',
-        currency: 'SEK',
+        currency,
         maximumFractionDigits: 2,
       }).format(amount),
-    [amount],
+    [amount, currency],
   )
+
+  useEffect(() => {
+    if (!orderId || orderNumberFromQuery) {
+      return
+    }
+
+    let isCurrent = true
+
+    const loadOrder = async () => {
+      try {
+        const order = await getOrderById(orderId)
+        if (isCurrent) {
+          setOrderNumber(order.orderNumber || '')
+        }
+      } catch {
+        if (isCurrent) {
+          setOrderNumber('')
+        }
+      }
+    }
+
+    void loadOrder()
+
+    return () => {
+      isCurrent = false
+    }
+  }, [orderId, orderNumberFromQuery])
 
   const buildOrderSuccessUrl = () => {
     const params = new URLSearchParams()
@@ -101,8 +131,12 @@ function MockStripeCheckoutPage({ user, isAdmin, onLogout }: MockStripeCheckoutP
       const payment = await createPayment({
         orderId,
         userId: user.id,
+        orderNumber: orderNumberFromQuery || orderNumber || orderId,
+        recipientEmail: user.email,
         amount,
-        paymentProvider: 'Stripe',
+        currency,
+        method: 0,
+        provider: 'Stripe',
       })
 
       const paymentId = payment.id ?? payment.paymentId
@@ -158,7 +192,9 @@ function MockStripeCheckoutPage({ user, isAdmin, onLogout }: MockStripeCheckoutP
           <section className="stripe-card">
             <p className="stripe-badge">Stripe-betalning (simulering)</p>
             <h1>Säker betalning</h1>
-            <p className="subtitle">Ordernummer: {orderId || '-'}</p>
+            <p className="subtitle">
+              Ordernummer: {orderNumberFromQuery || orderNumber || orderId || '-'}
+            </p>
 
             <div className="stripe-amount-row">
               <span>Att betala</span>
