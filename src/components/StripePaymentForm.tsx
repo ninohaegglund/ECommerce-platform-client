@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js'
-import { loadStripe } from '@stripe/stripe-js'
+import { loadStripe, type Appearance } from '@stripe/stripe-js'
 
 type StripePaymentFormProps = {
   clientSecret: string
@@ -17,7 +17,7 @@ type StripePaymentFormInnerProps = {
 
 const STRIPE_PUBLISHABLE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ?? ''
 const stripePromise = STRIPE_PUBLISHABLE_KEY ? loadStripe(STRIPE_PUBLISHABLE_KEY) : null
-const stripeAppearance = {
+const stripeAppearance: Appearance = {
   theme: 'flat',
   variables: {
     colorPrimary: '#d94a34',

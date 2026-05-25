@@ -126,10 +126,13 @@ function CartPage({ user, isAdmin, onLogout }: CartPageProps) {
   const getFallbackImageUrl = (item: CartItem) => {
     const product: Product = {
       id: item.productId,
+      categoryId: '',
       name: item.productName || 'Produkt',
       shortDescription: '',
+      description: '',
       price: item.unitPrice ?? 0,
       currency: cart?.currency || 'SEK',
+      stockQuantity: 0,
     }
     const profile = getProductProfile(product)
     return getProductImagePath(product, profile.tone)
