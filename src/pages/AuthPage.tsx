@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { subscribeToNewsletter } from '../services/newsletterApi'
 import type { AuthMode, LoginPayload, RegisterPayload } from '../types/auth'
 
 type AuthPageProps = {
@@ -28,6 +29,7 @@ function AuthPage({ mode, endpoint, isLoading, onContinueAsGuest, onSubmit }: Au
   const [lastName, setLastName] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(true)
+  const [newsletterOptIn, setNewsletterOptIn] = useState(false)
 
   const isRegister = mode === 'register'
 
@@ -59,6 +61,16 @@ function AuthPage({ mode, endpoint, isLoading, onContinueAsGuest, onSubmit }: Au
     if (!result.ok) {
       setErrorMessage(result.message)
       return
+    }
+
+    if (isRegister && newsletterOptIn) {
+      void subscribeToNewsletter({
+        email: email.trim(),
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+      }).catch(() => {
+        console.warn('Newsletter subscription failed after successful registration.')
+      })
     }
 
     setSuccessMessage(result.message)
@@ -139,6 +151,18 @@ function AuthPage({ mode, endpoint, isLoading, onContinueAsGuest, onSubmit }: Au
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 autoComplete="new-password"
               />
+            </label>
+          )}
+
+          {isRegister && (
+            <label className="remember-row">
+              <input
+                type="checkbox"
+                checked={newsletterOptIn}
+                onChange={(e) => setNewsletterOptIn(e.target.checked)}
+                className="remember-check"
+              />
+              Jag vill få nyheter och erbjudanden via mail
             </label>
           )}
 
