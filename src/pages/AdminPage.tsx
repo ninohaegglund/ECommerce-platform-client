@@ -1,14 +1,23 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import AppNavbar from '../components/AppNavbar'
 import SiteFooter from '../components/SiteFooter'
 import ProductImageUpload from '../components/ProductImageUpload'
 import type { Product } from '../data/products'
 import { getCatalogCategories } from '../services/categoryApi'
 import { createCatalogProduct, getCatalogProducts } from '../services/catalogApi'
+import { getAllOrders, getOrderById } from '../services/cartApi'
 import { getInventoryStock, setInventoryStock } from '../services/inventoryApi'
 import type { AuthUser } from '../types/auth'
 import type { Category } from '../types/category'
 import type { InventoryStock } from '../types/inventory'
+import {
+  getOrderStatusLabel,
+  PaymentStatusCode,
+  parseOrderStatusCode,
+  type OrderAddress,
+  type OrderDetails,
+  type OrderSummary,
+} from '../types/order'
 import { slugifyCategoryName } from '../utils/category'
 
 type AdminPageProps = {
@@ -90,6 +99,12 @@ function AdminPage({ user, onLogout }: AdminPageProps) {
   const [createProductSuccess, setCreateProductSuccess] = useState('')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [orders, setOrders] = useState<OrderSummary[]>([])
+  const [selectedOrder, setSelectedOrder] = useState<OrderDetails | null>(null)
+  const [isLoadingOrders, setIsLoadingOrders] = useState(true)
+  const [ordersError, setOrdersError] = useState('')
+  const [activeOrderId, setActiveOrderId] = useState('')
+  const modalRef = useRef<HTMLDivElement | null>(null)
 
   const categoryOptions = useMemo(() => getCategoryOptions(categories), [categories])
 
@@ -109,9 +124,34 @@ function AdminPage({ user, onLogout }: AdminPageProps) {
     }
   }, [])
 
+  const loadOrders = useCallback(async () => {
+    setIsLoadingOrders(true)
+    setOrdersError('')
+
+    try {
+      const data = await getAllOrders()
+      setOrders(data)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Could not load orders.'
+      setOrdersError(message)
+    } finally {
+      setIsLoadingOrders(false)
+    }
+  }, [])
+
   useEffect(() => {
     void loadProducts()
   }, [loadProducts])
+
+  useEffect(() => {
+    void loadOrders()
+  }, [loadOrders])
+
+  useEffect(() => {
+    if (selectedOrder) {
+      modalRef.current?.focus()
+    }
+  }, [selectedOrder])
 
   useEffect(() => {
     const loadCategories = async () => {
@@ -160,6 +200,141 @@ function AdminPage({ user, onLogout }: AdminPageProps) {
 
     setStockValue('0')
   }, [currentStock])
+
+  const formatDate = (value: string) => {
+    const date = new Date(value)
+    if (Number.isNaN(date.getTime())) {
+      return value || '-'
+    }
+
+    return date.toLocaleString('sv-SE')
+  }
+
+  const formatAmount = (amount: number, currency: string) => {
+    if (!Number.isFinite(amount)) {
+      return '-'
+    }
+
+    return new Intl.NumberFormat('sv-SE', {
+      style: 'currency',
+      currency: currency || 'SEK',
+      maximumFractionDigits: 2,
+    }).format(amount)
+  }
+
+  const getStatusLabel = (status: number | string) => {
+    const code = parseOrderStatusCode(status)
+    return code === -1
+      ? typeof status === 'string'
+        ? status
+        : `Unknown (${String(status)})`
+      : getOrderStatusLabel(code)
+  }
+
+  const formatPaymentStatus = (status: number | string | null | undefined) => {
+    if (typeof status === 'string') {
+      return status
+    }
+
+    const code = typeof status === 'number' ? status : NaN
+    if (!Number.isFinite(code)) {
+      return '-'
+    }
+
+    const labels: Record<number, string> = {
+      [PaymentStatusCode.Unpaid]: 'Unpaid',
+      [PaymentStatusCode.Paid]: 'Paid',
+      [PaymentStatusCode.Failed]: 'Failed',
+      [PaymentStatusCode.Refunded]: 'Refunded',
+    }
+
+    return labels[code] ?? `Code ${code}`
+  }
+
+  const formatAddressLines = (address?: OrderAddress) => {
+    if (!address) {
+      return ['-']
+    }
+
+    const lines = [
+      `${address.firstName} ${address.lastName}`.trim(),
+      address.company || '',
+      address.streetLine1,
+      address.streetLine2 || '',
+      `${address.postalCode} ${address.city}`.trim(),
+      address.region || '',
+      address.countryCode || '',
+      address.phoneNumber ? `Tel: ${address.phoneNumber}` : '',
+    ]
+
+    return lines.filter((line) => line.trim().length > 0)
+  }
+
+  const getItemCount = (order: OrderSummary) => {
+    if (typeof order.itemCount === 'number') {
+      return order.itemCount
+    }
+
+    if (order.items) {
+      return order.items.reduce((total, item) => total + item.quantity, 0)
+    }
+
+    return 0
+  }
+
+  const getCustomerName = (order: OrderSummary) => {
+    const shipping = order.shippingAddress
+    if (shipping && (shipping.firstName || shipping.lastName)) {
+      return `${shipping.firstName} ${shipping.lastName}`.trim()
+    }
+
+    const billing = order.billingAddress
+    if (billing && (billing.firstName || billing.lastName)) {
+      return `${billing.firstName} ${billing.lastName}`.trim()
+    }
+
+    return 'Unknown'
+  }
+
+  const getCustomerEmail = (order: OrderSummary) => {
+    const email = order.customerEmail?.trim()
+    if (email) {
+      return email
+    }
+
+    return order.userId ?? 'Unknown email'
+  }
+
+  const handleCloseDetails = () => {
+    setSelectedOrder(null)
+  }
+
+  const handleBackdropClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (event.target === event.currentTarget) {
+      handleCloseDetails()
+    }
+  }
+
+  const handleModalKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Escape') {
+      handleCloseDetails()
+    }
+  }
+
+  const viewOrderDetails = async (id: string) => {
+    setActiveOrderId(id)
+    setOrdersError('')
+
+    try {
+      const details = await getOrderById(id)
+      setSelectedOrder(details)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Could not load order details.'
+      setOrdersError(message)
+    } finally {
+      setActiveOrderId('')
+    }
+  }
 
   const handleSaveStock = async () => {
     if (!selectedProductId) {
@@ -298,6 +473,9 @@ function AdminPage({ user, onLogout }: AdminPageProps) {
           <article className="admin-card">
             <h3>Orders Monitor</h3>
             <p>Track order statuses and manually resolve failed payments.</p>
+            <div className="admin-card-actions">
+              <a className="ghost-btn" href="#admin-orders">View all orders</a>
+            </div>
           </article>
           <article className="admin-card">
             <h3>Inventory Manager</h3>
@@ -307,6 +485,44 @@ function AdminPage({ user, onLogout }: AdminPageProps) {
             <h3>User Access</h3>
             <p>Review user roles and account activity logs.</p>
           </article>
+        </div>
+
+        <div className="admin-stock-panel" id="admin-orders">
+          <h2>All orders</h2>
+          <p className="subtitle">View every order from OrderService API.</p>
+
+          {ordersError && <p className="feedback error">{ordersError}</p>}
+
+          {isLoadingOrders ? (
+            <p>Loading orders...</p>
+          ) : orders.length === 0 ? (
+            <p className="subtitle">No orders found.</p>
+          ) : (
+            <div className="orders-list">
+              {orders.map((order) => (
+                <article key={order.id} className="order-card">
+                  <h3>Order: {order.orderNumber || order.id}</h3>
+                  <p><strong>Created:</strong> {formatDate(order.createdAtUtc)}</p>
+                  <p><strong>Customer:</strong> {getCustomerName(order)}</p>
+                  <p><strong>Email:</strong> {getCustomerEmail(order)}</p>
+                  <p><strong>Status:</strong> {getStatusLabel(order.status)}</p>
+                  <p><strong>Payment:</strong> {formatPaymentStatus(order.paymentStatus)}</p>
+                  <p><strong>Total:</strong> {formatAmount(order.totalAmount, order.currency)}</p>
+                  <p><strong>Items:</strong> {getItemCount(order)}</p>
+                  <div className="order-actions">
+                    <button
+                      type="button"
+                      className="ghost-btn"
+                      onClick={() => void viewOrderDetails(order.id)}
+                      disabled={activeOrderId === order.id}
+                    >
+                      {activeOrderId === order.id ? 'Loading...' : 'View details'}
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="admin-stock-panel">
@@ -533,6 +749,126 @@ function AdminPage({ user, onLogout }: AdminPageProps) {
         {selectedProductId && !isLoading && (
           <div className="admin-images-panel">
             <ProductImageUpload productId={selectedProductId} />
+          </div>
+        )}
+
+        {selectedOrder && (
+          <div
+            className="order-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="admin-order-details-title"
+            onClick={handleBackdropClick}
+            onKeyDown={handleModalKeyDown}
+            tabIndex={-1}
+            ref={modalRef}
+          >
+            <div className="order-modal-card">
+              <header className="order-modal-header">
+                <div>
+                  <p className="order-modal-eyebrow">Order details</p>
+                  <h2 id="admin-order-details-title">
+                    Order: {selectedOrder.orderNumber || selectedOrder.id}
+                  </h2>
+                  <p className="order-modal-meta">
+                    <span>Status: {getStatusLabel(selectedOrder.status)}</span>
+                    <span>Payment: {formatPaymentStatus(selectedOrder.paymentStatus)}</span>
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="order-modal-close"
+                  onClick={handleCloseDetails}
+                  aria-label="Close order details"
+                >
+                  X
+                </button>
+              </header>
+
+              <div className="order-details-grid">
+                <section className="order-details-card">
+                  <h3>Order info</h3>
+                  <p><strong>Order date:</strong> {formatDate(selectedOrder.createdAtUtc)}</p>
+                  <p><strong>Customer email:</strong> {getCustomerEmail(selectedOrder)}</p>
+                  <p>
+                    <strong>Updated:</strong>{' '}
+                    {selectedOrder.updatedAtUtc ? formatDate(selectedOrder.updatedAtUtc) : '-'}
+                  </p>
+                  <p><strong>Order status:</strong> {getStatusLabel(selectedOrder.status)}</p>
+                  <p>
+                    <strong>Payment status:</strong>{' '}
+                    {formatPaymentStatus(selectedOrder.paymentStatus)}
+                  </p>
+                </section>
+                <section className="order-details-card">
+                  <h3>Payment</h3>
+                  <p><strong>Provider:</strong> {selectedOrder.paymentProvider || '-'}</p>
+                  <p>
+                    <strong>Transaction:</strong> {selectedOrder.paymentTransactionId || '-'}
+                  </p>
+                  <p>
+                    <strong>Subtotal:</strong>{' '}
+                    {formatAmount(selectedOrder.subtotalAmount ?? 0, selectedOrder.currency)}
+                  </p>
+                  <p>
+                    <strong>Shipping:</strong>{' '}
+                    {formatAmount(selectedOrder.shippingAmount ?? 0, selectedOrder.currency)}
+                  </p>
+                  <p>
+                    <strong>Tax:</strong>{' '}
+                    {formatAmount(selectedOrder.taxAmount ?? 0, selectedOrder.currency)}
+                  </p>
+                  <p>
+                    <strong>Discount:</strong>{' '}
+                    {formatAmount(selectedOrder.discountAmount ?? 0, selectedOrder.currency)}
+                  </p>
+                  <p>
+                    <strong>Total:</strong>{' '}
+                    {formatAmount(selectedOrder.totalAmount, selectedOrder.currency)}
+                  </p>
+                </section>
+                <section className="order-details-card">
+                  <h3>Shipping address</h3>
+                  {formatAddressLines(selectedOrder.shippingAddress).map((line) => (
+                    <p key={`ship-${line}`}>{line}</p>
+                  ))}
+                </section>
+                <section className="order-details-card">
+                  <h3>Billing address</h3>
+                  {formatAddressLines(selectedOrder.billingAddress).map((line) => (
+                    <p key={`bill-${line}`}>{line}</p>
+                  ))}
+                </section>
+              </div>
+
+              <div className="cart-table-wrap">
+                <table className="cart-table order-details-table">
+                  <thead>
+                    <tr>
+                      <th>Product</th>
+                      <th>Qty</th>
+                      <th>Unit price</th>
+                      <th>Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedOrder.items?.map((item) => (
+                      <tr key={item.id}>
+                        <td className="order-details-product admin-order-product">
+                          <div>
+                            <p className="order-item-name">{item.productName}</p>
+                            <p className="order-item-meta">ID: {item.productId}</p>
+                          </div>
+                        </td>
+                        <td>{item.quantity}</td>
+                        <td>{formatAmount(item.unitPrice, selectedOrder.currency)}</td>
+                        <td>{formatAmount(item.totalPrice, selectedOrder.currency)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         )}
       </section>

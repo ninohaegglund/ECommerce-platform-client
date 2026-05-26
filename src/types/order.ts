@@ -107,6 +107,8 @@ export function parseOrderStatusCode(status: number | string | null | undefined)
 
 export type OrderSummary = {
   id: string
+  userId?: string
+  customerEmail?: string | null
   orderNumber: string
   createdAtUtc: string
   updatedAtUtc?: string

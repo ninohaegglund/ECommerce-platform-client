@@ -6,7 +6,6 @@ import type { AuthMode, LoginPayload, RegisterPayload } from '../types/auth'
 
 type AuthPageProps = {
   mode: AuthMode
-  endpoint: string
   isLoading: boolean
   onContinueAsGuest?: () => void
   onSubmit: (
@@ -16,7 +15,7 @@ type AuthPageProps = {
   ) => Promise<{ ok: boolean; message: string }>
 }
 
-function AuthPage({ mode, endpoint, isLoading, onContinueAsGuest, onSubmit }: AuthPageProps) {
+function AuthPage({ mode, isLoading, onContinueAsGuest, onSubmit }: AuthPageProps) {
   const navigate = useNavigate()
 
   const [errorMessage, setErrorMessage] = useState('')
@@ -34,7 +33,7 @@ function AuthPage({ mode, endpoint, isLoading, onContinueAsGuest, onSubmit }: Au
   const isRegister = mode === 'register'
 
   const title = useMemo(
-    () => (isRegister ? 'Create account' : 'Sign in'),
+    () => (isRegister ? 'Skapa konto' : 'Logga in'),
     [isRegister],
   )
 
@@ -80,18 +79,15 @@ function AuthPage({ mode, endpoint, isLoading, onContinueAsGuest, onSubmit }: Au
   return (
     <main className="auth-page">
       <section className="auth-card">
-        <p className="eyebrow">Identity Service Connection</p>
         <h1>{title}</h1>
-        <p className="subtitle">
-          Endpoint: <span>{endpoint}</span>
-        </p>
+      
 
         <div className="mode-switch" role="tablist" aria-label="Auth mode">
           <Link className={!isRegister ? 'active' : ''} to="/login" replace>
-            Sign in
+            Logga in
           </Link>
           <Link className={isRegister ? 'active' : ''} to="/register" replace>
-            Register
+            Skapa konto
           </Link>
         </div>
 
@@ -99,7 +95,7 @@ function AuthPage({ mode, endpoint, isLoading, onContinueAsGuest, onSubmit }: Au
           {isRegister && (
             <>
               <label>
-                First Name
+                Förnamn
                 <input
                   required
                   value={firstName}
@@ -108,7 +104,7 @@ function AuthPage({ mode, endpoint, isLoading, onContinueAsGuest, onSubmit }: Au
                 />
               </label>
               <label>
-                Last Name
+                Efternamn
                 <input
                   required
                   value={lastName}
@@ -131,7 +127,7 @@ function AuthPage({ mode, endpoint, isLoading, onContinueAsGuest, onSubmit }: Au
           </label>
 
           <label>
-            Password
+            Lösenord
             <input
               required
               type="password"
@@ -143,7 +139,7 @@ function AuthPage({ mode, endpoint, isLoading, onContinueAsGuest, onSubmit }: Au
 
           {isRegister && (
             <label>
-              Confirm Password
+              Bekräfta lösenord
               <input
                 required
                 type="password"
@@ -174,12 +170,12 @@ function AuthPage({ mode, endpoint, isLoading, onContinueAsGuest, onSubmit }: Au
                 onChange={(e) => setRememberMe(e.target.checked)}
                 className="remember-check"
               />
-              Remember me
+              Kom ihåg mig  
             </label>
           )}
 
           <button className="submit-btn" type="submit" disabled={isLoading}>
-            {isLoading ? 'Please wait...' : isRegister ? 'Create account' : 'Sign in'}
+            {isLoading ? 'Please wait...' : isRegister ? 'Skapa konto' : 'Logga in'}
           </button>
 
           {!isRegister && onContinueAsGuest && (
@@ -193,7 +189,7 @@ function AuthPage({ mode, endpoint, isLoading, onContinueAsGuest, onSubmit }: Au
                 navigate('/dashboard', { replace: true })
               }}
             >
-              Continue as guest
+              Fortsätt som gäst
             </button>
           )}
         </form>

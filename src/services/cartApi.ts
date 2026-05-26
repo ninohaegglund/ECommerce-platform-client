@@ -84,6 +84,16 @@ export async function getOrders(userId: string): Promise<OrderSummary[]> {
   )
 }
 
+export async function getAllOrders(): Promise<OrderSummary[]> {
+  return request<OrderSummary[]>(
+    '/api/orders',
+    {
+      method: 'GET',
+    },
+    ORDER_API_BASE_URL,
+  )
+}
+
 export async function getOrderById(id: string): Promise<OrderDetails> {
   return request<OrderDetails>(
     `/api/orders/${id}`,
