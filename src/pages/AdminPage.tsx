@@ -498,28 +498,45 @@ function AdminPage({ user, onLogout }: AdminPageProps) {
           ) : orders.length === 0 ? (
             <p className="subtitle">No orders found.</p>
           ) : (
-            <div className="orders-list">
+            <div className="admin-orders-list">
+              <div className="admin-orders-header" aria-hidden="true">
+                <span>Order</span>
+                <span>Customer</span>
+                <span>Status</span>
+                <span>Payment</span>
+                <span>Total</span>
+                <span>Items</span>
+              </div>
               {orders.map((order) => (
-                <article key={order.id} className="order-card">
-                  <h3>Order: {order.orderNumber || order.id}</h3>
-                  <p><strong>Created:</strong> {formatDate(order.createdAtUtc)}</p>
-                  <p><strong>Customer:</strong> {getCustomerName(order)}</p>
-                  <p><strong>Email:</strong> {getCustomerEmail(order)}</p>
-                  <p><strong>Status:</strong> {getStatusLabel(order.status)}</p>
-                  <p><strong>Payment:</strong> {formatPaymentStatus(order.paymentStatus)}</p>
-                  <p><strong>Total:</strong> {formatAmount(order.totalAmount, order.currency)}</p>
-                  <p><strong>Items:</strong> {getItemCount(order)}</p>
-                  <div className="order-actions">
-                    <button
-                      type="button"
-                      className="ghost-btn"
-                      onClick={() => void viewOrderDetails(order.id)}
-                      disabled={activeOrderId === order.id}
-                    >
-                      {activeOrderId === order.id ? 'Loading...' : 'View details'}
-                    </button>
+                <details key={order.id} className="admin-order-card">
+                  <summary className="admin-order-summary">
+                    <div className="admin-order-main">
+                      <span className="admin-order-id">{order.orderNumber || order.id}</span>
+                      <span className="admin-order-date">{formatDate(order.createdAtUtc)}</span>
+                    </div>
+                    <span>{getCustomerName(order)}</span>
+                    <span>{getStatusLabel(order.status)}</span>
+                    <span>{formatPaymentStatus(order.paymentStatus)}</span>
+                    <span>{formatAmount(order.totalAmount, order.currency)}</span>
+                    <span>{getItemCount(order)}</span>
+                  </summary>
+                  <div className="admin-order-body">
+                    <div className="admin-order-meta">
+                      <p><strong>Email:</strong> {getCustomerEmail(order)}</p>
+                      <p><strong>Order ID:</strong> {order.id}</p>
+                    </div>
+                    <div className="admin-order-actions">
+                      <button
+                        type="button"
+                        className="ghost-btn"
+                        onClick={() => void viewOrderDetails(order.id)}
+                        disabled={activeOrderId === order.id}
+                      >
+                        {activeOrderId === order.id ? 'Loading...' : 'View details'}
+                      </button>
+                    </div>
                   </div>
-                </article>
+                </details>
               ))}
             </div>
           )}

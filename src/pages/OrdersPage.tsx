@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import AppNavbar from '../components/AppNavbar'
 import SiteFooter from '../components/SiteFooter'
 import { getProductImagePath, getProductProfile } from '../utils/productCard'
@@ -8,7 +8,6 @@ import { getProductImages } from '../services/productImagesApi'
 import type { AuthUser } from '../types/auth'
 import type { ProductImage } from '../types/product-image'
 import {
-  getOrderStatusLabel,
   OrderStatusCode,
   PaymentStatusCode,
   parseOrderStatusCode,
@@ -28,6 +27,18 @@ type OrdersPageProps = {
 type CheckoutSuccessState = {
   checkoutSuccess?: string
 }
+
+type OrdersTab = 'all' | 'active' | 'shipped' | 'delivered' | 'cancelled'
+
+const ORDER_TABS: { id: OrdersTab; label: string }[] = [
+  { id: 'all', label: 'Alla' },
+  { id: 'active', label: 'Aktiva' },
+  { id: 'shipped', label: 'Skickade' },
+  { id: 'delivered', label: 'Levererade' },
+  { id: 'cancelled', label: 'Avbrutna' },
+]
+
+const ORDER_PROGRESS_STEPS = ['Beställd', 'Betald', 'Packas', 'Skickad', 'Levererad']
 
 const getProductImageCandidates = (images: ProductImage[]) =>
   images
@@ -55,11 +66,127 @@ const resolveWorkingImageUrl = async (candidates: string[]) => {
   return ''
 }
 
+const parsePaymentStatusCode = (status: number | string | null | undefined) => {
+  if (typeof status === 'number' && Number.isFinite(status)) {
+    return status
+  }
+
+  if (typeof status !== 'string') {
+    return -1
+  }
+
+  const normalized = status.trim().toLowerCase()
+  if (normalized === 'paid' || normalized === 'betald') {
+    return PaymentStatusCode.Paid
+  }
+  if (normalized === 'unpaid' || normalized === 'ej betald') {
+    return PaymentStatusCode.Unpaid
+  }
+  if (normalized === 'failed' || normalized === 'misslyckad') {
+    return PaymentStatusCode.Failed
+  }
+  if (normalized === 'refunded' || normalized === 'aterbetald' || normalized === 'återbetald') {
+    return PaymentStatusCode.Refunded
+  }
+
+  return -1
+}
+
+const isCancelledStatus = (status: number | string) => {
+  const code = parseOrderStatusCode(status)
+  return code === OrderStatusCode.Cancelled || code === OrderStatusCode.Refunded
+}
+
+const isDeliveredStatus = (status: number | string) =>
+  parseOrderStatusCode(status) === OrderStatusCode.Delivered
+
+const isShippedStatus = (status: number | string) =>
+  parseOrderStatusCode(status) === OrderStatusCode.Shipped
+
+const isActiveStatus = (status: number | string) => {
+  const code = parseOrderStatusCode(status)
+  if (code === -1) {
+    return true
+  }
+
+  return (
+    code !== OrderStatusCode.Shipped &&
+    code !== OrderStatusCode.Delivered &&
+    code !== OrderStatusCode.Cancelled &&
+    code !== OrderStatusCode.Refunded
+  )
+}
+
+const getOrderStatusBadge = (status: number | string) => {
+  const code = parseOrderStatusCode(status)
+
+  if (code === OrderStatusCode.Delivered) {
+    return { label: 'Levererad', tone: 'delivered' }
+  }
+
+  if (code === OrderStatusCode.Shipped) {
+    return { label: 'Skickad', tone: 'shipped' }
+  }
+
+  if (code === OrderStatusCode.Cancelled || code === OrderStatusCode.Refunded) {
+    return { label: 'Avbruten', tone: 'cancelled' }
+  }
+
+  return { label: 'Behandlas', tone: 'processing' }
+}
+
+const getPaymentBadge = (status: number | string | null | undefined) => {
+  const code = parsePaymentStatusCode(status)
+  const isPaid = code === PaymentStatusCode.Paid
+
+  return {
+    label: isPaid ? 'Betald' : 'Ej betald',
+    tone: isPaid ? 'paid' : 'unpaid',
+  }
+}
+
+const getOrderProgressIndex = (
+  status: number | string,
+  paymentStatus: number | string | null | undefined,
+) => {
+  const statusCode = parseOrderStatusCode(status)
+  const paymentCode = parsePaymentStatusCode(paymentStatus)
+
+  switch (statusCode) {
+    case OrderStatusCode.Delivered:
+      return 4
+    case OrderStatusCode.Shipped:
+      return 3
+    case OrderStatusCode.Packed:
+      return 2
+    case OrderStatusCode.Paid:
+      return 1
+    case OrderStatusCode.Confirmed:
+      return paymentCode === PaymentStatusCode.Paid ? 1 : 0
+    case OrderStatusCode.Pending:
+      return 0
+    default:
+      return paymentCode === PaymentStatusCode.Paid ? 1 : 0
+  }
+}
+
+const getOrderPreviewItems = (order: OrderSummary, maxItems = 2) => {
+  if (!order.items || order.items.length === 0) {
+    return { items: [] as OrderItem[], remainingCount: 0 }
+  }
+
+  const items = order.items.slice(0, maxItems)
+  const remainingCount = Math.max(0, order.items.length - items.length)
+
+  return { items, remainingCount }
+}
+
 function OrdersPage({ user, isAdmin, onLogout }: OrdersPageProps) {
   const location = useLocation()
   const state = (location.state as CheckoutSuccessState | null) ?? null
 
   const [orders, setOrders] = useState<OrderSummary[]>([])
+  const [activeTab, setActiveTab] = useState<OrdersTab>('all')
   const [selectedOrder, setSelectedOrder] = useState<OrderDetails | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [activeOrderId, setActiveOrderId] = useState('')
@@ -145,6 +272,89 @@ function OrdersPage({ user, isAdmin, onLogout }: OrdersPageProps) {
     [state?.checkoutSuccess],
   )
 
+  const orderStats = useMemo(() => {
+    let currency = ''
+    let active = 0
+    let shipped = 0
+    let delivered = 0
+    let cancelled = 0
+    let totalSpent = 0
+
+    for (const order of orders) {
+      if (!currency && order.currency) {
+        currency = order.currency
+      }
+
+      const statusCode = parseOrderStatusCode(order.status)
+      const isCancelled =
+        statusCode === OrderStatusCode.Cancelled || statusCode === OrderStatusCode.Refunded
+      const isDelivered = statusCode === OrderStatusCode.Delivered
+      const isShipped = statusCode === OrderStatusCode.Shipped
+
+      if (isCancelled) {
+        cancelled += 1
+      } else if (isDelivered) {
+        delivered += 1
+      } else if (isShipped) {
+        shipped += 1
+      } else {
+        active += 1
+      }
+
+      if (!isCancelled && Number.isFinite(order.totalAmount)) {
+        totalSpent += order.totalAmount
+      }
+    }
+
+    return {
+      all: orders.length,
+      active,
+      shipped,
+      delivered,
+      cancelled,
+      totalSpent,
+      currency: currency || 'SEK',
+    }
+  }, [orders])
+
+  const tabCounts: Record<OrdersTab, number> = {
+    all: orderStats.all,
+    active: orderStats.active,
+    shipped: orderStats.shipped,
+    delivered: orderStats.delivered,
+    cancelled: orderStats.cancelled,
+  }
+
+  const filteredOrders = useMemo(() => {
+    switch (activeTab) {
+      case 'active':
+        return orders.filter((order) => isActiveStatus(order.status))
+      case 'shipped':
+        return orders.filter((order) => isShippedStatus(order.status))
+      case 'delivered':
+        return orders.filter((order) => isDeliveredStatus(order.status))
+      case 'cancelled':
+        return orders.filter((order) => isCancelledStatus(order.status))
+      default:
+        return orders
+    }
+  }, [activeTab, orders])
+
+  const activeTabEmptyMessage = useMemo(() => {
+    switch (activeTab) {
+      case 'active':
+        return 'Du har inga aktiva beställningar just nu.'
+      case 'shipped':
+        return 'Du har inga skickade beställningar ännu.'
+      case 'delivered':
+        return 'Du har inga levererade beställningar ännu.'
+      case 'cancelled':
+        return 'Du har inga avbrutna beställningar ännu.'
+      default:
+        return 'Du har inga beställningar ännu.'
+    }
+  }, [activeTab])
+
   const formatDate = (value: string) => {
     const date = new Date(value)
     if (Number.isNaN(date.getTime())) {
@@ -168,11 +378,22 @@ function OrdersPage({ user, isAdmin, onLogout }: OrdersPageProps) {
 
   const getStatusLabel = (status: number | string) => {
     const code = parseOrderStatusCode(status)
-    return code === -1
-      ? typeof status === 'string'
-        ? status
-        : `Okänd (${String(status)})`
-      : getOrderStatusLabel(code)
+    if (code === -1) {
+      return typeof status === 'string' ? status : `Okänd (${String(status)})`
+    }
+
+    const labels: Record<number, string> = {
+      [OrderStatusCode.Pending]: 'Väntar',
+      [OrderStatusCode.Confirmed]: 'Bekräftad',
+      [OrderStatusCode.Paid]: 'Betald',
+      [OrderStatusCode.Packed]: 'Packas',
+      [OrderStatusCode.Shipped]: 'Skickad',
+      [OrderStatusCode.Delivered]: 'Levererad',
+      [OrderStatusCode.Cancelled]: 'Avbruten',
+      [OrderStatusCode.Refunded]: 'Återbetald',
+    }
+
+    return labels[code] ?? `Kod ${code}`
   }
 
   const canCancelOrder = (status: number | string) => {
@@ -197,14 +418,6 @@ function OrdersPage({ user, isAdmin, onLogout }: OrdersPageProps) {
     return 0
   }
 
-  const getOrderItemPreview = (order: OrderSummary): OrderItem[] => {
-    if (!order.items || order.items.length === 0) {
-      return []
-    }
-
-    return order.items.slice(0, 1)
-  }
-
   const getFallbackImageUrl = (item: OrderItem, currency: string) => {
     const product: Product = {
       id: item.productId,
@@ -221,20 +434,21 @@ function OrdersPage({ user, isAdmin, onLogout }: OrdersPageProps) {
   }
 
   const formatPaymentStatus = (status: number | string | null | undefined) => {
-    if (typeof status === 'string') {
-      return status
-    }
-
-    const code = typeof status === 'number' ? status : NaN
+    const code =
+      typeof status === 'number'
+        ? status
+        : typeof status === 'string'
+          ? parsePaymentStatusCode(status)
+          : NaN
     if (!Number.isFinite(code)) {
-      return '-'
+      return typeof status === 'string' ? status : '-'
     }
 
     const labels: Record<number, string> = {
       [PaymentStatusCode.Unpaid]: 'Ej betald',
       [PaymentStatusCode.Paid]: 'Betald',
       [PaymentStatusCode.Failed]: 'Misslyckad',
-      [PaymentStatusCode.Refunded]: 'Aterbetald',
+      [PaymentStatusCode.Refunded]: 'Återbetald',
     }
 
     return labels[code] ?? `Kod ${code}`
@@ -327,7 +541,7 @@ function OrdersPage({ user, isAdmin, onLogout }: OrdersPageProps) {
         {error && <p className="feedback error">{error}</p>}
 
         {isLoading ? (
-          <p>Laddar beställningar...</p>
+          <p className="orders-loading">Laddar beställningar...</p>
         ) : orders.length === 0 ? (
           <div className="sv-empty-state">
             <svg
@@ -345,71 +559,206 @@ function OrdersPage({ user, isAdmin, onLogout }: OrdersPageProps) {
               <path d="M16 10a4 4 0 0 1-8 0" />
             </svg>
             <h2>Inga beställningar än</h2>
-            <p>Slutför ett köp för att skapa din första beställning.</p>
+            <p>Du har inga beställningar ännu. Fortsätt handla för att skapa din första order.</p>
+            <div className="sv-empty-actions">
+              <Link className="sv-btn-primary" to="/dashboard">
+                Fortsätt handla
+              </Link>
+            </div>
           </div>
         ) : (
-          <div className="orders-list">
-            {orders.map((order) => (
-              <article key={order.id} className="order-card">
-                <h3>Ordernummer: {order.orderNumber || order.id}</h3>
-                <p><strong>Skapad:</strong> {formatDate(order.createdAtUtc)}</p>
-                <p>
-                  <strong>Totalt:</strong> {formatAmount(order.totalAmount, order.currency)}
+          <>
+            <div className="orders-summary">
+              <div className="orders-summary-card">
+                <p className="orders-summary-label">Aktiva beställningar</p>
+                <p className="orders-summary-value">{orderStats.active}</p>
+              </div>
+              <div className="orders-summary-card">
+                <p className="orders-summary-label">Levererade beställningar</p>
+                <p className="orders-summary-value">{orderStats.delivered}</p>
+              </div>
+              <div className="orders-summary-card">
+                <p className="orders-summary-label">Avbrutna beställningar</p>
+                <p className="orders-summary-value">{orderStats.cancelled}</p>
+              </div>
+              <div className="orders-summary-card">
+                <p className="orders-summary-label">Totalt spenderat</p>
+                <p className="orders-summary-value">
+                  {formatAmount(orderStats.totalSpent, orderStats.currency)}
                 </p>
-                <p>
-                  <strong>Betalning:</strong> {formatPaymentStatus(order.paymentStatus)}
-                </p>
-                <p><strong>Produkter:</strong> {getItemCount(order)}</p>
-                {getOrderItemPreview(order).length > 0 && (
-                  <div className="order-items-preview">
-                    {getOrderItemPreview(order).map((item) => {
-                      const imageUrl =
-                        productImageUrls[item.productId] ??
-                        getFallbackImageUrl(item, order.currency)
-                      return (
-                        <div key={item.id} className="order-item-preview">
-                          <img
-                            src={imageUrl}
-                            alt={item.productName}
-                            onError={(e) => {
-                              const fallback = getFallbackImageUrl(item, order.currency)
-                              if (e.currentTarget.src !== fallback) {
-                                e.currentTarget.src = fallback
-                              }
-                            }}
-                          />
-                          <div>
-                            <p className="order-item-name">{item.productName}</p>
-                            <p className="order-item-meta">Antal: {item.quantity}</p>
+              </div>
+            </div>
+
+            <div className="orders-tabs" role="tablist" aria-label="Filtrera beställningar">
+              {ORDER_TABS.map((tab) => {
+                const isActive = activeTab === tab.id
+                const count = tabCounts[tab.id]
+
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    className={`orders-tab ${isActive ? 'is-active' : ''}`}
+                    onClick={() => setActiveTab(tab.id)}
+                    aria-pressed={isActive}
+                  >
+                    <span>{tab.label}</span>
+                    <span className="orders-tab-count">{count}</span>
+                  </button>
+                )
+              })}
+            </div>
+
+            {filteredOrders.length === 0 ? (
+              <div className="orders-empty-tab">
+                <p>{activeTabEmptyMessage}</p>
+              </div>
+            ) : (
+              <div className="orders-list">
+                {filteredOrders.map((order) => {
+                  const statusBadge = getOrderStatusBadge(order.status)
+                  const paymentBadge = getPaymentBadge(order.paymentStatus)
+                  const paymentStatusLabel = formatPaymentStatus(order.paymentStatus)
+                  const preview = getOrderPreviewItems(order, 2)
+                  const isCancelled = isCancelledStatus(order.status)
+                  const rawProgressIndex = isCancelled
+                    ? 0
+                    : getOrderProgressIndex(order.status, order.paymentStatus)
+                  const progressIndex = Math.min(
+                    ORDER_PROGRESS_STEPS.length - 1,
+                    Math.max(0, rawProgressIndex),
+                  )
+                  const progressPercent = Math.round(
+                    (progressIndex / (ORDER_PROGRESS_STEPS.length - 1)) * 100,
+                  )
+                  const progressStyle = {
+                    '--progress': `${progressPercent}%`,
+                  } as CSSProperties
+
+                  return (
+                    <article key={order.id} className="order-card">
+                      <div className="order-card-top">
+                        <div className="order-card-left">
+                          <p className="order-card-label">Ordernummer</p>
+                          <h3 className="order-card-number">
+                            {order.orderNumber || order.id}
+                          </h3>
+                          <p className="order-card-date">
+                            Beställd {formatDate(order.createdAtUtc)}
+                          </p>
+                          <div className="order-badges">
+                            <span className={`status-badge ${statusBadge.tone}`}>
+                              {statusBadge.label}
+                            </span>
+                            <span
+                              className={`payment-badge ${paymentBadge.tone}`}
+                              title={paymentStatusLabel}
+                            >
+                              {paymentBadge.label}
+                            </span>
                           </div>
                         </div>
-                      )
-                    })}
-                  </div>
-                )}
-                <div className="order-actions">
-                  <button
-                    type="button"
-                    className="ghost-btn"
-                    onClick={() => void viewOrderDetails(order.id)}
-                    disabled={activeOrderId === order.id}
-                  >
-                    {activeOrderId === order.id ? 'Laddar...' : 'Visa detaljer'}
-                  </button>
-                  {canCancelOrder(order.status) && (
-                    <button
-                      type="button"
-                      className="danger-btn"
-                      onClick={() => void handleCancelOrder(order.id)}
-                      disabled={cancelingOrderId === order.id}
-                    >
-                      {cancelingOrderId === order.id ? 'Avbryter...' : 'Avbryt beställning'}
-                    </button>
-                  )}
-                </div>
-              </article>
-            ))}
-          </div>
+                        <div className="order-card-right">
+                          <div className="order-card-stat">
+                            <span className="order-card-stat-label">Totalsumma</span>
+                            <p className="order-card-total">
+                              {formatAmount(order.totalAmount, order.currency)}
+                            </p>
+                          </div>
+                          <div className="order-card-stat">
+                            <span className="order-card-stat-label">Produkter</span>
+                            <p className="order-card-count">{getItemCount(order)} st</p>
+                          </div>
+                          <div className="order-card-actions">
+                            <button
+                              type="button"
+                              className="ghost-btn"
+                              onClick={() => void viewOrderDetails(order.id)}
+                              disabled={activeOrderId === order.id}
+                            >
+                              {activeOrderId === order.id ? 'Laddar...' : 'Visa detaljer'}
+                            </button>
+                            {canCancelOrder(order.status) && (
+                              <button
+                                type="button"
+                                className="danger-btn"
+                                onClick={() => void handleCancelOrder(order.id)}
+                                disabled={cancelingOrderId === order.id}
+                              >
+                                {cancelingOrderId === order.id
+                                  ? 'Avbryter...'
+                                  : 'Avbryt beställning'}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className={`order-progress ${isCancelled ? 'is-cancelled' : ''}`}>
+                        <div className="order-progress-top">
+                          <span className="order-progress-label">Orderstatus</span>
+                          {isCancelled && (
+                            <span className="order-progress-cancelled">Avbruten</span>
+                          )}
+                        </div>
+                        <div className="order-progress-track" style={progressStyle}>
+                          <span className="order-progress-fill" />
+                        </div>
+                        <div
+                          className={`order-progress-steps ${isCancelled ? 'is-muted' : ''}`}
+                        >
+                          {ORDER_PROGRESS_STEPS.map((step, index) => (
+                            <div
+                              key={step}
+                              className={`order-progress-step ${
+                                index <= progressIndex ? 'is-complete' : ''
+                              }`}
+                            >
+                              <span className="order-progress-dot" />
+                              <span>{step}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {preview.items.length > 0 && (
+                        <div className="order-items-preview">
+                          {preview.items.map((item) => {
+                            const imageUrl =
+                              productImageUrls[item.productId] ??
+                              getFallbackImageUrl(item, order.currency)
+                            return (
+                              <div key={item.id} className="order-item-preview">
+                                <img
+                                  src={imageUrl}
+                                  alt={item.productName}
+                                  onError={(e) => {
+                                    const fallback = getFallbackImageUrl(item, order.currency)
+                                    if (e.currentTarget.src !== fallback) {
+                                      e.currentTarget.src = fallback
+                                    }
+                                  }}
+                                />
+                                <div>
+                                  <p className="order-item-name">{item.productName}</p>
+                                  <p className="order-item-meta">Antal: {item.quantity}</p>
+                                </div>
+                              </div>
+                            )
+                          })}
+                          {preview.remainingCount > 0 && (
+                            <p className="order-items-more">
+                              +{preview.remainingCount} fler produkter
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </article>
+                  )
+                })}
+              </div>
+            )}
+          </>
         )}
 
         {selectedOrder && (
