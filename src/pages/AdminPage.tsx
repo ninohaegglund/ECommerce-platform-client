@@ -133,6 +133,7 @@ function AdminPage({ user, onLogout }: AdminPageProps) {
     testRecipientEmail: user.email,
   }))
   const [newsletterResult, setNewsletterResult] = useState<NewsletterSendResult | null>(null)
+  const [isNewsletterAdvancedOpen, setIsNewsletterAdvancedOpen] = useState(false)
   const [isLoadingSubscribers, setIsLoadingSubscribers] = useState(true)
   const [isSendingNewsletterTest, setIsSendingNewsletterTest] = useState(false)
   const [isSendingNewsletter, setIsSendingNewsletter] = useState(false)
@@ -144,6 +145,9 @@ function AdminPage({ user, onLogout }: AdminPageProps) {
   const activeSubscriberCount = useMemo(
     () => subscribers.filter((subscriber) => subscriber.isActive !== false).length,
     [subscribers],
+  )
+  const canSendNewsletter = Boolean(
+    newsletterForm.subject.trim() && newsletterForm.body.trim(),
   )
 
   const loadProducts = useCallback(async (preferredProductId?: string) => {
@@ -490,9 +494,12 @@ function AdminPage({ user, onLogout }: AdminPageProps) {
         throw new Error('Enter a test recipient email.')
       }
 
+      const newsletterPayload = buildNewsletterPayload()
       const result = await sendNewsletterTest({
         recipientEmail,
-        ...buildNewsletterPayload(),
+        subject: newsletterPayload.subject,
+        body: newsletterPayload.body,
+        ...(newsletterPayload.htmlBody ? { htmlBody: newsletterPayload.htmlBody } : {}),
       })
 
       setNewsletterResult(result)
@@ -516,7 +523,12 @@ function AdminPage({ user, onLogout }: AdminPageProps) {
         throw new Error('There are no active subscribers to send to.')
       }
 
-      const result = await sendNewsletter(buildNewsletterPayload())
+      const newsletterPayload = buildNewsletterPayload()
+      const result = await sendNewsletter({
+        subject: newsletterPayload.subject,
+        body: newsletterPayload.body,
+        ...(newsletterPayload.htmlBody ? { htmlBody: newsletterPayload.htmlBody } : {}),
+      })
 
       setNewsletterResult(result)
       setNewsletterSuccess('Newsletter sent to active subscribers.')
@@ -715,6 +727,7 @@ function AdminPage({ user, onLogout }: AdminPageProps) {
                 <label>
                   Subject
                   <input
+                    required
                     type="text"
                     value={newsletterForm.subject}
                     onChange={(event) => updateNewsletterForm('subject', event.target.value)}
@@ -737,6 +750,7 @@ function AdminPage({ user, onLogout }: AdminPageProps) {
                 <label className="admin-newsletter-form__wide">
                   Body
                   <textarea
+                    required
                     rows={6}
                     value={newsletterForm.body}
                     onChange={(event) => updateNewsletterForm('body', event.target.value)}
@@ -744,22 +758,40 @@ function AdminPage({ user, onLogout }: AdminPageProps) {
                   />
                 </label>
 
-                <label className="admin-newsletter-form__wide">
-                  HTML body (optional)
-                  <textarea
-                    rows={5}
-                    value={newsletterForm.htmlBody}
-                    onChange={(event) => updateNewsletterForm('htmlBody', event.target.value)}
-                    placeholder="<h1>Nyheter från Spelvalvet</h1>"
-                  />
-                </label>
+                <div className="admin-newsletter-advanced admin-newsletter-form__wide">
+                  <button
+                    type="button"
+                    className="ghost-btn"
+                    onClick={() => setIsNewsletterAdvancedOpen((isOpen) => !isOpen)}
+                    aria-expanded={isNewsletterAdvancedOpen}
+                  >
+                    {isNewsletterAdvancedOpen ? 'Hide advanced' : 'Advanced HTML'}
+                  </button>
+
+                  {isNewsletterAdvancedOpen && (
+                    <label>
+                      HTML body (optional)
+                      <textarea
+                        rows={5}
+                        value={newsletterForm.htmlBody}
+                        onChange={(event) => updateNewsletterForm('htmlBody', event.target.value)}
+                        placeholder="<h1>Nyheter från Spelvalvet</h1>"
+                      />
+                    </label>
+                  )}
+                </div>
 
                 <div className="admin-newsletter-actions admin-newsletter-form__wide">
                   <button
                     type="button"
                     className="ghost-btn"
                     onClick={() => void handleSendNewsletterTest()}
-                    disabled={isSendingNewsletterTest || isSendingNewsletter}
+                    disabled={
+                      isSendingNewsletterTest ||
+                      isSendingNewsletter ||
+                      !canSendNewsletter ||
+                      !newsletterForm.testRecipientEmail.trim()
+                    }
                   >
                     {isSendingNewsletterTest ? 'Sending test...' : 'Send test'}
                   </button>
@@ -770,6 +802,7 @@ function AdminPage({ user, onLogout }: AdminPageProps) {
                     disabled={
                       isSendingNewsletter ||
                       isSendingNewsletterTest ||
+                      !canSendNewsletter ||
                       activeSubscriberCount === 0
                     }
                   >

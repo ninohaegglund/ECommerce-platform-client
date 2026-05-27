@@ -2458,6 +2458,20 @@
   line-height: 1.45;
 }
 
+.admin-newsletter-advanced {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+}
+
+.admin-newsletter-advanced .ghost-btn {
+  width: auto;
+}
+
+.admin-newsletter-advanced label {
+  width: 100%;
+}
+
 .admin-newsletter-actions {
   display: flex;
   flex-wrap: wrap;
