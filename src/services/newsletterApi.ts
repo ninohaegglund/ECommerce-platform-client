@@ -127,11 +127,18 @@ export async function getNewsletterSubscribers(): Promise<NewsletterSubscriber[]
 export async function sendNewsletterTest(
   payload: NewsletterSendTestRequest,
 ): Promise<NewsletterSendResult> {
+  const requestPayload: NewsletterSendTestRequest = {
+    recipientEmail: payload.recipientEmail,
+    subject: payload.subject,
+    body: payload.body,
+    ...(payload.htmlBody ? { htmlBody: payload.htmlBody } : {}),
+  }
+
   return newsletterRequest<NewsletterSendResult>(
     '/api/newsletter/send-test',
     {
       method: 'POST',
-      body: JSON.stringify(payload),
+      body: JSON.stringify(requestPayload),
     },
     true,
   )
@@ -140,11 +147,17 @@ export async function sendNewsletterTest(
 export async function sendNewsletter(
   payload: NewsletterSendRequest,
 ): Promise<NewsletterSendResult> {
+  const requestPayload: NewsletterSendRequest = {
+    subject: payload.subject,
+    body: payload.body,
+    ...(payload.htmlBody ? { htmlBody: payload.htmlBody } : {}),
+  }
+
   return newsletterRequest<NewsletterSendResult>(
     '/api/newsletter/send',
     {
       method: 'POST',
-      body: JSON.stringify(payload),
+      body: JSON.stringify(requestPayload),
     },
     true,
   )
