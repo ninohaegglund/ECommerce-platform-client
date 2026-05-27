@@ -663,10 +663,6 @@ function AdminPage({ user, onLogout }: AdminPageProps) {
               <span>Active subscribers</span>
               <strong>{activeSubscriberCount}</strong>
             </div>
-            <div>
-              <span>Notification API</span>
-              <strong>localhost:5205</strong>
-            </div>
           </div>
 
           {newsletterError && <p className="feedback error">{newsletterError}</p>}
@@ -677,7 +673,6 @@ function AdminPage({ user, onLogout }: AdminPageProps) {
               <div className="admin-newsletter-card-header">
                 <div>
                   <h3>Subscribers</h3>
-                  <p className="subtitle">Fetched from NotificationService.API.</p>
                 </div>
                 <button
                   type="button"
