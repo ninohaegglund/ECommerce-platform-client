@@ -27,7 +27,7 @@ import type {
 } from './types/auth'
 import { clearStoredAuth, getStoredAuth, setStoredAuth } from './utils/authStorage'
 
-const API_BASE_URL =
+const identityApiUrl =
   import.meta.env.VITE_IDENTITY_API_URL ?? 'https://localhost:5001/api/auth'
 const WELCOME_NOTIFICATION_FLAG_KEY = 'pendingWelcomeNotificationUserId'
 const GUEST_SESSION_KEY = 'guestModeEnabled'
@@ -83,7 +83,7 @@ function App() {
   ): Promise<{ ok: boolean; message: string }> => {
     setIsLoading(true)
 
-    const endpoint = `${API_BASE_URL}/${mode === 'login' ? 'login' : 'register'}`
+    const endpoint = `${identityApiUrl}/${mode === 'login' ? 'login' : 'register'}`
 
     try {
       const response = await fetch(endpoint, {
