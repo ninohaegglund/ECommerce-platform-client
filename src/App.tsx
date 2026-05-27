@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { Link, Navigate, Route, Routes } from 'react-router-dom'
 import './App.css'
 import { NotificationCenterProvider } from './context/notificationCenter'
@@ -133,9 +133,6 @@ function App() {
     }
   }
 
-  const loginEndpoint = useMemo(() => `${API_BASE_URL}/login`, [])
-  const registerEndpoint = useMemo(() => `${API_BASE_URL}/register`, [])
-
   return (
     <NotificationCenterProvider userId={activeUser?.id ?? ''}>
       <Routes>
@@ -148,7 +145,6 @@ function App() {
         element={
           <AuthPage
             mode="login"
-            endpoint={loginEndpoint}
             isLoading={isLoading}
             onSubmit={handleSubmit}
             onContinueAsGuest={handleContinueAsGuest}
@@ -160,7 +156,6 @@ function App() {
         element={
           <AuthPage
             mode="register"
-            endpoint={registerEndpoint}
             isLoading={isLoading}
             onSubmit={handleSubmit}
           />
