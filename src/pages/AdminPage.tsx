@@ -7,6 +7,15 @@ import { getCatalogCategories } from '../services/categoryApi'
 import { createCatalogProduct, getCatalogProducts } from '../services/catalogApi'
 import { getAllOrders, getOrderById } from '../services/cartApi'
 import { getInventoryStock, setInventoryStock } from '../services/inventoryApi'
+import {
+  getNewsletterSubscribers,
+  sendNewsletter,
+  sendNewsletterTest,
+  type NewsletterRecipientResult,
+  type NewsletterSendRequest,
+  type NewsletterSendResult,
+  type NewsletterSubscriber,
+} from '../services/newsletterApi'
 import type { AuthUser } from '../types/auth'
 import type { Category } from '../types/category'
 import type { InventoryStock } from '../types/inventory'
@@ -42,6 +51,13 @@ type CreateProductFormState = {
   imageAltText: string
 }
 
+type NewsletterFormState = {
+  subject: string
+  body: string
+  htmlBody: string
+  testRecipientEmail: string
+}
+
 const emptyProductForm: CreateProductFormState = {
   categoryId: '',
   name: '',
@@ -57,6 +73,13 @@ const emptyProductForm: CreateProductFormState = {
   status: '0',
   imageUrl: '',
   imageAltText: '',
+}
+
+const defaultNewsletterForm: NewsletterFormState = {
+  subject: 'Nyheter från Spelvalvet',
+  body: '',
+  htmlBody: '',
+  testRecipientEmail: '',
 }
 
 function getCategoryOptions(categories: Category[]) {
@@ -104,9 +127,28 @@ function AdminPage({ user, onLogout }: AdminPageProps) {
   const [isLoadingOrders, setIsLoadingOrders] = useState(true)
   const [ordersError, setOrdersError] = useState('')
   const [activeOrderId, setActiveOrderId] = useState('')
+  const [subscribers, setSubscribers] = useState<NewsletterSubscriber[]>([])
+  const [newsletterForm, setNewsletterForm] = useState<NewsletterFormState>(() => ({
+    ...defaultNewsletterForm,
+    testRecipientEmail: user.email,
+  }))
+  const [newsletterResult, setNewsletterResult] = useState<NewsletterSendResult | null>(null)
+  const [isNewsletterAdvancedOpen, setIsNewsletterAdvancedOpen] = useState(false)
+  const [isLoadingSubscribers, setIsLoadingSubscribers] = useState(true)
+  const [isSendingNewsletterTest, setIsSendingNewsletterTest] = useState(false)
+  const [isSendingNewsletter, setIsSendingNewsletter] = useState(false)
+  const [newsletterError, setNewsletterError] = useState('')
+  const [newsletterSuccess, setNewsletterSuccess] = useState('')
   const modalRef = useRef<HTMLDivElement | null>(null)
 
   const categoryOptions = useMemo(() => getCategoryOptions(categories), [categories])
+  const activeSubscriberCount = useMemo(
+    () => subscribers.filter((subscriber) => subscriber.isActive !== false).length,
+    [subscribers],
+  )
+  const canSendNewsletter = Boolean(
+    newsletterForm.subject.trim() && newsletterForm.body.trim(),
+  )
 
   const loadProducts = useCallback(async (preferredProductId?: string) => {
     setIsLoading(true)
@@ -139,6 +181,22 @@ function AdminPage({ user, onLogout }: AdminPageProps) {
     }
   }, [])
 
+  const loadNewsletterSubscribers = useCallback(async () => {
+    setIsLoadingSubscribers(true)
+    setNewsletterError('')
+
+    try {
+      const data = await getNewsletterSubscribers()
+      setSubscribers(data)
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : 'Could not load newsletter subscribers.'
+      setNewsletterError(message)
+    } finally {
+      setIsLoadingSubscribers(false)
+    }
+  }, [])
+
   useEffect(() => {
     void loadProducts()
   }, [loadProducts])
@@ -146,6 +204,10 @@ function AdminPage({ user, onLogout }: AdminPageProps) {
   useEffect(() => {
     void loadOrders()
   }, [loadOrders])
+
+  useEffect(() => {
+    void loadNewsletterSubscribers()
+  }, [loadNewsletterSubscribers])
 
   useEffect(() => {
     if (selectedOrder) {
@@ -305,6 +367,29 @@ function AdminPage({ user, onLogout }: AdminPageProps) {
     return order.userId ?? 'Unknown email'
   }
 
+  const getSubscriberName = (subscriber: NewsletterSubscriber) => {
+    const name = `${subscriber.firstName ?? ''} ${subscriber.lastName ?? ''}`.trim()
+    return name || '-'
+  }
+
+  const getSubscriberDate = (subscriber: NewsletterSubscriber) => {
+    return formatDate(subscriber.subscribedAtUtc ?? subscriber.createdAtUtc ?? '')
+  }
+
+  const formatRecipientResult = (recipient: NewsletterRecipientResult) => {
+    if (typeof recipient === 'string') {
+      return recipient
+    }
+
+    return [
+      recipient.email ?? recipient.recipientEmail ?? 'Unknown recipient',
+      recipient.status,
+      recipient.error,
+    ]
+      .filter(Boolean)
+      .join(' - ')
+  }
+
   const handleCloseDetails = () => {
     setSelectedOrder(null)
   }
@@ -372,6 +457,87 @@ function AdminPage({ user, onLogout }: AdminPageProps) {
     value: CreateProductFormState[Key],
   ) => {
     setProductForm((current) => ({ ...current, [key]: value }))
+  }
+
+  const updateNewsletterForm = <Key extends keyof NewsletterFormState>(
+    key: Key,
+    value: NewsletterFormState[Key],
+  ) => {
+    setNewsletterForm((current) => ({ ...current, [key]: value }))
+  }
+
+  const buildNewsletterPayload = (): NewsletterSendRequest => {
+    const subject = newsletterForm.subject.trim()
+    const body = newsletterForm.body.trim()
+    const htmlBody = newsletterForm.htmlBody.trim()
+
+    if (!subject) {
+      throw new Error('Subject is required.')
+    }
+
+    if (!body) {
+      throw new Error('Body is required.')
+    }
+
+    return htmlBody ? { subject, body, htmlBody } : { subject, body }
+  }
+
+  const handleSendNewsletterTest = async () => {
+    setIsSendingNewsletterTest(true)
+    setNewsletterError('')
+    setNewsletterSuccess('')
+    setNewsletterResult(null)
+
+    try {
+      const recipientEmail = newsletterForm.testRecipientEmail.trim()
+      if (!recipientEmail) {
+        throw new Error('Enter a test recipient email.')
+      }
+
+      const newsletterPayload = buildNewsletterPayload()
+      const result = await sendNewsletterTest({
+        recipientEmail,
+        subject: newsletterPayload.subject,
+        body: newsletterPayload.body,
+        ...(newsletterPayload.htmlBody ? { htmlBody: newsletterPayload.htmlBody } : {}),
+      })
+
+      setNewsletterResult(result)
+      setNewsletterSuccess(`Test newsletter sent to ${recipientEmail}.`)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Could not send test newsletter.'
+      setNewsletterError(message)
+    } finally {
+      setIsSendingNewsletterTest(false)
+    }
+  }
+
+  const handleSendNewsletter = async () => {
+    setIsSendingNewsletter(true)
+    setNewsletterError('')
+    setNewsletterSuccess('')
+    setNewsletterResult(null)
+
+    try {
+      if (activeSubscriberCount === 0) {
+        throw new Error('There are no active subscribers to send to.')
+      }
+
+      const newsletterPayload = buildNewsletterPayload()
+      const result = await sendNewsletter({
+        subject: newsletterPayload.subject,
+        body: newsletterPayload.body,
+        ...(newsletterPayload.htmlBody ? { htmlBody: newsletterPayload.htmlBody } : {}),
+      })
+
+      setNewsletterResult(result)
+      setNewsletterSuccess('Newsletter sent to active subscribers.')
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Could not send newsletter.'
+      setNewsletterError(message)
+    } finally {
+      setIsSendingNewsletter(false)
+    }
   }
 
   const handleCreateProduct = async () => {
@@ -485,6 +651,202 @@ function AdminPage({ user, onLogout }: AdminPageProps) {
             <h3>User Access</h3>
             <p>Review user roles and account activity logs.</p>
           </article>
+          <article className="admin-card">
+            <h3>Nyhetsbrev</h3>
+            <p>Review subscribers, send a test email, and publish newsletters manually.</p>
+            <div className="admin-card-actions">
+              <a className="ghost-btn" href="#admin-newsletter">Open newsletter</a>
+            </div>
+          </article>
+        </div>
+
+        <div className="admin-stock-panel" id="admin-newsletter">
+          <h2>Nyhetsbrev</h2>
+          <p className="subtitle">
+            Send test emails first, then publish manually to active subscribers.
+          </p>
+
+          <div className="admin-newsletter-stats">
+            <div>
+              <span>Total subscribers</span>
+              <strong>{subscribers.length}</strong>
+            </div>
+            <div>
+              <span>Active subscribers</span>
+              <strong>{activeSubscriberCount}</strong>
+            </div>
+          </div>
+
+          {newsletterError && <p className="feedback error">{newsletterError}</p>}
+          {newsletterSuccess && <p className="feedback success">{newsletterSuccess}</p>}
+
+          <div className="admin-newsletter-layout">
+            <section className="admin-newsletter-card">
+              <div className="admin-newsletter-card-header">
+                <div>
+                  <h3>Subscribers</h3>
+                </div>
+                <button
+                  type="button"
+                  className="ghost-btn"
+                  onClick={() => void loadNewsletterSubscribers()}
+                  disabled={isLoadingSubscribers}
+                >
+                  {isLoadingSubscribers ? 'Refreshing...' : 'Refresh'}
+                </button>
+              </div>
+
+              {isLoadingSubscribers ? (
+                <p>Loading subscribers...</p>
+              ) : subscribers.length === 0 ? (
+                <p className="subtitle">No newsletter subscribers found.</p>
+              ) : (
+                <div className="admin-subscriber-list">
+                  {subscribers.map((subscriber) => (
+                    <article
+                      key={subscriber.id ?? subscriber.email}
+                      className="admin-subscriber-row"
+                    >
+                      <div>
+                        <strong>{subscriber.email}</strong>
+                        <span>{getSubscriberName(subscriber)}</span>
+                      </div>
+                      <div>
+                        <span>{getSubscriberDate(subscriber)}</span>
+                        <em>{subscriber.isActive === false ? 'Inactive' : 'Active'}</em>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            <section className="admin-newsletter-card">
+              <h3>Create newsletter</h3>
+              <div className="admin-newsletter-form">
+                <label>
+                  Subject
+                  <input
+                    required
+                    type="text"
+                    value={newsletterForm.subject}
+                    onChange={(event) => updateNewsletterForm('subject', event.target.value)}
+                    placeholder="Nyheter från Spelvalvet"
+                  />
+                </label>
+
+                <label>
+                  Test recipient email
+                  <input
+                    type="email"
+                    value={newsletterForm.testRecipientEmail}
+                    onChange={(event) =>
+                      updateNewsletterForm('testRecipientEmail', event.target.value)
+                    }
+                    placeholder="admin@example.com"
+                  />
+                </label>
+
+                <label className="admin-newsletter-form__wide">
+                  Body
+                  <textarea
+                    required
+                    rows={6}
+                    value={newsletterForm.body}
+                    onChange={(event) => updateNewsletterForm('body', event.target.value)}
+                    placeholder="Texten i nyhetsbrevet"
+                  />
+                </label>
+
+                <div className="admin-newsletter-advanced admin-newsletter-form__wide">
+                  <button
+                    type="button"
+                    className="ghost-btn"
+                    onClick={() => setIsNewsletterAdvancedOpen((isOpen) => !isOpen)}
+                    aria-expanded={isNewsletterAdvancedOpen}
+                  >
+                    {isNewsletterAdvancedOpen ? 'Hide advanced' : 'Advanced HTML'}
+                  </button>
+
+                  {isNewsletterAdvancedOpen && (
+                    <label>
+                      HTML body (optional)
+                      <textarea
+                        rows={5}
+                        value={newsletterForm.htmlBody}
+                        onChange={(event) => updateNewsletterForm('htmlBody', event.target.value)}
+                        placeholder="<h1>Nyheter från Spelvalvet</h1>"
+                      />
+                    </label>
+                  )}
+                </div>
+
+                <div className="admin-newsletter-actions admin-newsletter-form__wide">
+                  <button
+                    type="button"
+                    className="ghost-btn"
+                    onClick={() => void handleSendNewsletterTest()}
+                    disabled={
+                      isSendingNewsletterTest ||
+                      isSendingNewsletter ||
+                      !canSendNewsletter ||
+                      !newsletterForm.testRecipientEmail.trim()
+                    }
+                  >
+                    {isSendingNewsletterTest ? 'Sending test...' : 'Send test'}
+                  </button>
+                  <button
+                    type="button"
+                    className="submit-btn"
+                    onClick={() => void handleSendNewsletter()}
+                    disabled={
+                      isSendingNewsletter ||
+                      isSendingNewsletterTest ||
+                      !canSendNewsletter ||
+                      activeSubscriberCount === 0
+                    }
+                  >
+                    {isSendingNewsletter ? 'Sending...' : 'Send to subscribers'}
+                  </button>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          {newsletterResult && (
+            <div className="admin-newsletter-result">
+              <h3>Send result</h3>
+              <div className="admin-newsletter-result-grid">
+                <div>
+                  <span>Total subscribers</span>
+                  <strong>{newsletterResult.totalSubscribers ?? '-'}</strong>
+                </div>
+                <div>
+                  <span>Sent</span>
+                  <strong>{newsletterResult.sentCount ?? '-'}</strong>
+                </div>
+                <div>
+                  <span>Failed</span>
+                  <strong>{newsletterResult.failedCount ?? '-'}</strong>
+                </div>
+              </div>
+
+              {newsletterResult.message && <p>{newsletterResult.message}</p>}
+
+              {newsletterResult.recipients && newsletterResult.recipients.length > 0 && (
+                <div className="admin-newsletter-recipients">
+                  <h4>Recipients</h4>
+                  <ul>
+                    {newsletterResult.recipients.map((recipient, index) => (
+                      <li key={`${formatRecipientResult(recipient)}-${index}`}>
+                        {formatRecipientResult(recipient)}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="admin-stock-panel" id="admin-orders">
