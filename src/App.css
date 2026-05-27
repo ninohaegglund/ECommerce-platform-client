@@ -143,7 +143,8 @@
 .auth-form label,
 .checkout-grid label,
 .admin-stock-form label,
-.admin-product-form label {
+.admin-product-form label,
+.admin-newsletter-form label {
   display: grid;
   gap: 6px;
   text-align: left;
@@ -158,7 +159,9 @@
 .admin-stock-form select,
 .admin-product-form input,
 .admin-product-form select,
-.admin-product-form textarea {
+.admin-product-form textarea,
+.admin-newsletter-form input,
+.admin-newsletter-form textarea {
   width: 100%;
   border: 1px solid rgba(23, 24, 29, 0.16);
   background: var(--color-paper-strong);
@@ -175,6 +178,8 @@
 .admin-product-form input:focus,
 .admin-product-form select:focus,
 .admin-product-form textarea:focus,
+.admin-newsletter-form input:focus,
+.admin-newsletter-form textarea:focus,
 .token-panel textarea:focus,
 .session-panel textarea:focus {
   outline: 3px solid rgba(31, 157, 138, 0.22);
@@ -2337,6 +2342,156 @@
   line-height: 1.45;
 }
 
+.admin-newsletter-stats,
+.admin-newsletter-result-grid {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.admin-newsletter-stats div,
+.admin-newsletter-result-grid div {
+  border: 1px solid rgba(23, 24, 29, 0.12);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.66);
+  padding: 12px;
+  display: grid;
+  gap: 4px;
+}
+
+.admin-newsletter-stats span,
+.admin-newsletter-result-grid span {
+  color: var(--color-muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.admin-newsletter-stats strong,
+.admin-newsletter-result-grid strong {
+  color: var(--color-ink);
+  font-size: 1.35rem;
+}
+
+.admin-newsletter-layout {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: minmax(280px, 0.9fr) minmax(0, 1.4fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.admin-newsletter-card {
+  border: 1px solid rgba(23, 24, 29, 0.12);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.68);
+  padding: 14px;
+}
+
+.admin-newsletter-card h3,
+.admin-newsletter-result h3,
+.admin-newsletter-recipients h4 {
+  margin: 0 0 8px;
+  color: var(--color-ink);
+}
+
+.admin-newsletter-card-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.admin-subscriber-list {
+  margin-top: 12px;
+  display: grid;
+  gap: 8px;
+  max-height: 390px;
+  overflow: auto;
+}
+
+.admin-subscriber-row {
+  border: 1px solid rgba(23, 24, 29, 0.1);
+  border-radius: 8px;
+  background: var(--color-paper);
+  padding: 10px 12px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+}
+
+.admin-subscriber-row div {
+  display: grid;
+  gap: 3px;
+}
+
+.admin-subscriber-row strong {
+  color: var(--color-ink);
+  overflow-wrap: anywhere;
+}
+
+.admin-subscriber-row span,
+.admin-subscriber-row em {
+  color: var(--color-muted);
+  font-size: 0.8rem;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.admin-newsletter-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.admin-newsletter-form__wide {
+  grid-column: 1 / -1;
+}
+
+.admin-newsletter-form textarea {
+  resize: vertical;
+  min-height: 120px;
+  font-family: inherit;
+  line-height: 1.45;
+}
+
+.admin-newsletter-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.admin-newsletter-result {
+  margin-top: 14px;
+  border: 1px solid rgba(23, 24, 29, 0.12);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.68);
+  padding: 14px;
+}
+
+.admin-newsletter-result p {
+  margin: 10px 0 0;
+  color: var(--color-ink-soft);
+}
+
+.admin-newsletter-recipients {
+  margin-top: 12px;
+}
+
+.admin-newsletter-recipients ul {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--color-ink-soft);
+}
+
+.admin-newsletter-recipients li {
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+}
+
 .admin-checkbox-label {
   align-self: end;
   display: flex !important;
@@ -2682,6 +2837,10 @@
   .orders-list,
   .admin-grid,
   .admin-product-form,
+  .admin-newsletter-layout,
+  .admin-newsletter-form,
+  .admin-newsletter-stats,
+  .admin-newsletter-result-grid,
   .footer-main {
     grid-template-columns: 1fr;
   }
@@ -2714,6 +2873,10 @@
 
   .hero-showcase {
     min-height: 330px;
+  }
+
+  .admin-subscriber-row {
+    grid-template-columns: 1fr;
   }
 
   .hero-drop-card {
