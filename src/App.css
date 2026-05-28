@@ -6292,6 +6292,7 @@
   width: min(720px, 100%);
   max-height: calc(100svh - 48px);
   overflow: auto;
+  overflow-x: hidden;
   border: 1px solid var(--line-2);
   border-radius: 8px;
   background: var(--bg);
@@ -6371,6 +6372,7 @@
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 16px;
   align-items: center;
+  min-width: 0;
   padding: 16px;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -6391,6 +6393,7 @@
 .sv-cookie-option-copy {
   display: grid;
   gap: 6px;
+  min-width: 0;
 }
 
 .sv-cookie-option-title {
@@ -6398,6 +6401,7 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
+  min-width: 0;
   color: var(--ink);
   font-size: 15px;
   font-weight: 800;
@@ -6416,6 +6420,7 @@
   color: var(--ink-2);
   font-size: 13px;
   line-height: 1.5;
+  overflow-wrap: break-word;
 }
 
 .sv-cookie-toggle {
@@ -6643,7 +6648,20 @@
   .sv-review-badge { left: 20px; }
   .sv-review-quote { font-size: 15.5px; }
   .sv-cookie-backdrop { padding: 14px; }
-  .sv-cookie-dialog { max-height: calc(100svh - 28px); padding: 18px; }
+  .sv-cookie-dialog {
+    width: 100%;
+    max-width: calc(100vw - 28px);
+    max-height: calc(100svh - 28px);
+    padding: 18px;
+  }
+  .sv-cookie-header {
+    gap: 12px;
+  }
+  .sv-cookie-close {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+  }
   .sv-cookie-option { grid-template-columns: 1fr; }
   .sv-cookie-toggle { justify-self: start; }
   .sv-footer-newsletter-form { flex-direction: column; gap: 8px; }
