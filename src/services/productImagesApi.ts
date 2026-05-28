@@ -1,45 +1,39 @@
-import { requestMultipart } from './apiClient'
+import { request as apiRequest } from './apiClient'
 import type { ProductImage } from '../types/product-image'
 
 const CATALOG_API_BASE_URL = import.meta.env.VITE_CATALOG_API_URL ?? 'https://localhost:7019'
 
-export interface UploadProductImageRequest {
-  file: File
+export interface CreateProductImageRequest {
+  imageUrl: string
   altText?: string
   sortOrder?: number
   isPrimary?: boolean
 }
 
-export async function uploadProductImage(
+export async function createProductImage(
   productId: string,
-  request: UploadProductImageRequest,
+  request: CreateProductImageRequest,
 ): Promise<ProductImage> {
-  const formData = new FormData()
-  formData.append('Image', request.file)
-
-  if (request.altText) {
-    formData.append('AltText', request.altText)
+  const payload = {
+    imageUrl: request.imageUrl,
+    ...(request.altText ? { altText: request.altText } : {}),
+    ...(request.sortOrder !== undefined ? { sortOrder: request.sortOrder } : {}),
+    ...(request.isPrimary !== undefined ? { isPrimary: request.isPrimary } : {}),
   }
 
-  if (request.sortOrder !== undefined) {
-    formData.append('SortOrder', String(request.sortOrder))
-  }
-
-  if (request.isPrimary !== undefined) {
-    formData.append('IsPrimary', String(request.isPrimary))
-  }
-
-  return requestMultipart<ProductImage>(
-    `/api/products/${encodeURIComponent(productId)}/images`,
-    formData,
-    {},
+  return apiRequest<ProductImage>(
+    `/api/Products/${encodeURIComponent(productId)}/images`,
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    },
     CATALOG_API_BASE_URL,
   )
 }
 
 export async function getProductImages(productId: string): Promise<ProductImage[]> {
   const response = await fetch(
-    `${CATALOG_API_BASE_URL}/api/products/${encodeURIComponent(productId)}/images`,
+    `${CATALOG_API_BASE_URL}/api/Products/${encodeURIComponent(productId)}/images`,
     {
       method: 'GET',
     },
