@@ -1,18 +1,24 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { ProductImage } from '../types/product-image'
-import { uploadProductImage, getProductImages } from '../services/productImagesApi'
+import { createProductImage, getProductImages } from '../services/productImagesApi'
 
 type ProductImageUploadProps = {
   productId: string
 }
 
-const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
-const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
+const isValidHttpUrl = (value: string) => {
+  try {
+    const url = new URL(value)
+    return url.protocol === 'http:' || url.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
 
 function ProductImageUpload({ productId }: ProductImageUploadProps) {
   const [images, setImages] = useState<ProductImage[]>([])
   const [brokenImageIds, setBrokenImageIds] = useState<string[]>([])
-  const [file, setFile] = useState<File | null>(null)
+  const [imageUrl, setImageUrl] = useState('')
   const [altText, setAltText] = useState('')
   const [sortOrder, setSortOrder] = useState('0')
   const [isPrimary, setIsPrimary] = useState(false)
@@ -20,8 +26,7 @@ function ProductImageUpload({ productId }: ProductImageUploadProps) {
   const [isLoadingImages, setIsLoadingImages] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-  const [preview, setPreview] = useState<string | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [previewError, setPreviewError] = useState('')
 
   // Load existing images
   useEffect(() => {
@@ -41,44 +46,25 @@ function ProductImageUpload({ productId }: ProductImageUploadProps) {
     void loadImages()
   }, [productId])
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0]
+  const handleImageUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setError('')
-    setPreview(null)
-
-    if (!selectedFile) {
-      setFile(null)
-      return
-    }
-
-    // Validation
-    if (!ALLOWED_IMAGE_TYPES.includes(selectedFile.type)) {
-      setError('Invalid file type. Please upload a JPEG, PNG, WebP, or GIF image.')
-      setFile(null)
-      return
-    }
-
-    if (selectedFile.size > MAX_FILE_SIZE) {
-      setError('File is too large. Maximum size is 5MB.')
-      setFile(null)
-      return
-    }
-
-    setFile(selectedFile)
-
-    // Create preview
-    const reader = new FileReader()
-    reader.onload = (event) => {
-      setPreview(event.target?.result as string)
-    }
-    reader.readAsDataURL(selectedFile)
+    setSuccess('')
+    setPreviewError('')
+    setImageUrl(e.target.value)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!file) {
-      setError('Please select an image file.')
+    const trimmedImageUrl = imageUrl.trim()
+
+    if (!trimmedImageUrl) {
+      setError('Please enter an image URL.')
+      return
+    }
+
+    if (!isValidHttpUrl(trimmedImageUrl)) {
+      setError('Image URL must be a valid http or https address.')
       return
     }
 
@@ -92,28 +78,24 @@ function ProductImageUpload({ productId }: ProductImageUploadProps) {
         throw new Error('Sort order must be a non-negative number.')
       }
 
-      const newImage = await uploadProductImage(productId, {
-        file,
-        altText: altText || undefined,
+      const newImage = await createProductImage(productId, {
+        imageUrl: trimmedImageUrl,
+        altText: altText.trim() || undefined,
         sortOrder: sortOrderNum,
         isPrimary,
       })
 
       setImages((prev) => [...prev, newImage])
-      setSuccess('Image uploaded successfully!')
+      setSuccess('Image added successfully!')
 
       // Reset form
-      setFile(null)
+      setImageUrl('')
       setAltText('')
       setSortOrder('0')
       setIsPrimary(false)
-      setPreview(null)
-
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ''
-      }
+      setPreviewError('')
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to upload image.'
+      const message = err instanceof Error ? err.message : 'Failed to add image.'
       setError(message)
     } finally {
       setIsLoading(false)
@@ -130,6 +112,9 @@ function ProductImageUpload({ productId }: ProductImageUploadProps) {
     (image) => image.imageUrl.trim().length > 0 && !brokenImageIds.includes(image.id),
   )
 
+  const trimmedImageUrl = imageUrl.trim()
+  const canPreview = isValidHttpUrl(trimmedImageUrl)
+
   return (
     <div className="product-image-upload">
       <h3>Product Images</h3>
@@ -139,20 +124,26 @@ function ProductImageUpload({ productId }: ProductImageUploadProps) {
 
       <form onSubmit={(e) => void handleSubmit(e)} className="image-upload-form">
         <label>
-          Image File *
+          Image URL *
           <input
-            ref={fileInputRef}
-            type="file"
-            accept=".jpg,.jpeg,.png,.webp,.gif"
-            onChange={handleFileChange}
+            type="url"
+            value={imageUrl}
+            onChange={handleImageUrlChange}
             disabled={isLoading}
+            placeholder="https://cdn.example.com/products/image.jpg"
           />
         </label>
 
-        {preview && (
+        {canPreview && (
           <div className="image-preview">
-            <img src={preview} alt="Preview" />
+            <img
+              src={trimmedImageUrl}
+              alt={altText.trim() || 'Preview'}
+              onError={() => setPreviewError('Unable to load preview. Check the image URL.')}
+              onLoad={() => setPreviewError('')}
+            />
             <p className="preview-label">Preview</p>
+            {previewError && <p className="feedback error">{previewError}</p>}
           </div>
         )}
 
@@ -191,9 +182,9 @@ function ProductImageUpload({ productId }: ProductImageUploadProps) {
         <button
           type="submit"
           className="submit-btn"
-          disabled={isLoading || !file}
+          disabled={isLoading || !trimmedImageUrl}
         >
-          {isLoading ? 'Uploading...' : 'Upload Image'}
+          {isLoading ? 'Saving...' : 'Add Image'}
         </button>
       </form>
 
