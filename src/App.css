@@ -6557,7 +6557,48 @@
 
 @media (max-width: 768px) {
   .sv-utility-bar { display: none; }
-  .sv-navbar-inner { padding: 14px 20px; gap: 16px; }
+  .sv-navbar-inner {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "logo actions"
+      "search search";
+    gap: 12px;
+    max-width: 100%;
+    padding: 12px 16px;
+  }
+  .sv-logo {
+    grid-area: logo;
+    min-width: 0;
+  }
+  .sv-logo-copy {
+    min-width: 0;
+  }
+  .sv-logo-copy strong {
+    font-size: 20px;
+  }
+  .sv-logo-copy small {
+    display: none;
+  }
+  .sv-search {
+    grid-area: search;
+    width: 100%;
+    max-width: none;
+  }
+  .sv-nav-actions {
+    grid-area: actions;
+    justify-self: end;
+    gap: 4px;
+  }
+  .sv-cart-btn {
+    width: 40px;
+    height: 40px;
+    justify-content: center;
+    gap: 0;
+    padding: 0;
+  }
+  .sv-cart-btn span {
+    display: none;
+  }
   .sv-nav-row1 { display: none; }
   .sv-category-bar { display: none; }
   .sv-nav-toggle { display: flex; }
