@@ -4696,7 +4696,7 @@
   box-shadow: -8px 0 32px rgba(23, 24, 29, 0.12);
   z-index: 100;
   padding: 20px;
-  display: flex;
+  display: none;
   flex-direction: column;
   gap: 4px;
   transform: translateX(100%);
@@ -4705,6 +4705,7 @@
 }
 
 .sv-nav-drawer.open {
+  display: flex;
   transform: translateX(0);
 }
 
@@ -6557,6 +6558,9 @@
 
 @media (max-width: 768px) {
   .sv-utility-bar { display: none; }
+  .sv-store {
+    overflow-x: clip;
+  }
   .sv-navbar-inner {
     grid-template-columns: minmax(0, 1fr) auto;
     grid-template-areas:
