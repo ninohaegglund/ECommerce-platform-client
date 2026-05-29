@@ -6784,8 +6784,10 @@
   .sv-footer-mobile-group summary {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
+    position: relative;
     min-height: 38px;
+    padding: 0 28px;
     color: var(--amber);
     cursor: pointer;
     font-family: 'JetBrains Mono', monospace;
@@ -6799,6 +6801,8 @@
   }
   .sv-footer-mobile-group summary::after {
     content: '+';
+    position: absolute;
+    right: 0;
     color: #807456;
     font-family: Inter, system-ui, sans-serif;
     font-size: 18px;
