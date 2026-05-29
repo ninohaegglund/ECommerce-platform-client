@@ -216,7 +216,7 @@ function SiteFooter() {
       <div className="sv-footer-inner">
         <div className="sv-footer-grid">
           {/* Brand column */}
-          <div>
+          <div className="sv-footer-company">
             <Link className="sv-footer-brand" to="/dashboard" aria-label="Spelvalvet hem">
               <div className="sv-footer-logo-mark" aria-hidden="true">
                 <div className="sv-footer-logo-vault">
@@ -245,6 +245,21 @@ function SiteFooter() {
               </ul>
             </nav>
           ))}
+
+          <nav className="sv-footer-mobile-links" aria-label="Footer navigation">
+            {columns.map((col) => (
+              <details key={col.title} className="sv-footer-mobile-group">
+                <summary>{col.title}</summary>
+                <ul>
+                  {col.links.map((link) => (
+                    <li key={link.label}>
+                      <Link to={link.to}>{link.label}</Link>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            ))}
+          </nav>
 
           <div className="sv-footer-newsletter">
             <span className="sv-footer-col-title">Nyhetsbrev</span>

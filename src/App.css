@@ -6043,6 +6043,10 @@
   margin-bottom: 56px;
 }
 
+.sv-footer-company {
+  min-width: 0;
+}
+
 .sv-footer-brand {
   display: flex;
   align-items: center;
@@ -6134,6 +6138,10 @@
 
 .sv-footer-col a:hover {
   color: var(--bg);
+}
+
+.sv-footer-mobile-links {
+  display: none;
 }
 
 .sv-footer-newsletter {
@@ -6620,10 +6628,80 @@
   .sv-review-badge { left: 24px; }
   .sv-review-quote { font-size: 16px; }
   .sv-review-dot-name { display: none; }
-  .sv-footer-grid { grid-template-columns: 1fr; }
-  .sv-footer-newsletter { max-width: none; }
-  .sv-footer-bottom { align-items: flex-start; flex-direction: column; gap: 22px; }
-  .sv-footer-copyright { flex-wrap: wrap; gap: 12px 18px; }
+  .sv-footer-inner { padding: 44px 24px 28px; }
+  .sv-footer-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 28px 14px;
+    margin-bottom: 32px;
+  }
+  .sv-footer-company,
+  .sv-footer-newsletter {
+    grid-column: 1 / -1;
+    max-width: none;
+  }
+  .sv-footer-company {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 8px 14px;
+  }
+  .sv-footer-company .sv-footer-brand {
+    margin-bottom: 0;
+  }
+  .sv-footer-tagline {
+    grid-column: 1 / -1;
+    margin: 0;
+    font-size: 18px;
+    max-width: none;
+  }
+  .sv-footer-legal {
+    grid-column: 1 / -1;
+    max-width: none;
+    font-size: 12.5px;
+    line-height: 1.5;
+  }
+  .sv-footer-col-title {
+    margin-bottom: 12px;
+  }
+  .sv-footer-col ul {
+    gap: 7px;
+  }
+  .sv-footer-col a {
+    font-size: 12.5px;
+    line-height: 1.35;
+  }
+  .sv-footer-mobile-links {
+    display: none;
+  }
+  .sv-footer-newsletter h3 {
+    font-size: 17px;
+    margin-bottom: 6px;
+  }
+  .sv-footer-newsletter p {
+    font-size: 12.5px;
+    line-height: 1.45;
+  }
+  .sv-footer-newsletter-form {
+    margin-top: 12px;
+  }
+  .sv-footer-bottom {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 16px;
+    padding-top: 22px;
+  }
+  .sv-footer-copyright {
+    flex-wrap: wrap;
+    gap: 9px 16px;
+  }
+  .sv-footer-payments {
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  .sv-pay-label {
+    width: 100%;
+    margin-right: 0;
+  }
   .sv-cookie-dialog { padding: 22px; }
   .sv-cookie-header h2 { font-size: 24px; }
   .sv-cookie-actions { flex-direction: column; }
@@ -6664,6 +6742,87 @@
   }
   .sv-cookie-option { grid-template-columns: 1fr; }
   .sv-cookie-toggle { justify-self: start; }
+  .sv-footer-inner {
+    padding: 34px 22px 24px;
+  }
+  .sv-footer-grid {
+    gap: 24px 10px;
+    margin-bottom: 28px;
+  }
+  .sv-footer-brand-name {
+    font-size: 20px;
+  }
+  .sv-footer-tagline {
+    display: none;
+  }
+  .sv-footer-legal {
+    font-size: 12px;
+    line-height: 1.45;
+  }
+  .sv-footer-col-title {
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    margin-bottom: 10px;
+  }
+  .sv-footer-col a {
+    font-size: 12px;
+  }
+  .sv-footer-col {
+    display: none;
+  }
+  .sv-footer-mobile-links {
+    display: grid;
+    grid-column: 1 / -1;
+    gap: 8px;
+  }
+  .sv-footer-mobile-group {
+    border-top: 1px solid #2a2b32;
+  }
+  .sv-footer-mobile-group:last-child {
+    border-bottom: 1px solid #2a2b32;
+  }
+  .sv-footer-mobile-group summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 38px;
+    color: var(--amber);
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    list-style: none;
+    text-transform: uppercase;
+  }
+  .sv-footer-mobile-group summary::-webkit-details-marker {
+    display: none;
+  }
+  .sv-footer-mobile-group summary::after {
+    content: '+';
+    color: #807456;
+    font-family: Inter, system-ui, sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0;
+  }
+  .sv-footer-mobile-group[open] summary::after {
+    content: '-';
+  }
+  .sv-footer-mobile-group ul {
+    display: grid;
+    gap: 8px;
+    list-style: none;
+    margin: 0;
+    padding: 0 0 14px;
+  }
+  .sv-footer-mobile-group a {
+    color: #d8c89f;
+    font-size: 12.5px;
+    text-decoration: none;
+  }
+  .sv-footer-newsletter .sv-footer-col-title {
+    display: none;
+  }
   .sv-footer-newsletter-form {
     grid-template-columns: minmax(0, 1fr) minmax(116px, auto);
     gap: 8px;
@@ -6676,6 +6835,23 @@
   .sv-footer-newsletter-form button {
     width: auto;
     border-radius: 8px;
+  }
+  .sv-footer-bottom {
+    gap: 14px;
+  }
+  .sv-footer-copyright {
+    font-size: 11.5px;
+    gap: 8px 14px;
+  }
+  .sv-pay-chip {
+    padding: 3px 7px;
+    font-size: 10px;
+  }
+  .sv-pay-label {
+    width: auto;
+    margin-right: 4px;
+    font-size: 9.5px;
+    letter-spacing: 0.06em;
   }
   .sv-jobs-brand { font-size: 24px; margin-bottom: 32px; }
   .sv-jobs-section h1 { font-size: 44px; }
