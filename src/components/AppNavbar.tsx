@@ -1008,17 +1008,19 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
               <path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </Link>
-          <Link to="/wishlist" className="sv-nav-drawer-item" onClick={() => setIsNavOpen(false)}>
-            <span className="sv-nav-drawer-icon" aria-hidden="true">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 20s-7-4.3-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.7-7 10-7 10Z"/>
+          {isAuthenticated && (
+            <Link to="/wishlist" className="sv-nav-drawer-item" onClick={() => setIsNavOpen(false)}>
+              <span className="sv-nav-drawer-icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 20s-7-4.3-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.7-7 10-7 10Z"/>
+                </svg>
+              </span>
+              <span>Önskelista</span>
+              <svg className="sv-nav-drawer-arrow" viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-            </span>
-            <span>Önskelista</span>
-            <svg className="sv-nav-drawer-arrow" viewBox="0 0 16 16" aria-hidden="true">
-              <path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </Link>
+            </Link>
+          )}
           {isAdmin && (
             <Link to="/admin" className="sv-nav-drawer-item" onClick={() => setIsNavOpen(false)}>
               <span className="sv-nav-drawer-icon" aria-hidden="true">
