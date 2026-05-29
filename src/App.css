@@ -4701,7 +4701,7 @@
 /* Mobile nav drawer */
 .sv-nav-drawer-backdrop {
   position: fixed;
-  inset: 64px 0 0;
+  inset: 0;
   z-index: 80;
   border: 0;
   background: rgba(23, 24, 29, 0.42);
@@ -4711,23 +4711,27 @@
 
 .sv-nav-drawer {
   position: fixed;
-  top: 64px;
-  right: 0;
-  height: calc(100svh - 64px);
-  width: min(414px, calc(100vw - 10px));
+  top: clamp(16px, 3svh, 28px);
+  bottom: clamp(16px, 3svh, 28px);
+  left: 50%;
+  height: auto;
+  width: min(414px, calc(100vw - 24px));
   background:
     linear-gradient(180deg, rgba(255, 249, 239, 0.98) 0%, rgba(255, 255, 255, 0.98) 62%),
     var(--bg);
-  border-top: 1px solid var(--line);
-  border-left: 1px solid var(--line);
-  box-shadow: -12px 18px 42px rgba(23, 24, 29, 0.22);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  box-shadow: 0 24px 64px rgba(23, 24, 29, 0.28);
   z-index: 90;
   padding: 20px 16px 24px;
-  display: none;
+  display: flex;
   flex-direction: column;
   gap: 16px;
-  transform: translateX(100%);
-  transition: transform 0.22s ease;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateX(-50%) translateY(10px) scale(0.98);
+  transition: opacity 0.16s ease, transform 0.18s ease, visibility 0.18s ease;
   overflow-y: auto;
   overscroll-behavior: contain;
 }
@@ -4743,8 +4747,10 @@
 }
 
 .sv-nav-drawer.open {
-  display: flex;
-  transform: translateX(0);
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0) scale(1);
 }
 
 .sv-nav-drawer-close {
@@ -4873,7 +4879,12 @@
 
 .sv-nav-drawer-list {
   display: grid;
-  gap: 8px;
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: var(--shadow-sm);
 }
 
 .sv-nav-drawer-item {
@@ -4881,26 +4892,28 @@
   grid-template-columns: 38px minmax(0, 1fr) 20px;
   align-items: center;
   gap: 10px;
-  min-height: 48px;
+  min-height: 56px;
   padding: 8px 12px 8px 8px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.88);
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: #fff;
   color: var(--ink);
   font-size: 14px;
   font-weight: 750;
   line-height: 1.2;
   text-decoration: none;
-  box-shadow: var(--shadow-sm);
-  transition: background 0.14s ease, border-color 0.14s ease, color 0.14s ease, transform 0.14s ease;
+  transition: background 0.14s ease, color 0.14s ease;
+}
+
+.sv-nav-drawer-item:last-child {
+  border-bottom: 0;
 }
 
 .sv-nav-drawer-item:hover,
 .sv-nav-drawer-item:focus-visible {
   background: var(--bg-2);
-  border-color: var(--line-2);
   color: var(--ink);
-  transform: translateX(-2px);
 }
 
 .sv-nav-drawer-item:focus-visible {
@@ -4928,7 +4941,6 @@
 .sv-nav-drawer-item--deal {
   color: var(--red);
   background: #fff7f2;
-  border-color: rgba(217, 74, 52, 0.24);
 }
 
 .sv-nav-drawer-item--deal .sv-nav-drawer-icon {
