@@ -169,6 +169,7 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
   const productsDropdownRef = useRef<HTMLDivElement>(null)
   const navRef = useRef<HTMLElement>(null)
   const wishlistRef = useRef<HTMLDivElement>(null)
+  const mobileNavCloseRef = useRef<HTMLButtonElement>(null)
   const { unreadCount } = useNotificationCenter()
   const location = useLocation()
   const isGuest = user.id === 'guest'
@@ -297,8 +298,17 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
 
   const toggleWishlistMenu = useCallback(() => {
     setIsMenuOpen(false)
+    setIsNavOpen(false)
     setIsWishlistOpen((isOpen) => !isOpen)
   }, [])
+
+  const toggleMobileNav = () => {
+    setIsMenuOpen(false)
+    closeWishlistMenu()
+    setIsProductsOpen(false)
+    setOpenCategoryId('')
+    setIsNavOpen((isOpen) => !isOpen)
+  }
 
   const handleProductsBlur = (event: FocusEvent<HTMLDivElement>) => {
     const nextFocusedElement = event.relatedTarget as Node | null
@@ -463,6 +473,34 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
     }
   }, [closeWishlistMenu, isWishlistOpen])
 
+  useEffect(() => {
+    setIsNavOpen(false)
+    setIsMenuOpen(false)
+    setIsProductsOpen(false)
+    setOpenCategoryId('')
+    closeWishlistMenu()
+  }, [closeWishlistMenu, location.pathname])
+
+  useEffect(() => {
+    if (!isNavOpen) return
+
+    const previousOverflow = document.body.style.overflow
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsNavOpen(false)
+      }
+    }
+
+    document.body.style.overflow = 'hidden'
+    document.addEventListener('keydown', handleKeyDown)
+    mobileNavCloseRef.current?.focus()
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isNavOpen])
+
   const initials = `${user.firstName[0] ?? ''}${user.lastName[0] ?? ''}`.toUpperCase()
 
   return (
@@ -557,10 +595,11 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
           <div className="sv-nav-actions">
             <button
               type="button"
-              className="sv-nav-toggle"
-              onClick={() => setIsNavOpen((v) => !v)}
+              className={`sv-nav-toggle${isNavOpen ? ' is-open' : ''}`}
+              onClick={toggleMobileNav}
               aria-expanded={isNavOpen}
-              aria-label="Öppna meny"
+              aria-controls="nav-drawer"
+              aria-label={isNavOpen ? 'Stäng meny' : 'Öppna meny'}
             >
               <span aria-hidden="true" />
               <span aria-hidden="true" />
@@ -633,7 +672,7 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
             </div>
 
             <Link
-              className="sv-icon-btn sv-icon-btn--rel"
+              className="sv-icon-btn sv-icon-btn--rel sv-notification-link"
               to="/notifications"
               aria-label={`Aviseringar${unreadCount > 0 ? `, ${unreadCount} olästa` : ''}`}
             >
@@ -644,6 +683,15 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
                 <span className="sv-badge sv-badge--red mono">{unreadCount}</span>
               )}
             </Link>
+
+            {isGuest && (
+              <Link className="sv-icon-btn sv-mobile-login-btn" to="/login" aria-label="Logga in">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="8" r="4"/>
+                  <path d="M4 21a8 8 0 0 1 16 0"/>
+                </svg>
+              </Link>
+            )}
 
             <Link className="sv-cart-btn" to="/cart" aria-label="Varukorg">
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -659,6 +707,7 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
                   className="sv-avatar"
                   onClick={() => {
                     closeWishlistMenu()
+                    setIsNavOpen(false)
                     setIsMenuOpen((v) => !v)
                   }}
                   aria-expanded={isMenuOpen}
@@ -881,33 +930,108 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
       </div>
 
       {/* Mobile drawer */}
-      <div id="nav-drawer" className={`sv-nav-drawer${isNavOpen ? ' open' : ''}`} role="dialog" aria-label="Navigation">
-        <Link to="/dashboard" onClick={() => setIsNavOpen(false)}>Produkter</Link>
-        {navCategories.map((category) => {
-          const childCategories = childCategoriesByParentId.get(category.id) ?? []
+      {isNavOpen && (
+        <button
+          type="button"
+          className="sv-nav-drawer-backdrop"
+          aria-label="Stäng meny"
+          onClick={() => setIsNavOpen(false)}
+        />
+      )}
 
-          return (
-            <div key={`mob-group-${category.id}`} className="sv-nav-drawer-group">
-              <Link to={getCategoryPath(category)} onClick={() => setIsNavOpen(false)}>
-                {category.name}
-              </Link>
-              {childCategories.map((childCategory) => (
-                <Link
-                  key={`mob-child-${childCategory.id}`}
-                  to={getCategoryPath(childCategory)}
-                  className="sv-nav-drawer-child"
-                  onClick={() => setIsNavOpen(false)}
-                >
-                  {childCategory.name}
-                </Link>
-              ))}
-            </div>
-          )
-        })}
-        <Link to="/erbjudanden" onClick={() => setIsNavOpen(false)}>Erbjudanden</Link>
-        {isAdmin && (
-          <Link to="/admin" onClick={() => setIsNavOpen(false)}>Admin</Link>
-        )}
+      <div
+        id="nav-drawer"
+        className={`sv-nav-drawer${isNavOpen ? ' open' : ''}`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="mobile-nav-title"
+      >
+        <button
+          ref={mobileNavCloseRef}
+          type="button"
+          className="sv-nav-drawer-close"
+          onClick={() => setIsNavOpen(false)}
+          aria-label="Stäng meny"
+        >
+          <span aria-hidden="true">&times;</span>
+        </button>
+
+        <div className="sv-nav-drawer-auth">
+          {isGuest ? (
+            <>
+              <Link to="/login" onClick={() => setIsNavOpen(false)}>Logga in</Link>
+              <Link to="/register" onClick={() => setIsNavOpen(false)}>Skapa konto</Link>
+            </>
+          ) : (
+            <>
+              <div className="sv-nav-drawer-user">
+                <span className="sv-avatar sv-avatar--drawer">{initials || 'U'}</span>
+                <div>
+                  <strong>{user.firstName} {user.lastName}</strong>
+                  <span>{user.email}</span>
+                </div>
+              </div>
+              <Link to="/account" onClick={() => setIsNavOpen(false)}>Kontoinställningar</Link>
+              <Link to="/orders" onClick={() => setIsNavOpen(false)}>Mina ordrar</Link>
+              <button
+                type="button"
+                className="sv-nav-drawer-logout"
+                onClick={() => { setIsNavOpen(false); onLogout() }}
+              >
+                Logga ut
+              </button>
+            </>
+          )}
+        </div>
+
+        <h2 id="mobile-nav-title" className="sv-nav-drawer-title">Huvudkategorier</h2>
+        <nav className="sv-nav-drawer-list" aria-label="Mobil navigation">
+          {dynamicProductDropdownItems.map((dropdownItem) => (
+            <Link
+              key={`mob-main-${dropdownItem.label}`}
+              to={dropdownItem.to}
+              className="sv-nav-drawer-item"
+              onClick={() => setIsNavOpen(false)}
+            >
+              <span className="sv-nav-drawer-icon" aria-hidden="true">
+                <ProductDropdownIcon name={dropdownItem.icon} />
+              </span>
+              <span>{dropdownItem.label}</span>
+              <svg className="sv-nav-drawer-arrow" viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </Link>
+          ))}
+          <Link to="/erbjudanden" className="sv-nav-drawer-item sv-nav-drawer-item--deal" onClick={() => setIsNavOpen(false)}>
+            <span className="sv-nav-drawer-icon" aria-hidden="true">%</span>
+            <span>Erbjudanden</span>
+            <svg className="sv-nav-drawer-arrow" viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </Link>
+          <Link to="/wishlist" className="sv-nav-drawer-item" onClick={() => setIsNavOpen(false)}>
+            <span className="sv-nav-drawer-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 20s-7-4.3-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.7-7 10-7 10Z"/>
+              </svg>
+            </span>
+            <span>Önskelista</span>
+            <svg className="sv-nav-drawer-arrow" viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </Link>
+          {isAdmin && (
+            <Link to="/admin" className="sv-nav-drawer-item" onClick={() => setIsNavOpen(false)}>
+              <span className="sv-nav-drawer-icon" aria-hidden="true">
+                <ProductDropdownIcon name="grid" />
+              </span>
+              <span>Admin</span>
+              <svg className="sv-nav-drawer-arrow" viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </Link>
+          )}
+        </nav>
       </div>
     </header>
   )
