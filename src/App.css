@@ -2133,10 +2133,11 @@
 }
 
 .product-detail-grid {
-  margin-top: 14px;
+  margin-top: 18px;
   display: grid;
-  grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.9fr);
-  gap: 12px;
+  grid-template-columns: minmax(320px, 0.95fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
 }
 
 .product-detail-page .hero-panel,
@@ -2147,21 +2148,161 @@
   background: rgba(255, 255, 255, 0.42);
 }
 
+.product-detail-media-panel {
+
+}
+
 .product-detail-image {
   width: 100%;
-  aspect-ratio: 16 / 10;
-  overflow: hidden;
-  border: 1px solid rgba(23, 24, 29, 0.12);
+  height: clamp(320px, 40vw, 520px);
+  max-width: 620px;
+  margin: 0 auto 32px auto;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 8px;
-  background: repeating-linear-gradient(135deg, rgba(23, 24, 29, 0.04) 0 8px, transparent 8px 16px), var(--bg-2);
-  margin-bottom: 16px;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .product-detail-image img {
-  width: 100%;
-  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
+  object-position: center;
   display: block;
+}
+
+.product-detail-info {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+  min-height: auto;
+}
+
+.product-detail-info .chip,
+.product-detail-info h2,
+.product-detail-info p {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.product-detail-info h2 {
+  margin-top: 0;
+  font-size: clamp(1.65rem, 3vw, 2.5rem);
+  line-height: 1.05;
+}
+
+.product-detail-info .price {
+  font-size: 1.45rem;
+}
+
+.product-detail-info .submit-btn {
+  justify-self: start;
+  min-width: min(100%, 190px);
+}
+
+.product-detail-meta-grid {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.45fr) minmax(0, 1fr);
+  gap: 10px;
+}
+
+.product-detail-meta-grid div {
+  min-width: 0;
+  border: 1px solid rgba(23, 24, 29, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.62);
+  padding: 12px;
+}
+
+.product-detail-meta-grid span {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--color-muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.product-detail-meta-grid strong {
+  display: block;
+  color: var(--color-ink);
+  font-size: 1.55rem;
+  line-height: 1.1;
+}
+
+.product-detail-id {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.78rem !important;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+/* Related products */
+.related-products {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(23, 24, 29, 0.1);
+}
+
+.related-products-heading {
+  margin-bottom: 16px;
+}
+
+.related-products-heading h2 {
+  margin: 8px 0 6px;
+  font-size: 1.35rem;
+  color: var(--ink);
+}
+
+.related-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 1100px) {
+  .related-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 720px) {
+  .product-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .product-detail-media-panel {
+    min-height: clamp(280px, 84vw, 420px);
+    padding: 14px;
+  }
+
+  .product-detail-image {
+    height: clamp(260px, 78vw, 390px);
+    max-height: 390px;
+  }
+
+  .related-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 420px) {
+  .product-detail-meta-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .product-detail-info .submit-btn {
+    width: 100%;
+  }
+
+  .related-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .product-detail-description {
@@ -5517,14 +5658,20 @@
 .sv-product-image {
   height: 200px;
   position: relative;
-  background: repeating-linear-gradient(135deg, rgba(23, 24, 29, 0.04) 0 8px, transparent 8px 16px), var(--bg-2);
   overflow: hidden;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .sv-product-image img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center;
+  padding: 10px;
+  box-sizing: border-box;
 }
 
 .sv-product-badges {
