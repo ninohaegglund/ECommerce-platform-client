@@ -258,6 +258,8 @@ function SiteFooter() {
                 id="footer-newsletter-email"
                 type="email"
                 placeholder="Email"
+                autoComplete="email"
+                inputMode="email"
                 value={newsletterEmail}
                 onChange={(event) => {
                   setNewsletterEmail(event.target.value)

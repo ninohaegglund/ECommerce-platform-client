@@ -6158,20 +6158,20 @@
 }
 
 .sv-footer-newsletter-form {
-  display: flex;
-  align-items: stretch;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
   width: 100%;
-  margin-top: 18px;
+  margin-top: 16px;
 }
 
 .sv-footer-newsletter-form input {
   min-width: 0;
-  flex: 1;
-  height: 44px;
+  height: 40px;
   border: 1px solid #3a3b43;
-  border-right: 0;
-  border-radius: 6px 0 0 6px;
-  background: rgba(255, 249, 239, 0.04);
+  border-radius: 8px;
+  background: rgba(255, 249, 239, 0.05);
   color: var(--bg);
   padding: 0 12px;
   font-size: 13px;
@@ -6188,12 +6188,12 @@
 }
 
 .sv-footer-newsletter-form button {
-  min-height: 44px;
+  min-height: 40px;
   border: 0;
-  border-radius: 0 8px 8px 0;
+  border-radius: 8px;
   background: var(--blue);
   color: #fff;
-  padding: 0 16px;
+  padding: 0 14px;
   font-size: 13px;
   font-weight: 800;
   cursor: pointer;
@@ -6664,17 +6664,30 @@
   }
   .sv-cookie-option { grid-template-columns: 1fr; }
   .sv-cookie-toggle { justify-self: start; }
-  .sv-footer-newsletter-form { flex-direction: column; gap: 8px; }
+  .sv-footer-newsletter-form {
+    grid-template-columns: minmax(0, 1fr) minmax(116px, auto);
+    gap: 8px;
+  }
   .sv-footer-newsletter-form input {
     width: 100%;
     border: 1px solid #3a3b43;
-    border-radius: 6px;
+    border-radius: 8px;
   }
   .sv-footer-newsletter-form button {
-    width: 100%;
+    width: auto;
     border-radius: 8px;
   }
   .sv-jobs-brand { font-size: 24px; margin-bottom: 32px; }
   .sv-jobs-section h1 { font-size: 44px; }
   .sv-jobs-block h2 { font-size: 27px; }
+}
+
+@media (max-width: 360px) {
+  .sv-footer-newsletter-form {
+    grid-template-columns: 1fr;
+  }
+
+  .sv-footer-newsletter-form button {
+    width: 100%;
+  }
 }
