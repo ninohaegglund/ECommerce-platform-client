@@ -3968,10 +3968,6 @@
   position: relative;
 }
 
-.sv-mobile-login-btn {
-  display: none;
-}
-
 .sv-badge {
   position: absolute;
   top: -4px;
@@ -6786,15 +6782,7 @@
     justify-self: end;
     gap: 4px;
   }
-  .sv-wishlist-menu,
-  .sv-notification-link {
-    display: none;
-  }
-  .sv-mobile-login-btn {
-    display: grid;
-  }
-  .sv-profile-menu,
-  .sv-mobile-login-btn {
+  .sv-profile-menu {
     order: 1;
   }
   .sv-cart-btn {

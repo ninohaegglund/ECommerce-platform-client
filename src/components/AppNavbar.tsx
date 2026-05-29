@@ -684,15 +684,6 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
               )}
             </Link>
 
-            {isGuest && (
-              <Link className="sv-icon-btn sv-mobile-login-btn" to="/login" aria-label="Logga in">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <circle cx="12" cy="8" r="4"/>
-                  <path d="M4 21a8 8 0 0 1 16 0"/>
-                </svg>
-              </Link>
-            )}
-
             <Link className="sv-cart-btn" to="/cart" aria-label="Varukorg">
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.2a2 2 0 0 0 2-1.5L20.5 8H6"/><circle cx="9.5" cy="20" r="1.2"/><circle cx="17.5" cy="20" r="1.2"/>
