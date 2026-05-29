@@ -4710,6 +4710,7 @@
 }
 
 .sv-nav-drawer {
+  --sv-drawer-action-height: 40px;
   position: fixed;
   top: clamp(16px, 3svh, 28px);
   bottom: clamp(16px, 3svh, 28px);
@@ -4755,10 +4756,10 @@
 
 .sv-nav-drawer-close {
   position: absolute;
-  top: 14px;
+  top: 20px;
   right: 16px;
-  width: 40px;
-  height: 40px;
+  width: var(--sv-drawer-action-height);
+  height: var(--sv-drawer-action-height);
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #fff;
@@ -4787,7 +4788,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 40px;
+  min-height: var(--sv-drawer-action-height);
   border: 1px solid var(--line-2);
   border-radius: 8px;
   background: #fff;
