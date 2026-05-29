@@ -4952,7 +4952,10 @@
 }
 
 .sv-nav-drawer-arrow {
+  width: 18px;
+  height: 18px;
   color: var(--ink-3);
+  display: block;
   justify-self: end;
 }
 
