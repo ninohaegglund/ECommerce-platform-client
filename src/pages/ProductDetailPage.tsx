@@ -134,6 +134,41 @@ function intersects<T>(left: Set<T>, right: Set<T>) {
   return false
 }
 
+function formatMoney(value: number, currency: string, maximumFractionDigits = 2) {
+  return new Intl.NumberFormat('sv-SE', {
+    style: 'currency',
+    currency,
+    maximumFractionDigits,
+  }).format(value)
+}
+
+function formatProductDate(value: string | undefined) {
+  if (!value) return '-'
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return '-'
+
+  return new Intl.DateTimeFormat('sv-SE', {
+    dateStyle: 'medium',
+  }).format(date)
+}
+
+function formatProductStatus(status: number | string | undefined) {
+  if (status === undefined || status === null || status === '') return 'Publicerad'
+  if (typeof status === 'string') return status
+
+  switch (status) {
+    case 0:
+      return 'Utkast'
+    case 1:
+      return 'Publicerad'
+    case 2:
+      return 'Arkiverad'
+    default:
+      return `Status ${status}`
+  }
+}
+
 function getRelatedProductScore(
   product: Product,
   currentProduct: Product,
@@ -329,11 +364,15 @@ function ProductDetailPage({ user, isAdmin, onLogout }: ProductDetailPageProps) 
       return '-'
     }
 
-    return new Intl.NumberFormat('sv-SE', {
-      style: 'currency',
-      currency: product.currency,
-      maximumFractionDigits: 2,
-    }).format(product.price)
+    return formatMoney(product.price, product.currency)
+  }, [product])
+
+  const formattedCompareAtPrice = useMemo(() => {
+    if (!product?.compareAtPrice || product.compareAtPrice <= product.price) {
+      return ''
+    }
+
+    return formatMoney(product.compareAtPrice, product.currency)
   }, [product])
 
   const fallbackImageUrl = useMemo(() => {
@@ -347,8 +386,28 @@ function ProductDetailPage({ user, isAdmin, onLogout }: ProductDetailPageProps) 
     product?.shortDescription.trim() ||
     'Ingen beskrivning tillg\u00e4nglig.'
 
+  const productShortDescription =
+    product?.shortDescription.trim() ||
+    product?.description.trim() ||
+    'Noggrant kontrollerad produkt fr\u00e5n Spelvalvets katalog.'
+
   const availableQuantity = stock?.quantityAvailable ?? product?.stockQuantity ?? 0
   const isOutOfStock = availableQuantity <= 0
+  const productProfile = product ? getProductProfile(product) : null
+  const productCategoryLabel =
+    product?.category?.name.trim() ||
+    productProfile?.label ||
+    'Kategori'
+  const productSku = product?.sku?.trim() || product?.id.slice(0, 12).toUpperCase() || '-'
+  const productStatusLabel = formatProductStatus(product?.status)
+  const createdAtLabel = formatProductDate(product?.createdAtUtc)
+  const updatedAtLabel = formatProductDate(product?.updatedAtUtc)
+  const imageCount = product?.images?.length ?? 0
+  const hasCompareAtPrice = Boolean(formattedCompareAtPrice)
+  const discountPercent =
+    product?.compareAtPrice && product.compareAtPrice > product.price
+      ? Math.round((1 - product.price / product.compareAtPrice) * 100)
+      : 0
 
   const wishlistItemsByProductId = useMemo(
     () => new Map((wishlist?.items ?? []).map((item) => [item.productId, item] as const)),
@@ -457,13 +516,9 @@ function ProductDetailPage({ user, isAdmin, onLogout }: ProductDetailPageProps) 
     <main className="store-page">
       <AppNavbar user={user} isAdmin={isAdmin} onLogout={onLogout} />
 
-      <section className="product-detail-page">
-        <div className="section-heading">
-          <div>
-            <p className="eyebrow">Produktdetaljer</p>
-            <h1>{product?.name ?? 'Laddar produkt'}</h1>
-          </div>
-          <Link className="ghost-btn" to="/dashboard">
+      <section className="product-detail-page" aria-labelledby={product ? 'product-detail-title' : undefined}>
+        <div className="product-detail-topline">
+          <Link className="product-detail-back-link" to="/dashboard">
             Tillbaka till produkter
           </Link>
         </div>
@@ -493,14 +548,36 @@ function ProductDetailPage({ user, isAdmin, onLogout }: ProductDetailPageProps) 
               </div>
 
               <article className="hero-panel product-detail-info">
-                <h2>{product.name}</h2>
-                <p className="product-detail-description">{productDescription}</p>
-                <p className="price">{formattedPrice}</p>
+                <div className="product-detail-kicker-row">
+                  <span className="product-detail-category-chip">{productCategoryLabel}</span>
+                  <span className={`product-detail-status-pill${isOutOfStock ? ' is-out' : ''}`}>
+                    {isOutOfStock ? 'Slut i lager' : 'I lager'}
+                  </span>
+                </div>
+
+                <h1 id="product-detail-title">{product.name}</h1>
+                <p className="product-detail-short">{productShortDescription}</p>
+
+                <div className="product-detail-price-row">
+                  <span className="price">{formattedPrice}</span>
+                  {hasCompareAtPrice && (
+                    <>
+                      <span className="product-detail-compare-price">{formattedCompareAtPrice}</span>
+                      {discountPercent > 0 && (
+                        <span className="product-detail-discount">-{discountPercent}%</span>
+                      )}
+                    </>
+                  )}
+                </div>
 
                 <div className="product-detail-meta-grid">
                   <div>
                     <span>{'Tillg\u00e4ngliga'}</span>
                     <strong>{availableQuantity}</strong>
+                  </div>
+                  <div>
+                    <span>SKU</span>
+                    <strong className="product-detail-id">{productSku}</strong>
                   </div>
                 </div>
 
@@ -518,7 +595,56 @@ function ProductDetailPage({ user, isAdmin, onLogout }: ProductDetailPageProps) 
                 >
                   {isOutOfStock ? 'Slut i lager' : isAdding ? 'L\u00e4gger till...' : 'L\u00e4gg i varukorgen'}
                 </button>
+
+                <p className="product-detail-updated">Senast uppdaterad: {updatedAtLabel}</p>
               </article>
+            </div>
+
+            <div className="product-detail-data-grid">
+              <article className="product-detail-copy-panel">
+                <p className="eyebrow">Beskrivning</p>
+                <h2>Produktinformation</h2>
+                <p className="product-detail-description">{productDescription}</p>
+              </article>
+
+              <aside className="product-detail-spec-panel">
+                <p className="eyebrow">Data</p>
+                <h2>Produktdata</h2>
+                <dl className="product-detail-spec-list">
+                  <div>
+                    <dt>Kategori</dt>
+                    <dd>{productCategoryLabel}</dd>
+                  </div>
+                  <div>
+                    <dt>Status</dt>
+                    <dd>{productStatusLabel}</dd>
+                  </div>
+                  <div>
+                    <dt>Produkt-ID</dt>
+                    <dd>{product.id}</dd>
+                  </div>
+                  <div>
+                    <dt>SKU</dt>
+                    <dd>{productSku}</dd>
+                  </div>
+                  <div>
+                    <dt>Skapad</dt>
+                    <dd>{createdAtLabel}</dd>
+                  </div>
+                  <div>
+                    <dt>Uppdaterad</dt>
+                    <dd>{updatedAtLabel}</dd>
+                  </div>
+                  <div>
+                    <dt>Bilder</dt>
+                    <dd>{imageCount}</dd>
+                  </div>
+                  <div>
+                    <dt>Valuta</dt>
+                    <dd>{product.currency}</dd>
+                  </div>
+                </dl>
+              </aside>
             </div>
 
             {relatedProducts.length > 0 && (

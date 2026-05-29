@@ -92,6 +92,7 @@ function ProductCard({
   const profile = getProductProfile(product)
   const fallbackImagePath = getProductImagePath(product, profile.tone)
   const resolvedImagePath = imageUrl?.trim() ? imageUrl : fallbackImagePath
+  const productSku = product.sku?.trim() || product.id.slice(0, 12).toUpperCase()
   const wishlistLabel = isWishlisted ? 'Ta bort från önskelista' : 'Lägg till i önskelista'
 
   const formattedPrice = new Intl.NumberFormat('sv-SE', {
@@ -145,7 +146,7 @@ function ProductCard({
             <path d="M12 20s-7-4.3-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.7-7 10-7 10Z"/>
           </svg>
         </button>
-        <div className="sv-product-sku">› {product.id.slice(0, 12).toUpperCase()}</div>
+        <div className="sv-product-sku">› {productSku}</div>
       </div>
 
       <div className="sv-product-body">
