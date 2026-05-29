@@ -606,83 +606,82 @@ function AppNavbar({ user, isAdmin, onLogout }: AppNavbarProps) {
               <span aria-hidden="true" />
             </button>
 
-            <div ref={wishlistRef} className="sv-wishlist-menu">
-              <button
-                type="button"
-                className="sv-icon-btn sv-icon-btn--rel"
-                aria-label="Önskelista"
-                aria-expanded={isWishlistOpen}
-                aria-haspopup="menu"
-                aria-controls="wishlist-menu"
-                onClick={toggleWishlistMenu}
-              >
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M12 20s-7-4.3-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.7-7 10-7 10Z"/>
-                </svg>
-                {isAuthenticated && wishlistCount > 0 && (
-                  <span className="sv-badge sv-badge--red mono">{wishlistCount}</span>
-                )}
-              </button>
-              {isWishlistOpen && (
-                <div id="wishlist-menu" className="sv-wishlist-dropdown" role="menu">
-                  <div className="sv-wishlist-header">
-                    <span className="mono">Önskelista</span>
-                    <strong>{isAuthenticated ? `${wishlistCount} sparade` : 'Logga in'}</strong>
-                  </div>
-                  {!isAuthenticated ? (
-                    <div className="sv-wishlist-empty">
-                      <p>Logga in för att se och spara favoriter.</p>
-                      <Link className="sv-wishlist-action" to="/login" onClick={closeWishlistMenu}>Logga in</Link>
-                    </div>
-                  ) : isWishlistLoading ? (
-                    <p className="sv-wishlist-empty">Laddar önskelistan...</p>
-                  ) : wishlistError ? (
-                    <p className="sv-wishlist-error">{wishlistError}</p>
-                  ) : wishlistItems.length === 0 ? (
-                    <p className="sv-wishlist-empty">Inga sparade produkter än.</p>
-                  ) : (
-                    <div className="sv-wishlist-list">
-                      {wishlistItems.slice(0, 5).map((item) => (
-                        <Link
-                          key={item.id}
-                          to={`/products/${item.productId}`}
-                          className="sv-wishlist-item"
-                          onClick={closeWishlistMenu}
-                        >
-                          <div className="sv-wishlist-item-info">
-                            <span className="sv-wishlist-item-name">{item.productName}</span>
-                            <span className="sv-wishlist-item-sku mono">{item.sku || item.productId}</span>
-                          </div>
-                          <span className="sv-wishlist-item-price mono">
-                            {new Intl.NumberFormat('sv-SE', {
-                              style: 'currency',
-                              currency: item.currency || 'SEK',
-                              maximumFractionDigits: 0,
-                            }).format(item.unitPrice)}
-                          </span>
-                        </Link>
-                      ))}
+            {isAuthenticated && (
+              <>
+                <div ref={wishlistRef} className="sv-wishlist-menu">
+                  <button
+                    type="button"
+                    className="sv-icon-btn sv-icon-btn--rel"
+                    aria-label="Önskelista"
+                    aria-expanded={isWishlistOpen}
+                    aria-haspopup="menu"
+                    aria-controls="wishlist-menu"
+                    onClick={toggleWishlistMenu}
+                  >
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M12 20s-7-4.3-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.7-7 10-7 10Z"/>
+                    </svg>
+                    {wishlistCount > 0 && (
+                      <span className="sv-badge sv-badge--red mono">{wishlistCount}</span>
+                    )}
+                  </button>
+                  {isWishlistOpen && (
+                    <div id="wishlist-menu" className="sv-wishlist-dropdown" role="menu">
+                      <div className="sv-wishlist-header">
+                        <span className="mono">Önskelista</span>
+                        <strong>{`${wishlistCount} sparade`}</strong>
+                      </div>
+                      {isWishlistLoading ? (
+                        <p className="sv-wishlist-empty">Laddar önskelistan...</p>
+                      ) : wishlistError ? (
+                        <p className="sv-wishlist-error">{wishlistError}</p>
+                      ) : wishlistItems.length === 0 ? (
+                        <p className="sv-wishlist-empty">Inga sparade produkter än.</p>
+                      ) : (
+                        <div className="sv-wishlist-list">
+                          {wishlistItems.slice(0, 5).map((item) => (
+                            <Link
+                              key={item.id}
+                              to={`/products/${item.productId}`}
+                              className="sv-wishlist-item"
+                              onClick={closeWishlistMenu}
+                            >
+                              <div className="sv-wishlist-item-info">
+                                <span className="sv-wishlist-item-name">{item.productName}</span>
+                                <span className="sv-wishlist-item-sku mono">{item.sku || item.productId}</span>
+                              </div>
+                              <span className="sv-wishlist-item-price mono">
+                                {new Intl.NumberFormat('sv-SE', {
+                                  style: 'currency',
+                                  currency: item.currency || 'SEK',
+                                  maximumFractionDigits: 0,
+                                }).format(item.unitPrice)}
+                              </span>
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                      <div className="sv-wishlist-footer">
+                        <Link to="/wishlist" onClick={closeWishlistMenu}>Visa önskelista</Link>
+                      </div>
                     </div>
                   )}
-                  <div className="sv-wishlist-footer">
-                    <Link to="/wishlist" onClick={closeWishlistMenu}>Visa önskelista</Link>
-                  </div>
                 </div>
-              )}
-            </div>
 
-            <Link
-              className="sv-icon-btn sv-icon-btn--rel sv-notification-link"
-              to="/notifications"
-              aria-label={`Aviseringar${unreadCount > 0 ? `, ${unreadCount} olästa` : ''}`}
-            >
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2H4.5L6 16Z"/><path d="M10 20a2 2 0 0 0 4 0"/>
-              </svg>
-              {unreadCount > 0 && (
-                <span className="sv-badge sv-badge--red mono">{unreadCount}</span>
-              )}
-            </Link>
+                <Link
+                  className="sv-icon-btn sv-icon-btn--rel sv-notification-link"
+                  to="/notifications"
+                  aria-label={`Aviseringar${unreadCount > 0 ? `, ${unreadCount} olästa` : ''}`}
+                >
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2H4.5L6 16Z"/><path d="M10 20a2 2 0 0 0 4 0"/>
+                  </svg>
+                  {unreadCount > 0 && (
+                    <span className="sv-badge sv-badge--red mono">{unreadCount}</span>
+                  )}
+                </Link>
+              </>
+            )}
 
             <Link className="sv-cart-btn" to="/cart" aria-label="Varukorg">
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
