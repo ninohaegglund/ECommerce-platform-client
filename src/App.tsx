@@ -26,9 +26,11 @@ import type {
   RegisterPayload,
 } from './types/auth'
 import { clearStoredAuth, getStoredAuth, setStoredAuth } from './utils/authStorage'
+import { fetchWithFallback } from './services/apiClient'
 
 const identityApiUrl =
   import.meta.env.VITE_IDENTITY_API_URL ?? 'https://localhost:5001/api/auth'
+const identityApiFallbackUrl = 'https://localhost:5001/api/auth'
 const WELCOME_NOTIFICATION_FLAG_KEY = 'pendingWelcomeNotificationUserId'
 const GUEST_SESSION_KEY = 'guestModeEnabled'
 
@@ -86,13 +88,17 @@ function App() {
     const endpoint = `${identityApiUrl}/${mode === 'login' ? 'login' : 'register'}`
 
     try {
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await fetchWithFallback(
+        endpoint,
+        `${identityApiFallbackUrl}/${mode === 'login' ? 'login' : 'register'}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
         },
-        body: JSON.stringify(payload),
-      })
+      )
 
       const data = (await response.json()) as AuthResponse | { message?: string }
 

@@ -1,4 +1,4 @@
-import { getAuthToken, getErrorMessage } from './apiClient.ts'
+import { getAuthToken, request } from './apiClient.ts'
 
 const NEWSLETTER_API_BASE_URL =
   import.meta.env.VITE_NEWSLETTER_API_URL ?? 'http://localhost:5205'
@@ -75,33 +75,15 @@ async function newsletterRequest<T>(
     headers.set('Authorization', `Bearer ${token}`)
   }
 
-  const response = await fetch(`${getNewsletterApiBaseUrl()}${path}`, {
-    ...init,
-    headers,
-  })
-
-  if (!response.ok) {
-    let payload: unknown = null
-
-    try {
-      payload = await response.json()
-    } catch {
-      payload = null
-    }
-
-    throw new Error(getErrorMessage(payload, `Request failed (${response.status})`))
-  }
-
-  if (response.status === 204) {
-    return undefined as T
-  }
-
-  const text = await response.text()
-  if (!text) {
-    return undefined as T
-  }
-
-  return JSON.parse(text) as T
+  return request<T>(
+    path,
+    {
+      ...init,
+      headers,
+    },
+    getNewsletterApiBaseUrl(),
+    'http://localhost:5205',
+  )
 }
 
 export async function subscribeToNewsletter(

@@ -25,7 +25,7 @@ const ORDER_API_BASE_URL = import.meta.env.VITE_ORDER_API_URL ?? 'https://localh
 const PAYMENT_API_BASE_URL = import.meta.env.VITE_PAYMENT_API_URL ?? 'https://localhost:7082'
 
 export async function getCart(): Promise<Cart> {
-  return request<Cart>('/api/cart', { method: 'GET' }, ORDER_API_BASE_URL)
+  return request<Cart>('/api/cart', { method: 'GET' }, ORDER_API_BASE_URL, 'https://localhost:7043')
 }
 
 export async function addCartItem(payload: AddCartItemRequest): Promise<Cart | void> {
@@ -36,6 +36,7 @@ export async function addCartItem(payload: AddCartItemRequest): Promise<Cart | v
       body: JSON.stringify(payload),
     },
     ORDER_API_BASE_URL,
+    'https://localhost:7043',
   )
 }
 
@@ -50,6 +51,7 @@ export async function updateCartItem(
       body: JSON.stringify(payload),
     },
     ORDER_API_BASE_URL,
+    'https://localhost:7043',
   )
 }
 
@@ -60,6 +62,7 @@ export async function removeCartItem(itemId: string): Promise<void> {
       method: 'DELETE',
     },
     ORDER_API_BASE_URL,
+    'https://localhost:7043',
   )
 }
 
@@ -71,6 +74,7 @@ export async function checkoutCart(payload: CheckoutRequest): Promise<CheckoutRe
       body: JSON.stringify(payload),
     },
     ORDER_API_BASE_URL,
+    'https://localhost:7043',
   )
 }
 
@@ -81,6 +85,7 @@ export async function getOrders(userId: string): Promise<OrderSummary[]> {
       method: 'GET',
     },
     ORDER_API_BASE_URL,
+    'https://localhost:7043',
   )
 }
 
@@ -91,6 +96,7 @@ export async function getAllOrders(): Promise<OrderSummary[]> {
       method: 'GET',
     },
     ORDER_API_BASE_URL,
+    'https://localhost:7043',
   )
 }
 
@@ -101,6 +107,7 @@ export async function getOrderById(id: string): Promise<OrderDetails> {
       method: 'GET',
     },
     ORDER_API_BASE_URL,
+    'https://localhost:7043',
   )
 }
 
@@ -112,6 +119,7 @@ export async function updateOrderStatus(orderId: string, status: number): Promis
       body: JSON.stringify({ status }),
     },
     ORDER_API_BASE_URL,
+    'https://localhost:7043',
   )
 }
 
@@ -127,6 +135,7 @@ export async function updateOrderPayment(
         body: JSON.stringify(payload),
       },
       ORDER_API_BASE_URL,
+      'https://localhost:7043',
     )
   } catch (err) {
     const message = err instanceof Error ? err.message.toLowerCase() : ''
@@ -163,6 +172,7 @@ export async function createPayment(
       body: JSON.stringify(payload),
     },
     PAYMENT_API_BASE_URL,
+    'https://localhost:7082',
   )
 }
 
@@ -177,6 +187,7 @@ export async function processPayment(
       body: JSON.stringify(payload),
     },
     PAYMENT_API_BASE_URL,
+    'https://localhost:7082',
   )
 }
 
@@ -189,6 +200,7 @@ export async function createStripePaymentIntent(
       method: 'POST',
     },
     PAYMENT_API_BASE_URL,
+    'https://localhost:7082',
   )
 }
 
@@ -202,5 +214,6 @@ export async function verifyStripeCheckoutSession(
       body: JSON.stringify(payload),
     },
     PAYMENT_API_BASE_URL,
+    'https://localhost:7082',
   )
 }

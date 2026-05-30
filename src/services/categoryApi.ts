@@ -1,4 +1,5 @@
 import type { Category } from '../types/category'
+import { request } from './apiClient'
 import { slugifyCategoryName } from '../utils/category'
 
 const CATALOG_API_BASE_URL =
@@ -31,15 +32,12 @@ export function mapCatalogCategory(item: CatalogCategoryResponse): Category {
 }
 
 export async function getCatalogCategories(): Promise<Category[]> {
-  const response = await fetch(`${CATALOG_API_BASE_URL}/api/Categories`, {
-    method: 'GET',
-  })
-
-  if (!response.ok) {
-    throw new Error(`Failed to load categories (${response.status})`)
-  }
-
-  const payload = (await response.json()) as CatalogCategoryResponse[]
+  const payload = await request<CatalogCategoryResponse[]>(
+    '/api/Categories',
+    { method: 'GET' },
+    CATALOG_API_BASE_URL,
+    'https://localhost:7019',
+  )
 
   return payload.map(mapCatalogCategory).filter((category) => category.isActive)
 }

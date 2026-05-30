@@ -37,6 +37,7 @@ export async function getUserNotifications(userId: string): Promise<Notification
     `/api/notifications/user/${encodeURIComponent(userId)}`,
     { method: 'GET' },
     NOTIFICATION_API_BASE_URL,
+    'https://localhost:7117',
   )
 
   return response.map(normalizeNotification)

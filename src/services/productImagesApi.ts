@@ -28,20 +28,17 @@ export async function createProductImage(
       body: JSON.stringify(payload),
     },
     CATALOG_API_BASE_URL,
+    'https://localhost:7019',
   )
 }
 
 export async function getProductImages(productId: string): Promise<ProductImage[]> {
-  const response = await fetch(
-    `${CATALOG_API_BASE_URL}/api/Products/${encodeURIComponent(productId)}/images`,
+  return apiRequest<ProductImage[]>(
+    `/api/Products/${encodeURIComponent(productId)}/images`,
     {
       method: 'GET',
     },
+    CATALOG_API_BASE_URL,
+    'https://localhost:7019',
   )
-
-  if (!response.ok) {
-    throw new Error(`Failed to load product images (${response.status})`)
-  }
-
-  return (await response.json()) as ProductImage[]
 }
