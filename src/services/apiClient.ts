@@ -1,5 +1,42 @@
 import { getStoredAuth } from '../utils/authStorage'
 
+const DEFAULT_ORDER_API_BASE_URL = 'https://localhost:7043'
+
+function normalizeBaseUrl(baseUrl: string): string {
+  return baseUrl.trim().replace(/\/+$/, '')
+}
+
+function isRetryableFetchError(error: unknown): boolean {
+  return error instanceof TypeError
+}
+
+export async function fetchWithFallback(
+  primaryUrl: string,
+  fallbackUrl: string | undefined,
+  init: RequestInit,
+): Promise<Response> {
+  try {
+    const response = await fetch(primaryUrl, init)
+
+    if (
+      !response.ok &&
+      fallbackUrl &&
+      fallbackUrl !== primaryUrl &&
+      response.status >= 500
+    ) {
+      return fetch(fallbackUrl, init)
+    }
+
+    return response
+  } catch (error) {
+    if (fallbackUrl && fallbackUrl !== primaryUrl && isRetryableFetchError(error)) {
+      return fetch(fallbackUrl, init)
+    }
+
+    throw error
+  }
+}
+
 export function getAuthToken(): string {
   return getStoredAuth().token || localStorage.getItem('authToken') || ''
 }
@@ -22,9 +59,13 @@ export async function request<T>(
   path: string,
   init?: RequestInit,
   baseUrl?: string,
+  fallbackBaseUrl?: string,
 ): Promise<T> {
   const token = getAuthToken()
-  const resolvedBaseUrl = baseUrl ?? 'https://localhost:7043'
+  const resolvedBaseUrl = normalizeBaseUrl(baseUrl ?? DEFAULT_ORDER_API_BASE_URL)
+  const resolvedFallbackBaseUrl = normalizeBaseUrl(
+    fallbackBaseUrl ?? resolvedBaseUrl,
+  )
   const headers = new Headers(init?.headers)
   headers.set('Content-Type', 'application/json')
 
@@ -32,10 +73,14 @@ export async function request<T>(
     headers.set('Authorization', `Bearer ${token}`)
   }
 
-  const response = await fetch(`${resolvedBaseUrl}${path}`, {
-    ...init,
-    headers,
-  })
+  const response = await fetchWithFallback(
+    `${resolvedBaseUrl}${path}`,
+    `${resolvedFallbackBaseUrl}${path}`,
+    {
+      ...init,
+      headers,
+    },
+  )
 
   if (!response.ok) {
     let payload: unknown = null
@@ -66,9 +111,13 @@ export async function requestMultipart<T>(
   formData: FormData,
   init?: Omit<RequestInit, 'body'>,
   baseUrl?: string,
+  fallbackBaseUrl?: string,
 ): Promise<T> {
   const token = getAuthToken()
-  const resolvedBaseUrl = baseUrl ?? 'https://localhost:7043'
+  const resolvedBaseUrl = normalizeBaseUrl(baseUrl ?? DEFAULT_ORDER_API_BASE_URL)
+  const resolvedFallbackBaseUrl = normalizeBaseUrl(
+    fallbackBaseUrl ?? resolvedBaseUrl,
+  )
   const headers = new Headers(init?.headers)
 
   if (token) {
@@ -76,12 +125,16 @@ export async function requestMultipart<T>(
   }
 
   // Don't set Content-Type for multipart - let the browser set it with boundary
-  const response = await fetch(`${resolvedBaseUrl}${path}`, {
-    ...init,
-    method: 'POST',
-    body: formData,
-    headers,
-  })
+  const response = await fetchWithFallback(
+    `${resolvedBaseUrl}${path}`,
+    `${resolvedFallbackBaseUrl}${path}`,
+    {
+      ...init,
+      method: 'POST',
+      body: formData,
+      headers,
+    },
+  )
 
   if (!response.ok) {
     let payload: unknown = null

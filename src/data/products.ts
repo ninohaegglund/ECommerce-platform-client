@@ -9,7 +9,12 @@ export type Product = {
   shortDescription: string
   description: string
   price: number
+  compareAtPrice?: number | null
   currency: string
+  sku?: string
   stockQuantity: number
+  status?: number | string
+  createdAtUtc?: string
+  updatedAtUtc?: string
   images?: ProductImage[]
 }

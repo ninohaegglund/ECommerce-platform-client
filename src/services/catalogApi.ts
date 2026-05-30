@@ -14,8 +14,18 @@ type CatalogProductResponse = {
   shortDescription?: string
   description?: string
   price: number
+  compareAtPrice?: number | null
+  CompareAtPrice?: number | null
   currency?: string
+  sku?: string
+  Sku?: string
   stockQuantity?: number
+  status?: number | string
+  Status?: number | string
+  createdAtUtc?: string
+  CreatedAtUtc?: string
+  updatedAtUtc?: string
+  UpdatedAtUtc?: string
   images?: ProductImage[]
 }
 
@@ -51,39 +61,39 @@ function mapCatalogProduct(item: CatalogProductResponse): Product {
     shortDescription: item.shortDescription ?? '',
     description: item.description ?? '',
     price: item.price,
+    compareAtPrice: item.compareAtPrice ?? item.CompareAtPrice ?? null,
     currency: item.currency ?? 'SEK',
+    sku: item.sku ?? item.Sku ?? '',
     stockQuantity: item.stockQuantity ?? 0,
+    status: item.status ?? item.Status,
+    createdAtUtc: item.createdAtUtc ?? item.CreatedAtUtc,
+    updatedAtUtc: item.updatedAtUtc ?? item.UpdatedAtUtc,
     images: item.images ?? [],
   }
 }
 
 export async function getCatalogProducts(): Promise<Product[]> {
-  const response = await fetch(`${CATALOG_API_BASE_URL}/api/products`, {
-    method: 'GET',
-  })
-
-  if (!response.ok) {
-    throw new Error(`Failed to load products (${response.status})`)
-  }
-
-  const payload = (await response.json()) as CatalogProductResponse[]
+  const payload = await apiRequest<CatalogProductResponse[]>(
+    '/api/products',
+    { method: 'GET' },
+    CATALOG_API_BASE_URL,
+    'https://localhost:7019',
+  )
 
   return payload.map(mapCatalogProduct)
 }
 
 export async function getCatalogProduct(productId: string): Promise<Product> {
-  const response = await fetch(
-    `${CATALOG_API_BASE_URL}/api/products/${encodeURIComponent(productId)}`,
+  const payload = await apiRequest<CatalogProductResponse>(
+    `/api/products/${encodeURIComponent(productId)}`,
     {
       method: 'GET',
     },
+    CATALOG_API_BASE_URL,
+    'https://localhost:7019',
   )
 
-  if (!response.ok) {
-    throw new Error(`Failed to load product (${response.status})`)
-  }
-
-  return mapCatalogProduct((await response.json()) as CatalogProductResponse)
+  return mapCatalogProduct(payload)
 }
 
 export async function createCatalogProduct(request: CreateCatalogProductRequest): Promise<Product> {
@@ -95,6 +105,7 @@ export async function createCatalogProduct(request: CreateCatalogProductRequest)
         body: JSON.stringify(request),
       },
       CATALOG_API_BASE_URL,
+      'https://localhost:7019',
     ),
   )
 }

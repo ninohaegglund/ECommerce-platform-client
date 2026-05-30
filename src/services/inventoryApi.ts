@@ -34,6 +34,7 @@ export async function getInventoryStock(productId: string): Promise<InventorySto
     `/api/inventory/${encodeURIComponent(productId)}`,
     { method: 'GET' },
     INVENTORY_API_BASE_URL,
+    'https://localhost:7078',
   )
 
   return normalizeStock(productId, payload)
@@ -49,6 +50,7 @@ export async function setInventoryStock(
       body: JSON.stringify(payload),
     },
     INVENTORY_API_BASE_URL,
+    'https://localhost:7078',
   )
 
   return normalizeStock(payload.productId, response)
@@ -64,6 +66,7 @@ export async function reserveInventory(
       body: JSON.stringify(payload),
     },
     INVENTORY_API_BASE_URL,
+    'https://localhost:7078',
   )
 }
 
@@ -72,6 +75,7 @@ export async function confirmInventoryReservation(reservationId: string): Promis
     `/api/inventory/confirm/${encodeURIComponent(reservationId)}`,
     { method: 'POST' },
     INVENTORY_API_BASE_URL,
+    'https://localhost:7078',
   )
 }
 
@@ -80,5 +84,6 @@ export async function releaseInventoryReservation(reservationId: string): Promis
     `/api/inventory/release/${encodeURIComponent(reservationId)}`,
     { method: 'POST' },
     INVENTORY_API_BASE_URL,
+    'https://localhost:7078',
   )
 }
