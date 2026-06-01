@@ -109,3 +109,17 @@ export async function createCatalogProduct(request: CreateCatalogProductRequest)
     ),
   )
 }
+
+export async function deleteCatalogProduct(productId: string): Promise<boolean> {
+  try {
+    await apiRequest<void>(
+      `/api/products/${encodeURIComponent(productId)}`,
+      { method: 'DELETE' },
+      CATALOG_API_BASE_URL,
+      'https://localhost:7019',
+    )
+    return true
+  } catch {
+    return false
+  }
+}

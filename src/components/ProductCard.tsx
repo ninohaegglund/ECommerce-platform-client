@@ -10,6 +10,8 @@ type ProductCardProps = {
   isWishlistLoading: boolean
   onToggleWishlist: (product: Product) => void | Promise<void>
   imageUrl?: string
+  isAdmin?: boolean
+  onDelete?: (productId: string) => void | Promise<void>
 }
 
 type ProductProfile = {
@@ -88,6 +90,8 @@ function ProductCard({
   isWishlistLoading,
   onToggleWishlist,
   imageUrl,
+  isAdmin,
+  onDelete,
 }: ProductCardProps) {
   const profile = getProductProfile(product)
   const fallbackImagePath = getProductImagePath(product, profile.tone)
@@ -146,6 +150,26 @@ function ProductCard({
             <path d="M12 20s-7-4.3-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.7-7 10-7 10Z"/>
           </svg>
         </button>
+        {isAdmin && (
+          <button
+            type="button"
+            className="sv-product-delete"
+            aria-label={`Delete ${product.name}`}
+            onClick={(event) => {
+              event.preventDefault()
+              event.stopPropagation()
+              if (window.confirm(`Delete product \"${product.name}\"? This cannot be undone.`)) {
+                void onDelete?.(product.id)
+              }
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <polyline points="3 6 5 6 21 6" />
+              <path d="M19 6 18.2 19.3A2 2 0 0 1 16.2 21H7.8a2 2 0 0 1-1.99-1.7L4 6" />
+              <path d="M10 11v6M14 11v6" />
+            </svg>
+          </button>
+        )}
         <div className="sv-product-sku">› {productSku}</div>
       </div>
 

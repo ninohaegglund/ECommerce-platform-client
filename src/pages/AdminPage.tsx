@@ -5,6 +5,7 @@ import ProductImageUpload from '../components/ProductImageUpload'
 import type { Product } from '../data/products'
 import { getCatalogCategories } from '../services/categoryApi'
 import { createCatalogProduct, getCatalogProducts } from '../services/catalogApi'
+import { deleteCatalogProduct } from '../services/catalogApi'
 import { getAllOrders, getOrderById } from '../services/cartApi'
 import { getInventoryStock, setInventoryStock } from '../services/inventoryApi'
 import {
@@ -123,6 +124,8 @@ function AdminPage({ user, onLogout }: AdminPageProps) {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [orders, setOrders] = useState<OrderSummary[]>([])
+  const [ordersPage, setOrdersPage] = useState(1)
+  const [ordersPerPage, setOrdersPerPage] = useState(5)
   const [selectedOrder, setSelectedOrder] = useState<OrderDetails | null>(null)
   const [isLoadingOrders, setIsLoadingOrders] = useState(true)
   const [ordersError, setOrdersError] = useState('')
@@ -180,6 +183,15 @@ function AdminPage({ user, onLogout }: AdminPageProps) {
       setIsLoadingOrders(false)
     }
   }, [])
+
+  const totalOrderPages = Math.max(1, Math.ceil(orders.length / ordersPerPage))
+  const paginatedOrders = orders.slice((ordersPage - 1) * ordersPerPage, ordersPage * ordersPerPage)
+
+  useEffect(() => {
+    // ensure current page is within bounds when orders or page size changes
+    if (ordersPage > totalOrderPages) setOrdersPage(totalOrderPages)
+    if (ordersPage < 1) setOrdersPage(1)
+  }, [ordersPage, totalOrderPages])
 
   const loadNewsletterSubscribers = useCallback(async () => {
     setIsLoadingSubscribers(true)
@@ -446,6 +458,31 @@ function AdminPage({ user, onLogout }: AdminPageProps) {
       setSuccess('Stock saved successfully.')
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Could not save stock.'
+      setError(message)
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleDeleteSelectedProduct = async () => {
+    if (!selectedProductId) {
+      setError('Choose a product first.')
+      return
+    }
+
+    if (!window.confirm('Delete the selected product? This cannot be undone.')) return
+
+    setIsSaving(true)
+    setError('')
+    setSuccess('')
+
+    try {
+      const ok = await deleteCatalogProduct(selectedProductId)
+      if (!ok) throw new Error('Could not delete product.')
+      await loadProducts()
+      setSuccess('Product deleted successfully.')
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Could not delete product.'
       setError(message)
     } finally {
       setIsSaving(false)
@@ -869,7 +906,7 @@ function AdminPage({ user, onLogout }: AdminPageProps) {
                 <span>Total</span>
                 <span>Items</span>
               </div>
-              {orders.map((order) => (
+              {paginatedOrders.map((order) => (
                 <details key={order.id} className="admin-order-card">
                   <summary className="admin-order-summary">
                     <div className="admin-order-main">
@@ -900,6 +937,44 @@ function AdminPage({ user, onLogout }: AdminPageProps) {
                   </div>
                 </details>
               ))}
+              <div className="admin-orders-pagination">
+                <div className="admin-orders-pagination-info">
+                  {`Showing ${(ordersPage - 1) * ordersPerPage + 1} - ${Math.min(
+                    ordersPage * ordersPerPage,
+                    orders.length,
+                  )} of ${orders.length}`}
+                </div>
+                <div className="admin-orders-pagination-controls">
+                  <label>
+                    Per page
+                    <select
+                      value={ordersPerPage}
+                      onChange={(e) => { setOrdersPerPage(Number(e.target.value)); setOrdersPage(1) }}
+                    >
+                      <option value={5}>5</option>
+                      <option value={10}>10</option>
+                      <option value={20}>20</option>
+                      <option value={50}>50</option>
+                    </select>
+                  </label>
+                  <button
+                    type="button"
+                    className="ghost-btn"
+                    onClick={() => setOrdersPage((p) => Math.max(1, p - 1))}
+                    disabled={ordersPage <= 1}
+                  >
+                    Prev
+                  </button>
+                  <button
+                    type="button"
+                    className="ghost-btn"
+                    onClick={() => setOrdersPage((p) => Math.min(totalOrderPages, p + 1))}
+                    disabled={ordersPage >= totalOrderPages}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -1113,6 +1188,15 @@ function AdminPage({ user, onLogout }: AdminPageProps) {
                 disabled={isSaving}
               >
                 {isSaving ? 'Saving stock...' : 'Save stock'}
+              </button>
+              <button
+                type="button"
+                className="ghost-btn"
+                onClick={() => void handleDeleteSelectedProduct()}
+                disabled={isSaving || !selectedProductId}
+                style={{ marginLeft: 8 }}
+              >
+                Delete product
               </button>
             </div>
           )}
