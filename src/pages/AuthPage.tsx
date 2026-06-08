@@ -2,7 +2,12 @@ import { useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { subscribeToNewsletter } from '../services/newsletterApi'
-import type { AuthMode, LoginPayload, RegisterPayload } from '../types/auth'
+import type {
+  AuthMode,
+  AuthSubmitResult,
+  LoginPayload,
+  RegisterPayload,
+} from '../types/auth'
 
 type AuthPageProps = {
   mode: AuthMode
@@ -12,14 +17,24 @@ type AuthPageProps = {
     mode: AuthMode,
     payload: LoginPayload | RegisterPayload,
     rememberMe: boolean,
-  ) => Promise<{ ok: boolean; message: string }>
+  ) => Promise<AuthSubmitResult>
+  onResendVerification?: (email: string) => Promise<AuthSubmitResult>
 }
 
-function AuthPage({ mode, isLoading, onContinueAsGuest, onSubmit }: AuthPageProps) {
+function AuthPage({
+  mode,
+  isLoading,
+  onContinueAsGuest,
+  onSubmit,
+  onResendVerification,
+}: AuthPageProps) {
   const navigate = useNavigate()
 
   const [errorMessage, setErrorMessage] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
+  const [resendMessage, setResendMessage] = useState('')
+  const [canResendVerification, setCanResendVerification] = useState(false)
+  const [isResendingVerification, setIsResendingVerification] = useState(false)
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -41,17 +56,21 @@ function AuthPage({ mode, isLoading, onContinueAsGuest, onSubmit }: AuthPageProp
     event.preventDefault()
     setErrorMessage('')
     setSuccessMessage('')
+    setResendMessage('')
+    setCanResendVerification(false)
+
+    const trimmedEmail = email.trim()
 
     const payload = isRegister
       ? {
-          firstName,
-          lastName,
-          email,
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          email: trimmedEmail,
           password,
           confirmPassword,
         }
       : {
-          email,
+          email: trimmedEmail,
           password,
         }
 
@@ -59,6 +78,7 @@ function AuthPage({ mode, isLoading, onContinueAsGuest, onSubmit }: AuthPageProp
 
     if (!result.ok) {
       setErrorMessage(result.message)
+      setCanResendVerification(Boolean(result.isUnverifiedEmail))
       return
     }
 
@@ -73,7 +93,46 @@ function AuthPage({ mode, isLoading, onContinueAsGuest, onSubmit }: AuthPageProp
     }
 
     setSuccessMessage(result.message)
+
+    if (isRegister) {
+      navigate(
+        `/check-email?email=${encodeURIComponent(result.email ?? trimmedEmail)}`,
+        {
+          replace: true,
+          state: { message: result.message },
+        },
+      )
+      return
+    }
+
     navigate('/dashboard', { replace: true })
+  }
+
+  const handleResendVerification = async () => {
+    if (!onResendVerification) {
+      return
+    }
+
+    const trimmedEmail = email.trim()
+    if (!trimmedEmail) {
+      setErrorMessage('Fyll i din email-adress först.')
+      return
+    }
+
+    setIsResendingVerification(true)
+    setErrorMessage('')
+    setResendMessage('')
+
+    try {
+      const result = await onResendVerification(trimmedEmail)
+      if (result.ok) {
+        setResendMessage(result.message)
+      } else {
+        setErrorMessage(result.message)
+      }
+    } finally {
+      setIsResendingVerification(false)
+    }
   }
 
   return (
@@ -163,15 +222,20 @@ function AuthPage({ mode, isLoading, onContinueAsGuest, onSubmit }: AuthPageProp
           )}
 
           {!isRegister && (
-            <label className="remember-row">
-              <input
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                className="remember-check"
-              />
-              Kom ihåg mig  
-            </label>
+            <div className="auth-form-footer">
+              <label className="remember-row">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="remember-check"
+                />
+                Kom ihåg mig
+              </label>
+              <Link className="auth-inline-link" to="/forgot-password">
+                Glömt lösenord?
+              </Link>
+            </div>
           )}
 
           <button className="submit-btn" type="submit" disabled={isLoading}>
@@ -195,6 +259,17 @@ function AuthPage({ mode, isLoading, onContinueAsGuest, onSubmit }: AuthPageProp
         </form>
 
         {errorMessage && <p className="feedback error">{errorMessage}</p>}
+        {canResendVerification && onResendVerification && (
+          <button
+            className="guest-btn auth-resend-btn"
+            type="button"
+            onClick={handleResendVerification}
+            disabled={isResendingVerification || isLoading}
+          >
+            {isResendingVerification ? 'Skickar...' : 'Skicka verifieringsmail igen'}
+          </button>
+        )}
+        {resendMessage && <p className="feedback success">{resendMessage}</p>}
         {successMessage && <p className="feedback success">{successMessage}</p>}
 
       </section>

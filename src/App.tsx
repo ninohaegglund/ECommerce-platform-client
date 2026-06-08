@@ -18,21 +18,25 @@ import OrdersPage from './pages/OrdersPage'
 import ProductDetailPage from './pages/ProductDetailPage'
 import WishlistPage from './pages/WishlistPage'
 import SimplePage from './pages/SimplePage'
+import CheckEmailPage from './pages/CheckEmailPage'
 import type {
   AuthUser,
   AuthMode,
-  AuthResponse,
+  AuthSubmitResult,
   LoginPayload,
   RegisterPayload,
 } from './types/auth'
 import { clearStoredAuth, getStoredAuth, setStoredAuth } from './utils/authStorage'
-import { fetchWithFallback } from './services/apiClient'
+import {
+  login,
+  register,
+  resendEmailVerification,
+} from './services/authApi'
 
-const identityApiUrl =
-  import.meta.env.VITE_IDENTITY_API_URL ?? 'https://localhost:5001/api/auth'
-const identityApiFallbackUrl = 'https://localhost:5001/api/auth'
-const WELCOME_NOTIFICATION_FLAG_KEY = 'pendingWelcomeNotificationUserId'
 const GUEST_SESSION_KEY = 'guestModeEnabled'
+const UNVERIFIED_EMAIL_BACKEND_MESSAGE = 'Email address has not been verified.'
+const RESEND_VERIFICATION_CONFIRMATION =
+  'Om kontot finns och inte är verifierat har ett nytt mail skickats.'
 
 const GUEST_USER: AuthUser = {
   id: 'guest',
@@ -82,40 +86,23 @@ function App() {
     mode: AuthMode,
     payload: LoginPayload | RegisterPayload,
     rememberMe: boolean,
-  ): Promise<{ ok: boolean; message: string }> => {
+  ): Promise<AuthSubmitResult> => {
     setIsLoading(true)
 
-    const endpoint = `${identityApiUrl}/${mode === 'login' ? 'login' : 'register'}`
-
     try {
-      const response = await fetchWithFallback(
-        endpoint,
-        `${identityApiFallbackUrl}/${mode === 'login' ? 'login' : 'register'}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(payload),
-        },
-      )
-
-      const data = (await response.json()) as AuthResponse | { message?: string }
-
-      if (!response.ok) {
-        const message =
-          'message' in data && typeof data.message === 'string'
-            ? data.message
-            : 'Authentication failed.'
-        return { ok: false, message }
-      }
-
-      const authData = data as AuthResponse
-      setStoredAuth(authData.token, authData.user, authData.expiresAt, rememberMe)
-
       if (mode === 'register') {
-        sessionStorage.setItem(WELCOME_NOTIFICATION_FLAG_KEY, authData.user.id)
+        const registerData = await register(payload as RegisterPayload)
+        return {
+          ok: true,
+          message:
+            'Kontot är skapat. Kontrollera din inkorg och verifiera din email innan du loggar in.',
+          email: registerData.user.email,
+          emailVerificationRequired: registerData.emailVerificationRequired,
+        }
       }
+
+      const authData = await login(payload as LoginPayload)
+      setStoredAuth(authData.token, authData.user, authData.expiresAt, rememberMe)
 
       setIsGuestMode(false)
       sessionStorage.removeItem(GUEST_SESSION_KEY)
@@ -124,18 +111,48 @@ function App() {
       setAuthUser(authData.user)
       setAuthExpiresAt(authData.expiresAt)
 
-      const message =
-        mode === 'login'
-          ? `Welcome back, ${authData.user.firstName}!`
-          : 'Registration successful. You are now signed in.'
-      return { ok: true, message }
-    } catch {
+      return {
+        ok: true,
+        message: `Welcome back, ${authData.user.firstName}!`,
+      }
+    } catch (error) {
+      const rawMessage = error instanceof Error ? error.message : ''
+      const isUnverifiedEmail =
+        rawMessage === UNVERIFIED_EMAIL_BACKEND_MESSAGE ||
+        rawMessage.toLowerCase().includes('not been verified')
+
       return {
         ok: false,
-        message: 'Could not reach identity service. Check API URL/CORS.',
+        email: payload.email,
+        isUnverifiedEmail,
+        message: isUnverifiedEmail
+          ? 'Du behöver verifiera din email innan du kan logga in.'
+          : rawMessage || 'Could not reach identity service. Check API URL/CORS.',
       }
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleResendVerification = async (
+    email: string,
+  ): Promise<AuthSubmitResult> => {
+    try {
+      await resendEmailVerification(email)
+      return {
+        ok: true,
+        message: RESEND_VERIFICATION_CONFIRMATION,
+        email,
+      }
+    } catch (error) {
+      return {
+        ok: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Kunde inte skicka verifieringsmailet just nu.',
+        email,
+      }
     }
   }
 
@@ -153,6 +170,7 @@ function App() {
             mode="login"
             isLoading={isLoading}
             onSubmit={handleSubmit}
+            onResendVerification={handleResendVerification}
             onContinueAsGuest={handleContinueAsGuest}
           />
         }
@@ -167,6 +185,7 @@ function App() {
           />
         }
       />
+      <Route path="/check-email" element={<CheckEmailPage />} />
       <Route
         path="/dashboard"
         element={
