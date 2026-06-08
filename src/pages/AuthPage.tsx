@@ -239,7 +239,7 @@ function AuthPage({
           )}
 
           <button className="submit-btn" type="submit" disabled={isLoading}>
-            {isLoading ? 'Please wait...' : isRegister ? 'Skapa konto' : 'Logga in'}
+            {isLoading ? 'Väntar...' : isRegister ? 'Skapa konto' : 'Logga in'}
           </button>
 
           {!isRegister && onContinueAsGuest && (

@@ -41,6 +41,17 @@ const UNVERIFIED_EMAIL_BACKEND_MESSAGE = 'Email address has not been verified.'
 const RESEND_VERIFICATION_CONFIRMATION =
   'Om kontot finns och inte är verifierat har ett nytt mail skickats.'
 
+function isUnverifiedEmailError(message: string): boolean {
+  const normalizedMessage = message.toLowerCase()
+
+  return (
+    message === UNVERIFIED_EMAIL_BACKEND_MESSAGE ||
+    normalizedMessage.includes('not been verified') ||
+    normalizedMessage.includes('not verified') ||
+    normalizedMessage.includes('unverified')
+  )
+}
+
 const GUEST_USER: AuthUser = {
   id: 'guest',
   firstName: 'Guest',
@@ -116,13 +127,11 @@ function App() {
 
       return {
         ok: true,
-        message: `Welcome back, ${authData.user.firstName}!`,
+        message: `Välkommen tillbaka, ${authData.user.firstName}!`,
       }
     } catch (error) {
       const rawMessage = error instanceof Error ? error.message : ''
-      const isUnverifiedEmail =
-        rawMessage === UNVERIFIED_EMAIL_BACKEND_MESSAGE ||
-        rawMessage.toLowerCase().includes('not been verified')
+      const isUnverifiedEmail = isUnverifiedEmailError(rawMessage)
 
       return {
         ok: false,
