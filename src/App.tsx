@@ -20,6 +20,7 @@ import WishlistPage from './pages/WishlistPage'
 import SimplePage from './pages/SimplePage'
 import CheckEmailPage from './pages/CheckEmailPage'
 import VerifyEmailPage from './pages/VerifyEmailPage'
+import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import type {
   AuthUser,
   AuthMode,
@@ -188,6 +189,7 @@ function App() {
       />
       <Route path="/check-email" element={<CheckEmailPage />} />
       <Route path="/verify-email" element={<VerifyEmailPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route
         path="/dashboard"
         element={
