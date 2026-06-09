@@ -201,6 +201,43 @@
   height: 16px;
 }
 
+.auth-form-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.auth-inline-link {
+  color: var(--color-red);
+  font-size: 0.9rem;
+  font-weight: 900;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.auth-support-text {
+  margin: 14px 0 0;
+  color: var(--color-ink-soft);
+  font-size: 0.92rem;
+  font-weight: 800;
+}
+
+.auth-support-text span {
+  color: var(--color-ink);
+}
+
+.auth-actions {
+  display: grid;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.auth-resend-btn {
+  width: 100%;
+  margin-top: 10px;
+}
+
 .submit-btn,
 .ghost-btn,
 .danger-btn,

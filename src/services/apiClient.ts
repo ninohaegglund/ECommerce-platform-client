@@ -2,7 +2,7 @@ import { getStoredAuth } from '../utils/authStorage'
 
 const DEFAULT_ORDER_API_BASE_URL = 'https://localhost:7043'
 
-function normalizeBaseUrl(baseUrl: string): string {
+export function normalizeBaseUrl(baseUrl: string): string {
   return baseUrl.trim().replace(/\/+$/, '')
 }
 
