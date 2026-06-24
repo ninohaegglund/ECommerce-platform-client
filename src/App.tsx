@@ -11,11 +11,13 @@ import CartPage from './pages/CartPage'
 import CheckoutPage from './pages/CheckoutPage'
 import DashboardPage from './pages/DashboardPage'
 import JobsPage from './pages/JobsPage'
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage'
 import StripeCheckoutPage from './pages/StripeCheckoutPage'
 import NotificationsPage from './pages/NotificationsPage'
 import OrderSuccessPage from './pages/OrderSuccessPage'
 import OrdersPage from './pages/OrdersPage'
 import ProductDetailPage from './pages/ProductDetailPage'
+import TermsPage from './pages/TermsPage'
 import WishlistPage from './pages/WishlistPage'
 import SimplePage from './pages/SimplePage'
 import CheckEmailPage from './pages/CheckEmailPage'
@@ -401,6 +403,26 @@ function App() {
         path="/jobba-hos-oss"
         element={
           <JobsPage
+            user={activeUser ?? GUEST_USER}
+            isAdmin={isAdmin}
+            onLogout={handleLogout}
+          />
+        }
+      />
+      <Route
+        path="/integritetspolicy"
+        element={
+          <PrivacyPolicyPage
+            user={activeUser ?? GUEST_USER}
+            isAdmin={isAdmin}
+            onLogout={handleLogout}
+          />
+        }
+      />
+      <Route
+        path="/anvandarvillkor"
+        element={
+          <TermsPage
             user={activeUser ?? GUEST_USER}
             isAdmin={isAdmin}
             onLogout={handleLogout}
