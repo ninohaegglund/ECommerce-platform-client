@@ -297,8 +297,8 @@ function SiteFooter() {
         <div className="sv-footer-bottom">
           <div className="sv-footer-copyright">
             <span>© 2026 Spelvalvet AB</span>
-            <a href="#">Integritetspolicy</a>
-            <a href="#">Användarvillkor</a>
+            <Link to="/integritetspolicy">Integritetspolicy</Link>
+            <Link to="/anvandarvillkor">Användarvillkor</Link>
             <button className="sv-footer-link" type="button" onClick={openCookieModal}>
               Cookies
             </button>
