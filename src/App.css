@@ -2555,6 +2555,89 @@
   margin-top: 14px;
 }
 
+.admin-dashboard-panel {
+  margin-top: 14px;
+  border: 1px solid rgba(23, 24, 29, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.56);
+  padding: 16px;
+}
+
+.admin-dashboard-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.admin-dashboard-header h2 {
+  margin: 0 0 8px;
+  color: var(--color-ink);
+}
+
+.admin-metrics-grid {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.admin-metric-card {
+  min-width: 0;
+  border: 1px solid rgba(23, 24, 29, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.76);
+  padding: 13px;
+  display: grid;
+  gap: 5px;
+}
+
+.admin-metric-card--wide {
+  grid-column: span 2;
+}
+
+.admin-metric-card span {
+  color: var(--color-muted);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.admin-metric-card strong {
+  color: var(--color-ink);
+  font-size: 1.35rem;
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+}
+
+.admin-metric-card--wide strong {
+  font-size: 1.7rem;
+}
+
+.admin-metric-card small {
+  color: var(--color-ink-soft);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.admin-dashboard-signals {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-dashboard-signals span {
+  border: 1px solid rgba(23, 24, 29, 0.12);
+  border-radius: 999px;
+  background: var(--color-paper-strong);
+  color: var(--color-ink-soft);
+  padding: 6px 10px;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
 .admin-orders-list {
   margin-top: 14px;
   display: grid;
@@ -3217,6 +3300,7 @@
   .checkout-grid,
   .orders-list,
   .admin-grid,
+  .admin-metrics-grid,
   .admin-product-form,
   .admin-newsletter-layout,
   .admin-newsletter-form,
@@ -3229,10 +3313,15 @@
   .store-toolbar,
   .section-heading,
   .cart-summary,
+  .admin-dashboard-header,
   .session-panel {
     grid-template-columns: 1fr;
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .admin-metric-card--wide {
+    grid-column: auto;
   }
 
   .drop-badges {

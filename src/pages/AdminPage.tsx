@@ -22,6 +22,7 @@ import type { Category } from '../types/category'
 import type { InventoryStock } from '../types/inventory'
 import {
   getOrderStatusLabel,
+  OrderStatusCode,
   PaymentStatusCode,
   parseOrderStatusCode,
   type OrderAddress,
@@ -81,6 +82,34 @@ const defaultNewsletterForm: NewsletterFormState = {
   body: '',
   htmlBody: '',
   testRecipientEmail: '',
+}
+
+const dayInMilliseconds = 24 * 60 * 60 * 1000
+
+function parsePaymentStatusCode(status: number | string | null | undefined): number {
+  if (typeof status === 'number' && Number.isFinite(status)) {
+    return status
+  }
+
+  if (typeof status !== 'string') {
+    return -1
+  }
+
+  const normalized = status.trim().toLowerCase()
+  if (normalized === 'paid') {
+    return PaymentStatusCode.Paid
+  }
+  if (normalized === 'failed') {
+    return PaymentStatusCode.Failed
+  }
+  if (normalized === 'refunded') {
+    return PaymentStatusCode.Refunded
+  }
+  if (normalized === 'unpaid' || normalized === 'notpaid' || normalized === 'not paid') {
+    return PaymentStatusCode.Unpaid
+  }
+
+  return -1
 }
 
 function getCategoryOptions(categories: Category[]) {
@@ -148,6 +177,75 @@ function AdminPage({ user, onLogout }: AdminPageProps) {
   const activeSubscriberCount = useMemo(
     () => subscribers.filter((subscriber) => subscriber.isActive !== false).length,
     [subscribers],
+  )
+  const dashboardMetrics = useMemo(() => {
+    const startOfToday = new Date()
+    startOfToday.setHours(0, 0, 0, 0)
+    const sevenDaysAgo = startOfToday.getTime() - 6 * dayInMilliseconds
+
+    return orders.reduce(
+      (metrics, order) => {
+        const paymentStatus = parsePaymentStatusCode(order.paymentStatus)
+        const orderStatus = parseOrderStatusCode(order.status)
+        const totalAmount = Number(order.totalAmount) || 0
+        const discountAmount = Number(order.discountAmount) || 0
+        const itemCount =
+          typeof order.itemCount === 'number'
+            ? order.itemCount
+            : order.items?.reduce((total, item) => total + item.quantity, 0) ?? 0
+        const createdAt = new Date(order.createdAtUtc)
+        const createdTime = createdAt.getTime()
+        const isPaid = paymentStatus === PaymentStatusCode.Paid
+
+        metrics.totalOrders += 1
+        metrics.totalDiscount += discountAmount
+        metrics.itemsSold += itemCount
+
+        if (isPaid) {
+          metrics.paidOrders += 1
+          metrics.revenue += totalAmount
+        }
+
+        if (paymentStatus === PaymentStatusCode.Failed) {
+          metrics.failedPayments += 1
+        }
+
+        if (orderStatus === OrderStatusCode.Pending) {
+          metrics.pendingOrders += 1
+        }
+
+        if (!Number.isNaN(createdTime)) {
+          if (createdAt >= startOfToday) {
+            metrics.ordersToday += 1
+          }
+
+          if (createdTime >= sevenDaysAgo) {
+            metrics.ordersLastSevenDays += 1
+          }
+        }
+
+        return metrics
+      },
+      {
+        totalOrders: 0,
+        paidOrders: 0,
+        pendingOrders: 0,
+        failedPayments: 0,
+        revenue: 0,
+        totalDiscount: 0,
+        itemsSold: 0,
+        ordersToday: 0,
+        ordersLastSevenDays: 0,
+      },
+    )
+  }, [orders])
+  const averageOrderValue =
+    dashboardMetrics.paidOrders > 0
+      ? dashboardMetrics.revenue / dashboardMetrics.paidOrders
+      : 0
+  const lowStockProductCount = useMemo(
+    () => products.filter((product) => product.stockQuantity <= 5).length,
+    [products],
   )
   const canSendNewsletter = Boolean(
     newsletterForm.subject.trim() && newsletterForm.body.trim(),
@@ -695,6 +793,92 @@ function AdminPage({ user, onLogout }: AdminPageProps) {
               <a className="ghost-btn" href="#admin-newsletter">Open newsletter</a>
             </div>
           </article>
+        </div>
+
+        <div className="admin-dashboard-panel" aria-labelledby="admin-dashboard-title">
+          <div className="admin-dashboard-header">
+            <div>
+              <h2 id="admin-dashboard-title">Dashboard metrics</h2>
+              <p className="subtitle">
+                Live snapshot from the order, catalog, and newsletter data already loaded here.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="ghost-btn"
+              onClick={() => {
+                void loadOrders()
+                void loadProducts()
+                void loadNewsletterSubscribers()
+              }}
+              disabled={isLoadingOrders || isLoading || isLoadingSubscribers}
+            >
+              {isLoadingOrders || isLoading || isLoadingSubscribers ? 'Refreshing...' : 'Refresh metrics'}
+            </button>
+          </div>
+
+          {isLoadingOrders ? (
+            <p className="subtitle">Loading dashboard metrics...</p>
+          ) : ordersError ? (
+            <p className="feedback error">{ordersError}</p>
+          ) : (
+            <>
+              <div className="admin-metrics-grid">
+                <article className="admin-metric-card admin-metric-card--wide">
+                  <span>Paid revenue</span>
+                  <strong>{formatAmount(dashboardMetrics.revenue, 'SEK')}</strong>
+                  <small>{dashboardMetrics.paidOrders} paid orders</small>
+                </article>
+                <article className="admin-metric-card">
+                  <span>Total orders</span>
+                  <strong>{dashboardMetrics.totalOrders}</strong>
+                  <small>{dashboardMetrics.ordersToday} today</small>
+                </article>
+                <article className="admin-metric-card">
+                  <span>Average order</span>
+                  <strong>{formatAmount(averageOrderValue, 'SEK')}</strong>
+                  <small>Paid orders only</small>
+                </article>
+                <article className="admin-metric-card">
+                  <span>Items sold</span>
+                  <strong>{dashboardMetrics.itemsSold}</strong>
+                  <small>From loaded order rows</small>
+                </article>
+                <article className="admin-metric-card">
+                  <span>Discounts</span>
+                  <strong>{formatAmount(dashboardMetrics.totalDiscount, 'SEK')}</strong>
+                  <small>Total discount amount</small>
+                </article>
+                <article className="admin-metric-card">
+                  <span>Pending orders</span>
+                  <strong>{dashboardMetrics.pendingOrders}</strong>
+                  <small>{dashboardMetrics.failedPayments} failed payments</small>
+                </article>
+                <article className="admin-metric-card">
+                  <span>Recent orders</span>
+                  <strong>{dashboardMetrics.ordersLastSevenDays}</strong>
+                  <small>Last 7 days</small>
+                </article>
+                <article className="admin-metric-card">
+                  <span>Low stock</span>
+                  <strong>{lowStockProductCount}</strong>
+                  <small>{products.length} catalog products</small>
+                </article>
+                <article className="admin-metric-card">
+                  <span>Subscribers</span>
+                  <strong>{activeSubscriberCount}</strong>
+                  <small>{subscribers.length} total subscribers</small>
+                </article>
+              </div>
+
+              <div className="admin-dashboard-signals" aria-label="Operational signals">
+                <span>Paid: {dashboardMetrics.paidOrders}</span>
+                <span>Pending: {dashboardMetrics.pendingOrders}</span>
+                <span>Failed payments: {dashboardMetrics.failedPayments}</span>
+                <span>Low stock: {lowStockProductCount}</span>
+              </div>
+            </>
+          )}
         </div>
 
         <div className="admin-stock-panel" id="admin-newsletter">
